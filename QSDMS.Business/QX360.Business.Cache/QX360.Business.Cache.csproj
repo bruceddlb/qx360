@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{15869A6D-5645-47BD-A206-25386E2037B0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QX360.Business.Cache</RootNamespace>
+    <AssemblyName>QX360.Business.Cache</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Product\CategoryCache.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Business.Cache\QSDMS.Business.Cache.csproj">
+      <Project>{bf85365e-71d4-4a2f-823c-3516a6d08f7c}</Project>
+      <Name>QSDMS.Business.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Business\QSDMS.Business.csproj">
+      <Project>{f784fe53-4599-4ae6-9735-bf367829f27a}</Project>
+      <Name>QSDMS.Business</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Cache.Factory\QSDMS.Cache.Factory.csproj">
+      <Project>{05e4a0f4-a478-406d-af6c-e59e2ed88418}</Project>
+      <Name>QSDMS.Cache.Factory</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Cache.Redis\QSDMS.Cache.Redis.csproj">
+      <Project>{078bc972-7ce9-454c-9898-49e3225782c4}</Project>
+      <Name>QSDMS.Cache.Redis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Cache\QSDMS.Cache.csproj">
+      <Project>{01dc088c-172b-4b3c-ac36-33ea88c0bbdc}</Project>
+      <Name>QSDMS.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.Model\QX360.Model\QX360.Model.csproj">
+      <Project>{5cb80361-b123-4494-af2c-573cfbab79f1}</Project>
+      <Name>QX360.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\QX360.Business\QX360.Business.csproj">
+      <Project>{96293cb8-0691-4b56-943c-bf1cd73bf184}</Project>
+      <Name>QX360.Business</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

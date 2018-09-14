@@ -1,0 +1,82 @@
+﻿/* 活动轮播图 */
+.slideGroup {
+    width: 100%;
+    text-align: left;
+}
+
+    .slideGroup .slideBox {
+        overflow: hidden;
+        zoom: 1;
+        padding: 10px 0 10px 42px;
+        position: relative;
+    }
+
+    .slideGroup .sPrev, .slideGroup .sNext {
+        position: absolute;
+        left: 5px;
+        top: 50px;
+        display: block;
+        width: 30px;
+        height: 94px;
+        border: 1px solid #ddd;
+        background: url(images/slider-arrow.png) -110px 30px no-repeat #0099CC;
+    }
+
+    .slideGroup .sNext {
+        left: auto;
+        right: 5px;
+        background-position: 8px 25px;
+    }
+
+    .slideGroup .sPrev:hover, .slideGroup .sNext:hover {
+        position: absolute;
+        left: 5px;
+        top: 50px;
+        display: block;
+        width: 30px;
+        height: 94px;
+        border: 1px solid #ddd;
+        background: url(images/slider-arrow.png) -110px 30px no-repeat #808080;
+    }
+
+    .slideGroup .sNext:hover {
+        left: auto;
+        right: 5px;
+        background-position: 8px 25px;
+    }
+
+    .slideGroup .parBd ul {
+        overflow: hidden;
+        zoom: 1;
+    }
+
+    .slideGroup .parBd ul li {
+        margin: 0 8px;
+        float: left;
+        _display: inline;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    .slideGroup .parBd ul li .pic {
+        text-align: center;
+    }
+
+    .slideGroup .parBd ul li .pic img {
+        width: 230px;
+        height: 200px;
+        display: block;
+        padding: 2px;
+        border: 2px solid #C0C0C0;
+        border-radius: 4px;
+        opacity:0.8;
+    }
+
+    .slideGroup .parBd ul li .pic img:hover {
+      cursor:pointer;
+         border: 2px dotted #ff6a00;
+    }
+
+    .slideGroup .parBd ul li .title {
+        line-height: 24px;
+    }

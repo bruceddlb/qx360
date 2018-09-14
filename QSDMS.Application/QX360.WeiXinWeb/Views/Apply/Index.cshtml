@@ -1,0 +1,355 @@
+﻿@{
+    ViewBag.Title = "驾校报名";
+}
+@section scripts{
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=@(QSDMS.Util.Config.GetValue("baidumap_client_key"))"></script>
+
+    <script src="~/Content/js/convertor.js"></script>
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.Area = ko.observable({
+                Province: ko.observableArray([]),
+                City: ko.observableArray([]),
+                County: ko.observableArray([])
+            });
+            self.PageIndex = ko.observable(1);
+            self.IsEndPage = ko.observable(false);
+            self.List = ko.observableArray([]);
+            self.BannerList = ko.observableArray([]);
+            self.KeyWord = ko.observable("");
+            self.Lng = ko.observable("");
+            self.Lat = ko.observable("");
+            self.ProvinceId = ko.observable("");
+            self.CityId = ko.observable("");
+            self.CountyId = ko.observable("");
+
+            self.toDataInfo = function (data) {
+                var obj = {};
+                for (var o in data) {
+                    obj[o] = ko.observable(data[o]);
+                }
+                return obj;
+            };
+            self.loadSchoolList = function (isAppend) {
+                var queryJson = {};
+                queryJson["keyword"] = self.KeyWord();
+                queryJson["lat"] = self.Lat();
+                queryJson["lng"] = self.Lng();
+                queryJson["provinceid"] = self.ProvinceId();
+                queryJson["cityid"] = self.CityId();
+                queryJson["countyid"] = self.CountyId();
+                queryJson["istraining"] = "0";
+                $.get("/School/List", { pageIndex: self.PageIndex(), queryJson: JSON.stringify(queryJson) }, function (result) {
+                    self.processSchoolList(result, isAppend);
+                });
+            }
+
+            self.loadMore = function () {
+                self.PageIndex(self.PageIndex() + 1);
+                self.loadSchoolList(true);
+            }
+
+            self.processSchoolList = function (result, isAppend) {
+                if (!isAppend) {
+                    self.List.removeAll();
+                }
+                if (result.IsSuccess) {
+                    self.IsEndPage(result.ResultData["IsEndPage"]);
+                    //self.toEntityArray(result, self.List);
+                    var data = result.ResultData["List"];
+                    for (var i in data) {
+                        var item = data[i];
+                        self.List.push(item)
+                    }
+                }
+            }
+            self.CutWord = function (str) {
+                var Ilength = 35;
+                if (str) {
+                    var _exp = "...";
+                    if (str.length > Ilength) {
+                        return str.substring(0, Ilength) + _exp;
+                    }
+                    else {
+                        return str;
+                    }
+                } else {
+                    return "";
+                }
+                return str;
+            }
+            self.Seach = function () {
+                self.PageIndex(1);
+                self.loadSchoolList(false);
+            }
+
+            //banner
+            self.LoadBanner = function () {
+                $.get("/Apply/Banner", null, function (result) {
+                    if (result.IsSuccess) {
+                        self.BannerList.removeAll();
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            self.BannerList.push(item)
+                        }
+
+                        var mySwiper = new Swiper('.swiper-container', {
+                            pagination: '.pagination',
+                            slidesPerView: 1,
+                            loop: true,
+                            autoplay: 3000,
+                            autoplayDisableOnInteraction: false,
+                            speed: 500
+                        });
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+            $.get("/MapPosition/GetUserPoint", null, function (result) {
+                if (result.IsSuccess) {
+                    var data = result.ResultData["Data"];
+                    var lat = data.Lat;
+                    var lng = data.Lng;
+                    if (lat) {
+                        model.Lng(lng);
+                        model.Lat(lat);
+                        model.loadSchoolList(false);
+
+                    }
+                } else {
+                    var $loadingToast1 = $('#loadingToast1');
+                    if ($loadingToast1.css('display') != 'none') return;
+                    $loadingToast1.fadeIn(100);
+
+                    //定位当前地址
+                    var geolocation = new BMap.Geolocation();
+                    geolocation.getCurrentPosition(function (r) {
+                        if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+                            //var mk = new BMap.Marker(r.point);
+                            //alert('您的位置：' + r.point.lng + ',' + r.point.lat);
+
+                            model.Lng(r.point.lng);
+                            model.Lat(r.point.lat);
+                            model.loadSchoolList(false);
+                            setTimeout(function () {
+                                $loadingToast1.fadeOut(100);
+                            }, 200);
+                            $.post("/MapPosition/SetUserPoint", { "lat": r.point.lat, "lng": r.point.lng }, function (result) {
+
+                            });
+                        }
+                        else {
+                            alert('failed' + this.getStatus());
+                            model.loadSchoolList(false);
+                        }
+                    },
+                    {
+                        enableHighAccuracy: true
+                    })
+                }
+            });
+
+            model.LoadBanner();
+            model.Area().Province(GetAreaData(1));
+            model.Area().City(GetAreaData(2));
+            model.Area().County(GetAreaData(3));
+            //model.loadSchoolList(false);
+            FastClick.attach(document.body);
+
+            $(window).scroll(function () {
+                //var top = $(window).scrollTop();
+                //var win = $(window).height();
+                //var doc = $(document).height();
+                //if ((top + win) >= doc && !model.IsEndPage()) {
+                //    model.loadMore();
+                //}
+
+                var scrollTop = $(this).scrollTop();
+                var scrollHeight = $(document).height();
+                var windowHeight = $(this).height();
+                if (scrollTop + windowHeight == scrollHeight && !model.IsEndPage()) {
+                    model.loadMore();
+                }
+            });
+            //默认显示区域数据 显示第一个省
+            var normalproviceid = $("#divarea .Ind_snav_left dd:eq(0)").attr("id");
+            $("#divarea .Ind_snav_center dd").css({ "display": "none" });
+            $("#divarea .Ind_snav_center dd[parentid='" + normalproviceid + "']").css({ "display": "block" });
+            $("#" + normalproviceid).addClass('Ind_snav_dd');
+            var normalcityid = $(".Ind_snav_center dd[parentid='" + normalproviceid + "']:eq(0)").attr("id");
+            $("#divarea .Ind_snav_right dd").css({ "display": "none" });
+            $("#divarea .Ind_snav_right dd[parentid='" + normalcityid + "']").css({ "display": "block" });
+            $("#" + normalcityid).addClass('Ind_snav_rtdd');
+
+            $('.hdadd').on('click', function () {
+                $('.Ind_back').show()//背景
+                $(this).find('span').addClass('Ind_span')
+                $('.Ind_snav').show()
+            })
+            //选择区域
+            $('#divarea .Ind_snav_left dd').on('click', function () {
+                $('.Ind_snav_left dd').removeClass('Ind_snav_dd')
+                $(this).addClass('Ind_snav_dd');
+                $("#divarea .Ind_snav_center dd").css({ "display": "none" });
+                $("#divarea .Ind_snav_center dd[parentid='" + $(this).attr("id") + "']").css({ "display": "block" });
+                model.ProvinceId($(this).attr("id"));
+            })
+            $('#divarea .Ind_snav_center dd').on('click', function () {
+                $('.Ind_snav_center dd').removeClass('Ind_snav_rtdd')
+                $(this).addClass('Ind_snav_rtdd');
+                $("#divarea .Ind_snav_right dd").css({ "display": "none" });
+                $("#divarea .Ind_snav_right dd[parentid='" + $(this).attr("id") + "']").css({ "display": "block" });
+                model.CityId($(this).attr("id"));
+            })
+            //空白关闭
+            $('#divarea .Ind_back').on('click', function () {
+                $('.Ind_back').hide()
+                $('.Ind_snav').hide()
+            })
+            //关闭叉叉
+            $('#Ind_icon').on('click', function () {
+                $('.Ind_back').hide()
+                $('.Ind_snav').hide()
+            })
+            //选择后关闭
+            $('#divarea .Ind_snav_right dd').on('click', function () {
+                $('.Ind_back').hide()
+                $('.Ind_snav').hide()
+                $('.hdadd').html($(this).html());
+                model.CountyId($(this).attr("id"));
+
+                model.Seach();
+            })
+
+        });
+
+        //获取区域信息
+        function GetAreaData(layer) {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Area/GetAreaList",
+                async: false,
+                data: { layer: layer },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.AreaId,
+                                "value": item.AreaName,
+                                "parentid": item.ParentId
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+    </script>
+}
+@section css{
+
+    <style type="text/css">
+        .Dtmenu li {
+            margin-bottom: 10px;
+        }
+    </style>
+}
+
+
+<div class="Ind_back"></div>
+<div class="Ind_snav" id="divarea">
+    <h5 class="Ind_h5">选择区域<i class="iconfont icon-close" id="Ind_icon"></i></h5>
+    <dl class="Ind_snav_left" data-bind="foreach: $root.Area().Province">
+        <dd data-bind="attr:{id:id,parentid:parentid},text:value"></dd>
+    </dl>
+    <dl class="Ind_snav_center" data-bind="foreach: $root.Area().City">
+        <dd data-bind="attr:{id:id,parentid:parentid,title:value},text:value" style="display:none;overflow:hidden"></dd>
+    </dl>
+    <dl class="Ind_snav_right" data-bind="foreach: $root.Area().County">
+        <dd data-bind="attr:{id:id,parentid:parentid,title:value},text:value" style="display: none; overflow: hidden; "></dd>
+    </dl>
+</div>
+<div id="header">
+    <div class="search">
+        <input type="search" placeholder="搜索" class="se_input" data-bind="value:$root.KeyWord">
+        <span class="se_span" data-bind="click:function(){$root.Seach();}"><i class="iconfont icon-search"></i></span>
+    </div>
+    <div class="hdadd"><i class="iconfont icon-location"></i></div>
+</div>
+
+<div class="slide">
+    <div class="swiper-container">
+        <div class="swiper-wrapper" data-bind="foreach:BannerList">
+            <div class="swiper-slide">
+                <a data-bind="attr:{href:HrefUrl==null?'':HrefUrl,target:'_blank'}"><img data-bind="attr:{src:ImgPath}" alt="banner" class="s_img" style="width:100%" /></a>
+            </div>
+        </div>
+        <div class="pagination s_buts s_right"></div>
+    </div>
+</div>
+
+<ul class="Dtmenu">
+    <li><a href="/Shop/List"><img src="/content/images/index_05.jpg"></a></li>
+    <li><a href="/WithDriving/nav"><img src="/content/images/index_07.jpg"></a></li>
+    <li><a href="/TakeAudit/Index"><img src="/content/images/index_11.jpg"></a></li>
+    <li><a href="/Audit/Nav"><img src="/content/images/index_12.jpg"></a></li>
+</ul>
+
+<div class="Dto_con">
+    <div class="Dto_h2"><i class="iconfont icon-re"></i>热门推荐</div>
+    <ul class="Dto_ul" data-bind="foreach:List">
+        <li>
+            <a data-bind="attr:{href:'/Apply/SchoolInfo?id='+SchoolId}">
+                <i class="iconfont icon-jiantou Dto_po_icon"></i>
+                <img data-bind="attr:{src:FaceImage}" class="Dto_li_img" alt="icon">
+                <div class="Dto_list">
+                    <div class="Dto_list_h3" data-bind="text:Name"></div>
+                    <div class="Dto_list_sm" data-bind="foreach:TagList"><span data-bind="text:Value"></span></div>
+                    <div class="Dto_list_mh"><span data-bind="text:'￥'+StudyPrice"></span><font data-bind="text:'距您'+HowLong+'KM'"></font></div>
+                </div>
+            </a>
+        </li>
+        @*<li>
+                <a href="/Apply/SchoolInfo?id=1">
+                    <i class="iconfont icon-jiantou Dto_po_icon"></i>
+                    <img src="/content/images/index_19.jpg" class="Dto_li_img">
+                    <div class="Dto_list">
+                        <div class="Dto_list_h3">坤宝驾校</div>
+                        <div class="Dto_list_sm"><span>自建考场</span><span>补考免费</span><span>补考免费</span><span>补考免费</span><span>补考免费</span></div>
+                        <div class="Dto_list_mh"><span>￥3600</span><font>距您0.6KM</font></div>
+                    </div>
+                </a>
+            </li>*@
+    </ul>
+</div>
+
+<div class="page__bd" style="margin-bottom:80px;">
+    <div class="weui-loadmore">
+        <!--ko if:!IsEndPage() && List().length>0-->
+        <a href="javascript:void(0);" data-bind="click:function(){loadMore();}">查看更多</a>
+        <!--/ko-->
+        <!--ko if:IsEndPage()-->
+        <a href="javascript:void(0);" style="color:#ccc">没有更多了</a>
+        <!--/ko-->
+        <!--ko if:List().length==0-->
+        <a href="javascript:void(0);" style="color:#ccc">没有相关信息</a>
+        <!--/ko-->
+    </div>
+</div>
+<div id="loadingToast1" style="display:none;">
+    <div class="weui-mask_transparent"></div>
+    <div class="weui-toast">
+        <i class="weui-loading weui-icon_toast"></i>
+        <p class="weui-toast__content">正在努力获取您的位置信息,请稍后</p>
+    </div>
+</div>

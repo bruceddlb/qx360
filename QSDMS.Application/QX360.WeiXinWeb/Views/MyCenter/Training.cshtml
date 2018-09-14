@@ -1,0 +1,160 @@
+﻿@{
+    ViewBag.Title = "实训预约";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.List = ko.observableArray([]);
+            self.Status = ko.observable("-1");
+            self.Id = ko.observable("");
+            self.BindList = function () {
+                $.get("/TrainingCar/GetMyTraingOrder", { status: self.Status() }, function (result) {
+                    if (result.IsSuccess) {
+                        self.List.removeAll();
+                        var data = result.ResultData["List"];
+                        self.List(data);
+                        //添加弹窗
+                        $('.order_btn_a').on('click', function () {
+                            $('.McLcde_back').show();
+                            $('.McLcdepopup').show();
+                        })
+                    }
+                });
+            }
+            self.SetId = function (id) {
+                self.Id(id);
+            }
+            self.Cancel = function () {
+                $.post("/TrainingCar/Cancel", { id: self.Id() }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, "ok");
+                        hidepop();
+                        self.BindList();
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindList();
+
+            $('.McLcdepopup_close').on('click', function () {
+                hidepop();
+            })
+            $('.McLc_button').on('click', function () {
+                hidepop();
+            })
+            //菜单切换
+            $('.order_nav dd span').on('click', function () {
+                $('.order_nav dd span').removeClass('ornav_span')
+                $(this).addClass('ornav_span');
+                model.Status($(this).attr("data-status"));
+                model.BindList();
+            })
+        })
+
+        function hidepop() {
+            $('.McLcde_back').hide();
+            $('.McLcdepopup').hide();
+        }
+    </script>
+}
+<div class="McLcde_back"></div>
+<div class="McLcdepopup">
+    <div class="McLcdepopup_h2">提示</div>
+    <div class="McLcdepopup_txt">
+        <div class="McLcdepopup_li">请确认您是否要取消该实训预约单，一旦取消，您需要重新预约才可以进行相关操作。</div>
+        <div class="McLcde_sub">
+            <button type="button" class="McLc_button2" data-bind="click:function(){$root.Cancel();}">确定取消</button>
+            <button type="button" class="McLc_button">关闭</button>
+        </div>
+    </div>
+    <div class="McLcdepopup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+
+
+@*<dl class="order_nav">
+        <dd><span data-status="-1" class="ornav_span">全部</span></dd>
+        <dd><span data-status="1">预约成功</span></dd>
+        <dd><span data-status="3">预约取消</span></dd>
+    </dl>
+
+    <ul class="order_con" data-bind="foreach:$root.List">
+        <li>
+            <i class="iconfont icon-jiantou2 order_icon"></i>
+            <div class="order_row1">
+                <div class="order_time"><i class="iconfont icon-jibenxinxi1"></i>预约单号：<em data-bind="text:TrainingOrderNo"></em></div>
+                <div class="order_state"><em data-bind="text:formatDate(CreateTime,'yyyy-MM-dd hh:mm')"></em></div>
+            </div>
+            <div class="orcon_div">
+                <div class="orcon_title">
+                    <font>预约日期 :</font><em data-bind="text:formatDate(ServiceDate,'yyyy-MM-dd')+' '+ServiceTime"></em>
+                </div>
+                <div class="orcon_title">
+                    <font>驾校名称 :</font><em data-bind="text:SchoolName"></em>
+                </div>
+                <div class="orcon_title">
+                    <font>预约车辆 :</font><em data-bind="text:TrainingCarNumber"></em>
+                </div>
+            </div>
+            <div class="order_btn">
+                <div class="order_btn">
+                    <!--ko if:Status=="1"-->
+                    <div class="order_state2">状态:<span class="orcon_ok">预约成功</span></div>
+                    <div class="order_btn_a" data-bind="click:function(){$root.SetId(TrainingOrderId)}">取消预约</div>
+                    <!--/ko-->
+                    <!--ko if:Status=="2"-->
+                    <div class="order_state2">状态:<span class="orcon_ok">完成</span></div>
+                    <!--/ko-->
+                    <!--ko if:Status=="3"-->
+                    <div class="order_state2">状态:<span class="orcon_red">预约已取消</span></div>
+                    <!--/ko-->
+                </div>
+            </div>
+        </li>
+    </ul>*@
+<dl class="order_nav">
+    <dd><span data-status="-1" class="ornav_span">全部</span></dd>
+    <dd><span data-status="1">待审核</span></dd>
+    <dd><span data-status="2">待支付</span></dd>   
+    <dd><span data-status="4">完成</span></dd>
+    <dd><span data-status="5">取消</span></dd>
+</dl>
+<ul class="order_con" data-bind="foreach:$root.List">
+    <li>
+        <i class="iconfont icon-jiantou2 order_icon"></i>
+        <div class="order_row1">
+            <div class="order_time"><i class="iconfont icon-jibenxinxi1"></i>预约单号：<em data-bind="text:TrainingOrderNo"></em></div>
+        </div>
+        <div class="orcon_div">
+            <div class="orcon_title">
+                <font>预约日期 :</font><em data-bind="text:formatDate(ServiceDate,'yyyy-MM-dd')+' '+ServiceTime"></em>
+            </div>
+            <div class="orcon_title">
+                <font>考场名称 :</font><em data-bind="text:SchoolName"></em>
+            </div>
+            <div class="orcon_title">
+                <font>预约车辆 :</font><em data-bind="text:TrainingCarNumber"></em>
+            </div>
+            <div class="orcon_title">
+                <font>预约科目 :</font><em data-bind="text:TrainingTypeName"></em>
+            </div>
+        </div>
+        <div class="order_btn">
+            <!--ko if:Status=="1"-->
+            <div class="order_state2">状态:<span class="orcon_ok" data-bind="text:StatusName"></span></div>
+            <div class="order_btn_a" data-bind="click:function(){$root.SetId(TrainingOrderId)}">取消</div>
+            <!--/ko-->
+            <!--ko if:Status!="1"-->
+            <div class="order_state2">状态:<span class="orcon_red" data-bind="text:StatusName"></span></div>
+            <!--/ko-->
+        </div>
+    </li>
+</ul>
+<!--ko if:List().length==0-->
+<div class=" order_null"><i class="iconfont icon-xiaofeijilu5"></i><span>暂无预约！</span></div>
+<!--/ko-->

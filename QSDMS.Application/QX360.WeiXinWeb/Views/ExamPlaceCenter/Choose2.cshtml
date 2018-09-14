@@ -1,0 +1,70 @@
+﻿@{
+    ViewBag.Title = "按时间";
+}
+@section scripts{
+    <script type="text/javascript">
+        var trainingTimeTableId = request('trainingTimeTableId');
+        var freedate = request('freedate');
+        var trainingtype = request('trainingtype');
+        var schoolid = request('schoolid');
+        function ViewModel() {
+            var self = this;
+            self.List = ko.observableArray([]);
+            self.FreeTimeList = ko.observableArray([]);
+            self.toDataInfo = function (data) {
+                var obj = {};
+                for (var o in data) {
+                    obj[o] = ko.observable(data[o]);
+                }
+                return obj;
+            };
+            self.CallTel = function (mobile) {              
+                if (mobile) {
+                    window.location.href = 'tel:' + mobile;
+                }
+            }
+            self.loadTraingCarList = function () {
+                var queryJson = {};
+                queryJson["trainingTimeTableId"] = trainingTimeTableId;
+                queryJson["freedate"] = freedate;
+                queryJson["trainingtype"] = trainingtype;
+                queryJson["schoolid"] = schoolid;
+                $.get("/TrainingCar/GetTrainingCar", { queryJson: JSON.stringify(queryJson) }, function (result) {
+                    if (result.IsSuccess) {
+                        var list = result.ResultData["List"];
+                        self.List(list);
+                    }
+                });
+            }
+
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.loadTraingCarList();
+
+        })
+
+
+    </script>
+}
+<ul class="Dcc_dl" style="display:block;" data-bind="foreach:List">
+    <dd>
+
+        <img data-bind="attr:{src:FaceImage}" class="Dcc_dd_img">
+        <div class="Dcc_ddst">
+            <div class="Dcc_ddst_h3" data-bind="text:Name"></div>
+            <div class="Dcc_ddst_mh"><span data-bind="text:TrainingTypeName"></span></div>
+            <div class="Dcc_ddst_mh" ><a data-bind="click:function(){$root.CallTel(Info.Mobile)}"><span data-bind="text:'预约信息:'+(Info.SubNoticeInfo==null?'无':Info.SubNoticeInfo)"></span></a></div>
+        </div>
+    </dd>
+</ul>
+
+<div class="page__bd" style="margin-bottom:80px;">
+    <div class="weui-loadmore">
+        <!--ko if:List().length==0-->
+        <a href="javascript:void(0);" style="color:#ccc">没有相关信息</a>
+        <!--/ko-->
+    </div>
+</div>

@@ -1,0 +1,187 @@
+﻿@{
+    ViewBag.Title = "选择地图坐标";
+    Layout = null;
+}
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>
+    <link href="~/Content/styles/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/scripts/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
+    <script src="~/Content/scripts/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <link href="~/Content/styles/animate.min.css" rel="stylesheet" />
+    <!--框架必需end-->
+    <!--bootstrap组件start-->
+    <link href="~/Content/scripts/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/scripts/bootstrap/bootstrap.extension.css" rel="stylesheet" />
+    <script src="~/Content/scripts/bootstrap/bootstrap.min.js"></script>
+
+    <script src="~/Content/scripts/utils/dms-ui.src.js"></script>
+    <script src="~/Content/scripts/utils/dms-form.src.js"></script>
+
+    <link href="~/Content/styles/dms-ui.css" rel="stylesheet" />
+    <link href="~/Content/styles/style.min.css" rel="stylesheet" />
+
+    <link href="~/Content/@QSDMS.Model.OperatorProvider.Provider.Current().Theme/style.min.css" rel="stylesheet" />
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=@(QSDMS.Util.Config.GetValue("baidumap_client_key"))"></script>
+    <script type="text/javascript">
+        $(function () {
+            var adress = request('address');
+            if (adress) {
+                adress = (adress);
+                dingwei(adress);
+            }
+            $("#btn_ok").bind("click", function () {
+                var lng = $("#lng").val();
+                var lat = $("#lat").val();
+                //top.mappoint.$("#point").val(lng);
+                //查找iframe指定的id
+                var pwind = $('#Form', parent.document);
+                var $window = pwind[0].contentWindow;
+                $window.$("#point").val("经度：" + lng + ",纬度：" + lat);
+                $window.$("#AddressInfo").val($("#selectaddreess").val());
+                $window.$("#Lng").val(lng);
+                $window.$("#Lat").val(lat);
+                dialogClose();
+            })
+        })
+    </script>
+</head>
+<body>
+    <input type="hidden" id="selectaddreess" value="" name="" />
+    <input type="hidden" id="addr" value="" name="" />
+    <input type="hidden" name="" id="lng" size="15" onkeypress="if(event.keyCode == 13) return false;">
+    <input type="hidden" name="" id="lat" size="15" onkeypress="if(event.keyCode == 13) return false;">
+    <input type="hidden" id="zoom" name="zoom" value="15" size="5">
+    <!-- 地图那区域 -->
+    <div id="content" style="width: 100%; height: 450px; margin: 0 auto; border: 1px solid #d3d3d3;">
+        <div style="float: left; height: 460px; width: 100%; display: -webkit-box; overflow: hidden; " id="l-map"></div>
+    </div>
+    <div class="clear"></div>
+    <!-- 地图那区域 -->
+    <div style="text-align:right;margin-right:10px;margin-top:50px;">
+        <a id="btn_ok" class="btn btn-success"> 确定</a>
+    </div>
+</body>
+</html>
+
+@*<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=ptxzkrdeSbMUbBWGLHHd6gwZhQ3KkqSl"></script>*@
+
+<script type="text/javascript">
+
+    var cityName = "宜昌";
+    var desAddress = "";
+    var p2;
+    function addMarker(point, obj, p1) {
+        var opt = { "title": "", "enableDragging": true };
+        var marker = new BMap.Marker(point, opt);
+        map.addOverlay(marker);
+        marker.addEventListener("mouseup", function (e1) {
+            a(e1.point);
+        });
+
+    }
+
+    // 百度地图API功能    new BMap.Point(120.204, 33.3)
+    var map = new BMap.Map("l-map");
+    var dbx = "111.294021";
+    var dby = "30.695998";
+    var dbz = 12;
+    map.enableDragging(); //启用地图拖拽事件，默认启用(可不写)
+    map.enableScrollWheelZoom(); //启用地图滚轮放大缩小
+    map.enableDoubleClickZoom(); //启用鼠标双击放大，默认启用(可不写)
+    map.enableKeyboard(); //启用键盘上下左右键移动地图
+
+    //当前城市
+    function myFun(result) {
+        cityName = result.name;
+        map.setCenter(cityName);
+        //alert("当前定位城市:" + cityName);
+    }
+    var myCity = new BMap.LocalCity();
+    myCity.get(myFun);
+    if (dbx && dby && dbz) {
+        map.centerAndZoom(new BMap.Point(dbx, dby), 12);
+        addMarker(new BMap.Point(dbx, dby));
+    } else {
+
+        var myGeo = new BMap.Geocoder();
+        myGeo.getPoint(desAddress, function (point) {
+            if (point) {
+                p2 = point;
+                map.centerAndZoom(p2, 12);
+            }
+            else {
+                alert("对不起，获取不到您的位置！")
+            }
+        }, cityName);
+    }
+
+
+    map.addEventListener("click", function (e) {
+        a(e.point);
+    });
+    //点击获取坐标
+    function a(pp) {
+        var x = pp.lng
+        var y = pp.lat
+        document.getElementById('zoom').value = "" + map.getZoom() + "";
+        map.clearOverlays();
+        addMarker(new BMap.Point(x, y));
+        document.getElementById('lng').value = "" + x + "";
+        document.getElementById('lat').value = "" + y + "";
+
+        //根据经纬度获取详细地址
+        var geoc = new BMap.Geocoder();
+        var pt = pp;
+        geoc.getLocation(pt, function (rs) {
+            var addComp = rs.addressComponents;
+            //地址名称
+            //alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+            var adds = addComp.street + " " + addComp.streetNumber;
+            document.getElementById('selectaddreess').value = adds;
+
+        });
+
+    }
+    //地址定位获取坐标
+    function dingwei(adress) {
+        var adr = document.getElementById('addr').value = adress;
+        //if (adr == '') {
+        //    alert('请输入正确地址');
+        //    document.getElementById('addr').focus();
+        //    return;
+        //}
+        var myGeo = new BMap.Geocoder();
+        myGeo.getPoint(adr, function (point) {
+            if (point) {
+                p2 = point;
+                map.centerAndZoom(p2, 13);
+                map.clearOverlays();
+                addMarker(p2);
+                document.getElementById('lng').value = "" + point.lng + "";
+                document.getElementById('lat').value = "" + point.lat + "";
+
+                //根据经纬度获取详细地址
+                //var geoc = new BMap.Geocoder();
+                //var pt = point;
+                //geoc.getLocation(pt, function (rs) {
+                //    var addComp = rs.addressComponents;
+                //    //地址名称
+                //    //alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+                //   var aa= addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber;
+
+                //   alert(aa);
+
+                //});
+            }
+            else {
+                alert("对不起，自动定位方式获取不到您的位置！")
+            }
+        }, cityName);
+
+    }
+
+</script>

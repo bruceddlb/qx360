@@ -1,0 +1,187 @@
+﻿@{
+    ViewBag.Title = "财务列表";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+        $("#btn_setTime").bind("click", function () {
+            $("#SelectedStartTime").html($("#StartTime").val());
+            $("#SelectedEndTime").html($("#EndTime").val());
+            $("#timepanel").css({ "display": "none" });
+        })
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $("#gridTable").setGridHeight($(window).height() - 160);
+            }, 200);
+            e.stopPropagation();
+        });
+        $("#SourceType").val($("#source_horizon a:eq(0)").attr('data-value'));
+        $("#source_horizon a.btn-default").removeClass("active");
+        $("#source_horizon a:eq(0)").addClass("active");
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $("#gridTable");
+        var queryJson = {};
+        $("#SourceType").val("");
+        $("#StartTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+        $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+        queryJson["SourceType"] = $("#SourceType").val();
+        queryJson["StartTime"] = $("#StartTime").val();
+        queryJson["EndTime"] = $("#EndTime").val();
+        $gridTable.jqGrid({
+            url: "/QX360Manage/Finace/GetPageListJson",
+            datatype: "json",
+            postData: { queryJson: JSON.stringify(queryJson) },
+            height: $(window).height() - 160,
+            autowidth: true,
+            colModel: [
+                { label: '主键', name: 'FinaceId', hidden: true },
+                { label: '分类', name: 'SourceTypeName', ItemNameindex: 'SourceTypeName', width: 200, align: 'center', sortable: true },
+                { label: '支付方式', name: 'PayTypeName', index: 'PayTypeName', width: 200, align: 'center', sortable: true },
+                { label: '创建时间', name: 'CreateTime', index: 'CreateTime', width: 150, align: 'center', sortable: true },
+                { label: '名称|对方|交易号', name: 'Remark', index: 'Remark', width: 200, align: 'center', sortable: true },
+                { label: '金额', name: 'CosMoney', index: 'CosMoney', width: 150, align: 'center', sortable: false },
+                { label: '状态', name: 'StatusName', index: 'StatusName', width: 150, align: 'center', sortable: false },
+
+            ],
+            //multiselect: true,
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'CreateTime',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+        });
+
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {};
+            queryJson["SourceType"] = $("#SourceType").val();
+            queryJson["StartTime"] = $("#StartTime").val();
+            queryJson["EndTime"] = $("#EndTime").val();
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+        $("#btn_Reset").bind("click", function () {
+            $("#txt_Keyword").val("");
+        })
+
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+
+        //点击时间范围（今天、近7天、近一个月、近三个月）
+        $("#time_horizon a.btn-default").click(function () {
+            $("#time_horizon a.btn-default").removeClass("active");
+            $(this).addClass("active");
+            switch ($(this).attr('data-value')) {
+                case "1"://今天
+                    $("#StartTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                case "2"://近7天
+                    $("#StartTime").val("@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")");
+                    $("#EndTime").val("@DateTime.Now.ToString("yyyy-MM-dd")");
+                    break;
+                case "3"://近一月
+                    $("#StartTime").val("@DateTime.Now.ToString("yyyy-MM")");
+                    $("#EndTime").val("@DateTime.Now.AddMonths(1).ToString("yyyy-MM")");
+                    break;
+                default:
+                    break;
+            }
+            $("#SelectedStartTime").html($("#StartTime").val());
+            $("#SelectedEndTime").html($("#EndTime").val());
+
+        });
+
+        $("#source_horizon a.btn-default").click(function () {
+            $("#source_horizon a.btn-default").removeClass("active");
+            $(this).addClass("active");
+            $("#SourceType").val($(this).attr('data-value'));
+        });
+    }
+</script>
+<div class="toolbarPanel">
+    <div class="row" style="padding-bottom:20px;">
+        <div class="col-md-8">
+            <input type="hidden" id="SourceType" />
+            <div id="source_horizon" class="btn-group">
+                @*<a class="btn btn-default active" data-value="">全部</a>*@
+                <a class="btn btn-default" id="A001" data-value="@((int)QX360.Model.Enums.FinaceSourceType.驾校报名)">@QX360.Model.Enums.FinaceSourceType.驾校报名.ToString()</a>
+                <a class="btn btn-default" id="A002" data-value="@((int)QX360.Model.Enums.FinaceSourceType.陪驾报名)">@QX360.Model.Enums.FinaceSourceType.陪驾报名.ToString()</a>
+                <a class="btn btn-default" id="A003" data-value="@((int)QX360.Model.Enums.FinaceSourceType.实训报名)">@QX360.Model.Enums.FinaceSourceType.实训报名.ToString()</a>
+                <a class="btn btn-default" id="A004" data-value="@((int)QX360.Model.Enums.FinaceSourceType.年检预约)">@QX360.Model.Enums.FinaceSourceType.年检预约.ToString()</a>
+                <a class="btn btn-default" id="A005" data-value="@((int)QX360.Model.Enums.FinaceSourceType.代审预约)">@QX360.Model.Enums.FinaceSourceType.代审预约.ToString()</a>
+            </div>
+            <script>$('#source_horizon').authorizeButton()</script>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2">
+            <div class="ui-filter" style="width: 200px;">
+                <div class="ui-filter-text">
+                    <strong id="SelectedStartTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong> 至 <strong id="SelectedEndTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong>
+                </div>
+                <div class="ui-filter-list" style="width: 350px;" id="timepanel">
+                    <table class="form" id="filter-form">
+                        <tr>
+                            <th class="formTitle">时间：</th>
+                            <td class="formValue">
+                                <div style="float: left; width: 45%;">
+                                    <input id="StartTime" readonly type="text" value="@QSDMS.Util.Time.GetDate(-1)" class="form-control input-wdatepicker" onfocus="WdatePicker({maxDate:'%y-%M-%d'})">
+                                </div>
+                                <div style="float: left; width: 10%; text-align: center;">至</div>
+                                <div style="float: left; width: 45%;">
+                                    <input id="EndTime" readonly type="text" value="@QSDMS.Util.Time.GetToday()" class="form-control input-wdatepicker" onfocus="WdatePicker({maxDate:'%y-%M-%d'})">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="ui-filter-list-bottom">
+                        <a id="btn_setTime" class="btn btn-primary"><i class=""></i>&nbsp;确定</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div id="time_horizon" class="btn-group">
+                <a class="btn btn-default active" data-value="1">今天</a>
+                <a class="btn btn-default" data-value="2">近7天</a>
+                <a class="btn btn-default" data-value="3">近一月</a>
+            </div>
+        </div>
+        <div class="col-md-1">
+            <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+        </div>
+        <div class="toolbar">
+            <div class="btn-group animated fadeInDownBig">
+                <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+</div>

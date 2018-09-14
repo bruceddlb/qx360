@@ -1,0 +1,278 @@
+﻿@{
+    ViewBag.Title = "我的信息";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.Account = ko.observable({
+                HeadIcon: ko.observable(""),
+                ViewFaceImage: ko.observable(""),
+                MemberName: ko.observable(""),
+                NikeName: ko.observable(""),
+                Mobile: ko.observable(""),
+                MemberId: ko.observable(""),
+                LevName: ko.observable(""),
+                Point: ko.observable("0"),
+                NikeName: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                ProvinceId: ko.observable(""),
+                ProvinceName: ko.observable(""),
+                CityId: ko.observable(""),
+                CityName: ko.observable(""),
+                CountyId: ko.observable(""),
+                CountyName: ko.observable(""),
+                AreaInfo: ko.observable(""),
+            });
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Account().MemberName(data.MemberName);
+                            self.Account().NikeName(data.NikeName);
+                            self.Account().Mobile(data.Mobile);
+                            self.Account().MemberId(data.MemberId);
+                            self.Account().HeadIcon(data.HeadIcon);
+                            if (data.HeadIcon) {
+                                var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + data.HeadIcon;
+                                self.Account().ViewFaceImage(newpath);
+                            } else {
+                                if (data.WxHeadIcon) {
+                                    self.Account().ViewFaceImage(data.WxHeadIcon);
+                                }
+                            }
+                            self.Account().LevName(data.LevName);
+                            self.Account().Point(data.Point);
+                            self.Account().NikeName(data.NikeName);
+                            var areainfo = "";
+                            if (data.ProvinceName) {
+                                areainfo += data.ProvinceName;
+                                self.Account().ProvinceId(data.ProvinceId);
+                                self.Account().ProvinceName(data.ProvinceName);
+                            }
+                            if (data.CityName) {
+                                areainfo += " " + data.CityName;
+                                self.Account().CityId(data.CityId);
+                                self.Account().CityName(data.CityName);
+                            }
+                            if (data.CountyName) {
+                                areainfo += " " + data.CountyName;
+                                self.Account().CountyId(data.CountyId);
+                                self.Account().CountyName(data.CountyName);
+                            }
+                            self.Account().AreaInfo(areainfo);
+
+                            self.Account().AddressInfo(data.AddressInfo);
+
+                        }
+                    }
+                });
+            }
+            self.Save = function () {
+                if (!self.Account().MemberName()) {
+                    ShowTips("请输入姓名");
+                    return;
+                }
+                var tel = self.Account().Mobile();
+                if (!tel) {
+                    ShowTips("请输入联系电话");
+                    return;
+                }
+                //var isPhone = /^([0-9]{3,4}-)?[0-9]{7,8}$/;
+                var isMob = /^(((13[0-9]{1})|(15[0-9]{1})|(17[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+                if (isMob.test(tel)) {
+
+                } else {
+                    ShowTips("请输入正确的手机号码");
+                    return;
+                }
+                var $target = $(event.target);
+                $target.attr('disabled', 'disabled');
+
+                $.post("/Account/UpdateInfo", { json: ko.toJSON(self.Account()) }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, 1);
+                        setTimeout(function () {
+                            window.location.href = "/MyCenter/Index";
+                        }, 200)
+
+                    }
+                    else {
+                        ShowTips(result.Message);
+                        $target.removeAttr('disabled');
+                    }
+                })
+            }
+
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+            model.BindUser();
+
+            $('#uploadFile_FaceLogo').change(function () {
+                var f = document.getElementById('uploadFile_FaceLogo').files[0];
+                var src = window.URL.createObjectURL(f);
+                //document.getElementById('uploadPreview').src = src;
+                var formData = new FormData();
+                //为FormData对象添加数据
+                $.each($('#uploadFile_FaceLogo')[0].files, function (i, file) {
+                    formData.append('file', file);
+                });
+                //上传应用图标
+                $.ajax({
+                    url: "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]/Upload/UploadFile",
+                    type: 'POST',
+                    data: formData,
+                    async: false,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        if (data && data.IsSuccess) {
+                            var path = data.ResultData["files"];
+                            var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                            model.Account().HeadIcon(path);
+                            model.Account().ViewFaceImage(newpath);
+                        }
+                        else {
+                            alert(data.Message);
+                        }
+                    }
+                });
+            });
+
+
+            //选择区域
+            var iosProvinces = GetAreaData(1);
+            var iosCitys = GetAreaData(2);
+            var iosCountys = GetAreaData(3);
+            var selectContactDom = $('#select_area');
+            var showContactDom = $('#select_area');
+            var contactProvinceCodeDom = $('#contact_province_code');
+            var contactCityCodeDom = $('#contact_city_code');
+            selectContactDom.bind('click', function () {
+                var oneLevelId = showContactDom.attr('data-province-code');
+                if (!oneLevelId) {
+                    oneLevelId = model.Account().ProvinceId();
+                }
+                var twoLevelId = showContactDom.attr('data-city-code');
+                if (!twoLevelId) {
+                    twoLevelId = model.Account().CityId();
+                }
+                var threeLevelId = showContactDom.attr('data-district-code');
+
+                if (!threeLevelId) {
+                    threeLevelId = model.Account().CountyId();
+                }
+                var iosSelect = new IosSelect(3,
+                    [iosProvinces, iosCitys, iosCountys],
+                    {
+                        title: '选择省市',
+                        itemHeight: 35,
+                        relation: [1, 1],
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                            showContactDom.attr('data-province-code', selectOneObj.id);
+                            showContactDom.attr('data-city-code', selectTwoObj.id);
+                            showContactDom.attr('data-district-code', selectThreeObj.id);
+                            var area = selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value;
+                            selectContactDom.val(area);
+                            if (selectOneObj.id) {
+                                model.Account().ProvinceId(selectOneObj.id);
+                                model.Account().ProvinceName(selectOneObj.value);
+                            }
+                            if (selectTwoObj.id) {
+                                model.Account().CityId(selectTwoObj.id);
+                                model.Account().CityName(selectTwoObj.value);
+                            }
+                            if (selectThreeObj.id) {
+                                model.Account().CountyId(selectThreeObj.id);
+                                model.Account().CountyName(selectThreeObj.value);
+                            }
+                            model.Account().AreaInfo(area);
+                        }
+                    });
+            });
+        });
+        //获取区域信息
+        function GetAreaData(layer) {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Area/GetAreaList",
+                async: false,
+                data: { layer: layer },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.AreaId,
+                                "value": item.AreaName,
+                                "parentId": item.ParentId
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+    </script>
+}
+<ul class="Mcin_ul">
+
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">头像</span>
+        <font class="Mcin_list_right">
+            <i class="iconfont icon-jiantou Mcin_mm_i"></i>
+            <span class="Mcin_mm2">
+                <img data-bind="attr:{src:$root.Account().ViewFaceImage()==''?'/images/face.png':$root.Account().ViewFaceImage}">
+                <input type="file" class="Mcin_file" name="uploadFile_FaceLogo" id="uploadFile_FaceLogo">
+            </span>
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">账户名</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" data-bind="value:$root.Account().MemberName" readonly>
+
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">姓名</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" data-bind="value:$root.Account().MemberName">
+
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">手机号</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" data-bind="value:$root.Account().Mobile">
+
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">省市</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" placeholder="请选择省市区" id="select_area" data-bind="value: $root.Account().AreaInfo" readonly>
+            <i class="iconfont icon-jiantou"></i>
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">详细地址</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" placeholder="请输入详细地址" data-bind="value:$root.Account().AddressInfo" />
+        </font>
+    </li>
+</ul>
+
+<div class="Mcin_btn"><button type="button" class="Mcin_botton2" data-bind="click:function(){$root.Save();}">保存修改</button></div>
+

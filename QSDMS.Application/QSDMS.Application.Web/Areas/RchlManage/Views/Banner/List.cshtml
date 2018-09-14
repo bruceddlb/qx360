@@ -1,0 +1,151 @@
+﻿@{
+    ViewBag.Title = "Banner";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+       
+    });
+    //初始化页面
+    function InitialPage() {      
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $("#gridTable").setGridHeight($(window).height() - 141);
+
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $grid = $("#gridTable");
+        $grid.jqGrid({
+            url: contentPath + "/QX360Manage/Banner/GetPageListJson",
+            datatype: "json",
+            height: $(window).height() - 220,
+            autowidth: true,
+            colModel: [
+                { label: '主键', name: 'BannerId', hidden: true },
+                 {
+                     label: "缩略图", name: "ImgPath", index: "ImgPath", width: 80, align: "center", autowidth: false, sortable: false,
+                     formatter: function (cellvalue, options, rowObject) {
+                         if (cellvalue) {
+                             return '<a class="magnifier" href="' + cellvalue + '"><img src="' + cellvalue + '" style="width:30px;height:30px;"/></a>';
+                         } else {
+                             return '';
+                         }
+                     }
+                 },
+                { label: '标题', name: 'Name', index: 'Name', width: 200, align: 'center' },
+                { label: '连接地址', name: 'HrefUrl', index: 'HrefUrl', width: 200, align: 'center' },
+                { label: '备注', name: 'Remark', index: 'Remark', align: 'center' },
+
+            ],
+            rowNum: "10000",
+            rownumbers: true,
+            viewrecords: true,
+            rowNum: 20,
+            rowList: [10, 20, 30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'CreateTime',
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $("#" + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $("#" + this.id).setSelection(selectedRowIndex, false);
+                //查看图片
+                jQuery('.magnifier').touchTouch();
+            }
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            $grid.jqGrid('setGridParam', {
+                // postData: { queryJson: JSON.stringify(queryJson) },
+                postData: { keyword: $("#txt_Keyword").val() },
+                page: 1
+            }).trigger('reloadGrid');
+        });
+    }
+    //新增
+    function btn_add() {
+        dialogOpen({
+            id: "Form",
+            title: '添加',
+            url: '/QX360Manage/Banner/Form',
+            width: "1000px",
+            height: "630px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    };
+    //编辑
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue("BannerId");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "Form",
+                title: '修改',
+                url: '/QX360Manage/Banner/Form?keyValue=' + keyValue,
+                width: "1000px",
+                height: "630px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $("#gridTable").jqGridRowValue("BannerId");
+        if (keyValue) {
+            $.RemoveForm({
+                url: contentPath + "/QX360Manage/Banner/RemoveForm",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#gridTable").trigger("reloadGrid");
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的信息！', 0);
+        }
+    }
+
+</script>
+<div class="row">
+    <div class="toolbarPanel">
+        <div class="row">
+
+            <div class="col-md-2">
+                <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" style="" />
+            </div>
+
+            <div class="col-md-1">
+                <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+            </div>
+
+            <div class="toolbar">
+                <div class="btn-group animated fadeInDownBig">
+                    <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                    <a id="btn-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                    <a id="btn-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                    <a id="btn-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+        <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+    </div>
+</div>

@@ -1,0 +1,155 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+
+    });
+
+
+    //初始化数据
+    function InitControl() {
+      
+        ////所属驾校
+        $("#ddlSchool").ComboBox({
+            url: "/QX360Manage/School/GetDataListJson",
+            param: null,
+            id: "SchoolId",
+            text: "Name",
+            description: "==请选择所属驾校==",
+            height: "200px",
+            allowSearch: true
+        }).bind("change", function () {
+            $("#ddlTeacher").attr("data-value", "").attr("data-text","").text("");
+            var value = $(this).attr('data-value');
+            var queryJson = {};
+            queryJson["schoolid"] = value;
+                $("#ddlTeacher").ComboBox({
+                    url: "/QX360Manage/Teacher/GetListJson",
+                    param: { queryJson: JSON.stringify(queryJson) },
+                    id: "TeacherId",
+                    text: "Name",
+                    description: "==请选择教练==",
+                    height: "170px"
+                });
+        });
+        //城市
+        $("#ddlTeacher").ComboBox({
+            description: "==请选择教练==",
+            height: "170px"
+        })
+
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/WithDrivingOrder/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);                       
+                        if (data.SchoolId) {
+                            $("#ddlSchool").ComboBoxSetValue(data.SchoolId);
+                            $("#ddlSchool").trigger("change");
+                        }
+                        if (data.TeacherId) {
+                            $("#ddlTeacher").ComboBoxSetValue(data.TeacherId);
+                        }
+                        if (data.ServiceDate)
+                        {
+                            $("#ServiceDate").val(formatDate(data.ServiceDate, 'yyyy-MM-dd'));
+                        }
+                    }
+                }
+            });
+        }
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["TeacherId"] = $("#ddlTeacher").attr('data-value');
+        postData["TeacherName"] = $("#ddlTeacher").attr('data-text');
+        postData["SchoolId"] = $("#ddlSchool").attr('data-value');
+        postData["SchoolName"] = $("#ddlSchool").attr('data-text');
+        postData["StudyType"] = $("#ddlType").attr('data-text');
+        
+        $.SaveForm({
+            url: "/QX360Manage/WithDrivingOrder/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $(window).resize(function (e) {
+        });
+
+    }
+
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">       
+        <tr>
+            <td class="formTitle"> 预约日期<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="ServiceDate" type="text" class="form-control input-profile" onfocus="WdatePicker({dateFmt:'yyyy-MM-dd'})" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 预约时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="ServiceTime" type="text" class="form-control input-profile"  />
+            </td>
+        </tr>        
+        <tr>
+            <td class="formTitle">预约驾校<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlSchool" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">预约教练<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlTeacher" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">是否带车</td>
+            <td class="formValue">
+                <div class="checkbox">
+                    <label>
+                        <input id="IsBandCar" type="checkbox" checked="checked" />
+                        是
+                    </label>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 费用<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Price" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+    </table>
+</div>
+

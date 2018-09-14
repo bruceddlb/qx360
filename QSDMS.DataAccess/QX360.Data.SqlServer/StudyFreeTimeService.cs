@@ -1,0 +1,123 @@
+﻿using QSDMS.Util;
+using QSDMS.Util.WebControl;
+using QX360.Data.IServices;
+using QX360.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace QX360.Data.SqlServer
+{
+
+    /// <summary>
+    /// 空闲时间
+    /// </summary>
+    public class StudyFreeTimeService : BaseSqlDataService, IStudyFreeTimeService<StudyFreeTimeEntity, StudyFreeTimeEntity, Pagination>
+    {
+        public int QueryCount(StudyFreeTimeEntity para)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<StudyFreeTimeEntity> GetPageList(StudyFreeTimeEntity para, ref Pagination pagination)
+        {
+            var sql = new StringBuilder();
+            sql.Append(@"select * from tbl_StudyFreeTime");
+            string where = ConverPara(para);
+            if (!string.IsNullOrEmpty(where))
+            {
+                sql.AppendFormat(" where 1=1 {0}", where);
+            }
+            if (!string.IsNullOrWhiteSpace(pagination.sidx))
+            {
+                sql.AppendFormat(" order by {0} {1}", pagination.sidx, pagination.sord);
+            }
+            var currentpage = tbl_StudyFreeTime.Page(pagination.page, pagination.rows, sql.ToString());
+            //数据对象
+            var pageList = currentpage.Items;
+            //分页对象
+            pagination.records = Converter.ParseInt32(currentpage.TotalItems);
+            return EntityConvertTools.CopyToList<tbl_StudyFreeTime, StudyFreeTimeEntity>(pageList.ToList());
+        }
+
+        public List<StudyFreeTimeEntity> GetList(StudyFreeTimeEntity para)
+        {
+            var sql = new StringBuilder();
+            sql.Append(@"select * from tbl_StudyFreeTime");
+            string where = ConverPara(para);
+            if (!string.IsNullOrEmpty(where))
+            {
+                sql.AppendFormat(" where 1=1 {0}", where);
+            }
+            var list = tbl_StudyFreeTime.Query(sql.ToString());
+            return EntityConvertTools.CopyToList<tbl_StudyFreeTime, StudyFreeTimeEntity>(list.ToList());
+        }
+
+        public StudyFreeTimeEntity GetEntity(string keyValue)
+        {
+            var model = tbl_StudyFreeTime.SingleOrDefault("where StudyFreeTimeId=@0", keyValue);
+            return EntityConvertTools.CopyToModel<tbl_StudyFreeTime, StudyFreeTimeEntity>(model, null);
+        }
+
+        public bool Add(StudyFreeTimeEntity entity)
+        {
+            var model = EntityConvertTools.CopyToModel<StudyFreeTimeEntity, tbl_StudyFreeTime>(entity, null);
+            model.Insert();
+            return true;
+        }
+
+        public bool Update(StudyFreeTimeEntity entity)
+        {
+
+            var model = tbl_StudyFreeTime.SingleOrDefault("where StudyFreeTimeId=@0", entity.StudyFreeTimeId);
+            model = EntityConvertTools.CopyToModel<StudyFreeTimeEntity, tbl_StudyFreeTime>(entity, model);
+            int count = model.Update();
+            if (count > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public bool Delete(string keyValue)
+        {
+            int count = tbl_StudyFreeTime.Delete("where StudyFreeTimeId=@0", keyValue);
+            if (count > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public string ConverPara(StudyFreeTimeEntity para)
+        {
+            StringBuilder sbWhere = new StringBuilder();
+
+            if (para == null)
+            {
+                return sbWhere.ToString();
+            }
+            if (para.StudyFreeDateId != null)
+            {
+                sbWhere.AppendFormat(" and StudyFreeDateId='{0}'", para.StudyFreeDateId);
+            }
+            if (para.FreeStatus != null)
+            {
+                sbWhere.AppendFormat(" and FreeStatus='{0}'", para.FreeStatus);
+            }
+            if (para.WorkTimeTableId != null)
+            {
+                sbWhere.AppendFormat(" and WorkTimeTableId='{0}'", para.WorkTimeTableId);
+            }
+
+            return sbWhere.ToString();
+        }
+
+        public int ClearData()
+        {
+            return QX360_SQLDB.GetInstance().Execute("delete from tbl_StudyFreeTime", null);
+        }
+    }
+}

@@ -1,0 +1,508 @@
+﻿@{
+    ViewBag.Title = "个人中心";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.Account = ko.observable({
+                FaceImage: ko.observable(""),
+                MemberName: ko.observable(""),
+                Mobile: ko.observable(""),
+                MemberId: ko.observable(""),
+                IsOwner: ko.observable(""),
+                LevName: ko.observable(""),
+                Point: ko.observable("0"),
+                NikeName: ko.observable(""),
+                OpenId: ko.observable(""),
+            });
+            self.Owner = ko.observable({
+                OwnerId: ko.observable(""),
+                CarNumber: ko.observable(""),
+                CarColor: ko.observable(""),
+                MemberId: ko.observable(""),
+                MemberName: ko.observable(""),
+                MemberMobile: ko.observable(""),
+                CarFrameNum: ko.observable(""),
+                RegisterTime: ko.observable(""),
+                UseType: ko.observable(""),
+                UseTypeName: ko.observable(""),
+                CarType: ko.observable(""),
+                CarTypeName: ko.observable(""),
+                PeopleCount: ko.observable(""),
+            });
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Account().MemberName(data.MemberName);
+                            self.Account().Mobile(data.Mobile);
+                            self.Account().MemberId(data.MemberId);
+                            if (data.HeadIcon) {
+                                var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + data.HeadIcon;
+                                self.Account().FaceImage(newpath);
+                            } else {
+                                if (data.WxHeadIcon) {
+                                    self.Account().FaceImage(data.WxHeadIcon);
+                                }
+                            }
+
+                            if (data.Owner) {
+                                self.Account().IsOwner("1");
+                            } else {
+                                self.Account().IsOwner("0");
+                            }
+
+                            self.Account().LevName(data.LevName);
+                            self.Account().Point(data.Point);
+                            self.Account().NikeName(data.NikeName);
+                            self.Account().OpenId(data.OpenId);
+                            if (data.Owner) {
+                                var cararea = data.Owner.CarNumber.substring(0, 1);
+                                $("#ddlCarArea").val(cararea);
+                                var carnum = data.Owner.CarNumber.substring(1, data.Owner.CarNumber.length);
+                                $("#txtCarNum").val(carnum);
+                                self.Owner().CarNumber(cararea + carnum);
+                                self.Owner().MemberId(data.Owner.MemberId);
+                                self.Owner().MemberName(data.Owner.MemberName);
+                                self.Owner().CarColor(data.Owner.CarColor);
+                                self.Owner().CarFrameNum(data.Owner.CarFrameNum);
+                                self.Owner().MemberMobile(data.Owner.MemberMobile);
+                                self.Owner().UseType(data.Owner.UseType);
+                                self.Owner().UseTypeName(data.Owner.UseTypeName);
+                                self.Owner().CarType(data.Owner.CarType);
+                                self.Owner().CarTypeName(data.Owner.CarTypeName);
+                                self.Owner().PeopleCount(data.Owner.PeopleCount);
+                                if (data.Owner.RegisterTime) {
+                                    self.Owner().RegisterTime(formatDate(data.Owner.RegisterTime, "yyyy-MM"));
+                                }
+                            } else {
+                                self.Owner().MemberId(data.MemberId);
+                                self.Owner().MemberName(data.MemberName);
+                                self.Owner().MemberMobile(data.Mobile);
+                            }
+                        }
+
+                        //车主认证弹窗
+                        $('.McMy_top_span2').on('click', function () {
+                            $('.Mcc_back').show();
+                            $('.Mccpopup').show();
+                        })
+                        $('.McMy_top_span').on('click', function () {
+                            $('.Mcc_back').show();
+                            $('.Mccpopup').show();
+                        })
+                        $('.Mccpopup_close').on('click', function () {
+                            $('.Mcc_back').hide();
+                            $('.Mccpopup').hide();
+                        })
+                    }
+                });
+            }
+
+            //设置车主信息
+            self.SetOwner = function () {
+                self.Owner().CarNumber($("#ddlCarArea").val() + $("#txtCarNum").val());
+                if (!self.Owner().UseType()) {
+                    ShowTips("请选择车辆使用性质!");
+                    return;
+                }
+                if (!self.Owner().CarType()) {
+                    ShowTips("请选择车辆类型!");
+                    return;
+                }
+                if (!self.Owner().CarFrameNum()) {
+                    ShowTips("请填写车架号后四位!");
+                    return;
+                }
+                if (!self.Owner().CarNumber()) {
+                    ShowTips("请填写车牌号!");
+                    return;
+                }
+                if (!self.Owner().MemberMobile()) {
+                    ShowTips("请填写联系方式!");
+                    return;
+                }
+               
+                $.post("/Owner/CreateOwner", { "data": ko.toJSON(self.Owner()) }, function (result) {
+                    if (result.IsSuccess) {
+                        self.Account().IsOwner("1");
+                        $(".Mccpopup_close").trigger("click");
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+        }
+
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+            model.BindUser();
+
+
+            //选择时间
+            var selectDateDom = $('#AsTime');
+            var showDateDom = $('#AsTime');
+            // 初始化时间
+            var now = new Date();
+            var nowYear = now.getFullYear();
+            var nowMonth = now.getMonth() + 1;
+            var nowDate = now.getDate();
+            showDateDom.attr('data-year', nowYear);
+            showDateDom.attr('data-month', nowMonth);
+            showDateDom.attr('data-date', nowDate);
+            // 数据初始化
+            function formatYear(nowYear) {
+                var arr = [];
+                for (var i = nowYear - 20; i <= nowYear + 20; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '年'
+                    });
+                }
+                return arr;
+            }
+            function formatMonth() {
+                var arr = [];
+                for (var i = 1; i <= 12; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '月'
+                    });
+                }
+                return arr;
+            }
+            function formatDate(count) {
+                var arr = [];
+                for (var i = 1; i <= count; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '日'
+                    });
+                }
+                return arr;
+            }
+            var yearData = function (callback) {
+                callback(formatYear(nowYear))
+            }
+            var monthData = function (year, callback) {
+                callback(formatMonth());
+            };
+            var dateData = function (year, month, callback) {
+                if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                    callback(formatDate(31));
+                }
+                else if (/^(4|6|9|11)$/.test(month)) {
+                    callback(formatDate(30));
+                }
+                else if (/^2$/.test(month)) {
+                    if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                        callback(formatDate(29));
+                    }
+                    else {
+                        callback(formatDate(28));
+                    }
+                }
+                else {
+                    throw new Error('month is illegal');
+                }
+            };
+            selectDateDom.bind('click', function () {
+                var oneLevelId = showDateDom.attr('data-year');
+                var twoLevelId = showDateDom.attr('data-month');
+                var threeLevelId = showDateDom.attr('data-date');
+                var iosSelect = new IosSelect(2,
+                    [yearData, monthData, dateData],
+                    {
+                        title: '选择车辆初次登记日期',
+                        itemHeight: 35,
+                        itemShowCount: 9,
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj, selectFourObj, selectFiveObj) {
+                            showDateDom.attr('data-year', selectOneObj.id);
+                            showDateDom.attr('data-month', selectTwoObj.id);
+                            showDateDom.attr('data-date', selectThreeObj.id);
+                            selectDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value);
+                            if (selectOneObj.value && selectTwoObj.value && selectThreeObj.value) {
+                                var date = selectOneObj.value.replace("年", '') + "-" + selectTwoObj.value.replace("月", '');
+                                model.Owner().RegisterTime(date);
+                            }
+
+                        }
+                    });
+            });
+
+
+            //使用性质
+            var useType_show = $('#usetype');
+            var usetypedata = GetUseTypeList();
+            useType_show.bind('click', function () {
+                var bankSelect = new IosSelect(1,
+                    [usetypedata],
+                    {
+                        container: '.container',
+                        title: '选择车辆使用性质',
+                        itemHeight: 50,
+                        itemShowCount: 3,
+                        oneLevelId: model.Owner().UseType(),
+                        callback: function (selectOneObj) {
+                            useType_show.val(selectOneObj.value);
+                            model.Owner().UseType(selectOneObj.id);
+                            model.Owner().UseTypeName(selectOneObj.value);
+                        }
+                    });
+            });
+            var carType_show = $('#cartype');
+            var cartypedata = GetCarTypeList();
+            carType_show.bind('click', function () {
+
+                var bankSelect = new IosSelect(1,
+                    [cartypedata],
+                    {
+                        container: '.container',
+                        title: '选择车辆类型',
+                        itemHeight: 50,
+                        itemShowCount: 3,
+                        oneLevelId: model.Owner().CarType(),
+                        callback: function (selectOneObj) {
+                            carType_show.val(selectOneObj.value);
+                            model.Owner().CarType(selectOneObj.id);
+                            model.Owner().CarTypeName(selectOneObj.value);
+                        }
+                    });
+            });
+            //选择车牌所属区域
+            var areadata = GetCarArea();
+            if (areadata) {
+                var $ddlCarArea = $("#ddlCarArea");
+                for (var i = 0; i < areadata.length; i++) {
+                    $ddlCarArea.append("<option value='" + areadata[i].value + "'>" + areadata[i].value + "</option>")
+                }
+            }
+        });
+
+        function GetUseTypeList() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetUseType",
+                //async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+        function GetCarTypeList() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetCarType",
+                //async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+        function GetCarArea() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetDataItem",
+                async: false,
+                data: { EnCode: "cararea" },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+    </script>
+}
+
+<div class="Mcc_back"></div>
+<div class="Mccpopup">
+    <div class="Mccpopup_h2">车主认证</div>
+    <div class="Mccpopup_txt">
+        <input type="text" placeholder="请选择车辆使用性质" id="usetype" class="Vsl_text" data-bind="value: $root.Owner().UseTypeName" readonly />
+        <input type="text" placeholder="请选择车辆类型" id="cartype" class="Vsl_text" data-bind="value: $root.Owner().CarTypeName" readonly />
+        <input type="text" placeholder="请填写车架号后四位" class="Mcc_text" data-bind="value: $root.Owner().CarFrameNum">
+        <input type="text" placeholder="请填写核载人数" class="Vsl_text" data-bind="value: $root.Owner().PeopleCount" />
+        <div style="padding:5px" class="Vsl_text"><span class="" style="float:left;line-height:30px"><select style="font-weight:bold" id="ddlCarArea" class=""></select></span><input style="float:left;margin-left:10px; line-height:30px" type="text" placeholder="请填写您的车牌号" class="" id="txtCarNum" /></div>
+        <input type="text" placeholder="请填写联系方式" class="Mcc_text" data-bind="value: $root.Owner().MemberMobile">
+        <input type="text" placeholder="请选择车辆注册日期" id="AsTime" class="Vsl_text" data-bind="value: $root.Owner().RegisterTime" readonly />
+        <div class="Mcc_sub"><button type="button" class="Mcc_button" data-bind="click:function(){SetOwner()}">提交</button></div>
+    </div>
+    <div class="Mccpopup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+
+<div class="McMy_top">
+    <img data-bind="attr:{src:$root.Account().FaceImage()==null?'/images/face.png':$root.Account().FaceImage}" class="McMy_top_left">
+    <div class="McMy_top_right">
+        <div class="McMy_top_name" data-bind="text:$root.Account().MemberName"></div>
+        <div class="McMy_top_tel" data-bind="text:$root.Account().Mobile"></div>
+        <div class="McMy_top_sm">
+            <span><i class="iconfont icon-huiyuan"></i><em data-bind="text:$root.Account().LevName"></em></span>
+            <!--ko if:$root.Account().IsOwner()==1-->
+            <span class="McMy_top_span"><i class="iconfont icon-yanzhengma1"></i>车主已认证</span>
+            <!--/ko-->
+            <!--ko if:$root.Account().IsOwner()!=1-->
+            <span class="McMy_top_span2"><i class="iconfont icon-yanzhengma1"></i>车主未认证</span>
+            <!--/ko-->
+        </div>
+    </div>
+</div>
+
+<ul class="McMy_ul">
+    <li class="McMy_list">
+        <span class="McMy_list_left"><i class="iconfont icon-jifenshangcheng"></i>我的积分</span>
+        <a href="/MyCenter/Point"> <font class="McMy_list_right"><i class="iconfont icon-jiantou McMy_mm_i"></i><span class="McMy_mm" data-bind="text:$root.Account().Point()+'分'"></span></font></a>
+    </li>
+</ul>
+
+<dl class="McMy_dl">
+    <dd>
+        <a href="/MyCenter/School">
+            <span class="McMyspan1"><i class="iconfont icon-baomingjiaxiao"></i></span>
+            <font>我的驾校</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/MyCenter/LearnCar">
+            <span class="McMyspan2"><i class="iconfont icon-yuyue2"></i></span>
+            <font>学车预约</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/Exam/Index">
+            <span class="McMyspan3"><i class="iconfont icon-zikaojiazhao"></i></span>
+            <font>我的考试</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/MyCenter/Training">
+            <span class="McMyspan4"><i class="iconfont icon-iconfontzhijiaxiao"></i></span>
+            <font>实训预约</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/MyCenter/TakeAudit">
+            <span class="McMyspan5"><i class="iconfont icon-daibanshenche"></i></span>
+            <font>代审预约</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/MyCenter/WithDriving">
+            <span class="McMyspan6"><i class="iconfont icon-333-01"></i></span>
+            <font>陪驾预约</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/MyCenter/SeeCar">
+            <span class="McMyspan7"><i class="iconfont icon-che"></i></span>
+            <font>看车预约</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/MyCenter/Audit">
+            <span class="McMyspan8"><i class="iconfont icon-daiweianjianhushen"></i></span>
+            <font>年检预约</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/MyCenter/GroupAudit">
+            <span class="McMyspan8"><i class="iconfont icon-daiweianjianhushen"></i></span>
+            <font>集团年检预约</font>
+        </a>
+    </dd>
+    <dd>
+        <a href="/MyCenter/Insurance">
+            <span class="McMyspan9"><i class="iconfont icon-renzheng1"></i></span>
+            <font>保险预约</font>
+        </a>
+    </dd>
+
+</dl>
+
+<ul class="McMy_ul">
+    <li class="McMy_list">
+        <span class="McMy_list_left"><i class="iconfont icon-kttx"></i>会员中心</span>
+        <a href="/MyCenter/Vip"><font class="McMy_list_right"><i class="iconfont icon-jiantou McMy_mm_i"></i><span class="McMy_mm2">高级VIP限量预售中</span></font></a>
+    </li>
+
+    <li class="McMy_list">
+        <a href="/MyCenter/Message">
+            <span class="McMy_list_left"><i class="iconfont icon-wodexiaoxi"></i>我的消息</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+    <li class="McMy_list">
+        <a href="/MyCenter/SetUp">
+            <span class="McMy_list_left"><i class="iconfont icon-shezhi1"></i>自定义设置</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+    <li class="McMy_list">
+        <a href="/MyCenter/Complaint">
+            <span class="McMy_list_left"><i class="iconfont icon-tousu"></i>投诉建议</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+</ul>
+
+<ul class="McMy_ul">
+    <li class="McMy_list">
+        <a href="/MyCenter/Information">
+            <span class="McMy_list_left"><i class="iconfont icon-zhanghao"></i>个人信息</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+    <li class="McMy_list">
+        <a href="/MyCenter/Password">
+            <span class="McMy_list_left"><i class="iconfont icon-mima"></i>修改密码</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+    @*<li class="McMy_list">
+        <a href="" data-bind="attr:{href:'/Account/Login?sig=out&openid='+ $root.Account().OpenId()}">
+            <span class="McMy_list_left"><i class="iconfont icon-emoji"></i>退出登陆</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>*@
+</ul>

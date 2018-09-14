@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F334253F-F951-43C8-AA5E-E958B63D55A2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QX360.Data.IServices</RootNamespace>
+    <AssemblyName>QX360.Data.IServices</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="INetSiginService.cs" />
+    <Compile Include="IStudyCustomFreeTimeService.cs" />
+    <Compile Include="ITrainingCustomFreeTimeService.cs" />
+    <Compile Include="ISmsLogService.cs" />
+    <Compile Include="IAuditTimeTableService.cs" />
+    <Compile Include="IExamPlaceMasterService.cs" />
+    <Compile Include="IWithDringCommitteeService.cs" />
+    <Compile Include="IAuditFreeDateService.cs" />
+    <Compile Include="IWithDrivingFreeDateService.cs" />
+    <Compile Include="IAuditFreeTimeService.cs" />
+    <Compile Include="IWithDrivingFreeTimeService.cs" />
+    <Compile Include="IStudyFreeDateService.cs" />
+    <Compile Include="IStudyFreeTimeService.cs" />
+    <Compile Include="ITrainingFreeDateService.cs" />
+    <Compile Include="ITrainingFreeTimeService.cs" />
+    <Compile Include="ITrainingTimeTableService.cs" />
+    <Compile Include="IAuditCommitteeService.cs" />
+    <Compile Include="IGroupAuditOrderService.cs" />
+    <Compile Include="ITeacherCommitteeService.cs" />
+    <Compile Include="IStudyOrderDetailService.cs" />
+    <Compile Include="ITrainingOrderDetailService.cs" />
+    <Compile Include="IClassService.cs" />
+    <Compile Include="ICourseService.cs" />
+    <Compile Include="ICourseItemService.cs" />
+    <Compile Include="IBlackListService.cs" />
+    <Compile Include="IMonthWorkDayService.cs" />
+    <Compile Include="IWorkTimeTableService.cs" />
+    <Compile Include="IStudyCommitteeService.cs" />
+    <Compile Include="IWxUserInfoService.cs" />
+    <Compile Include="ISettingsService.cs" />
+    <Compile Include="IFinaceService.cs" />
+    <Compile Include="IOwnerService.cs" />
+    <Compile Include="IMessageSetUpService.cs" />
+    <Compile Include="IMessageService.cs" />
+    <Compile Include="ITradeLogService.cs" />
+    <Compile Include="IWxTemplateService.cs" />
+    <Compile Include="IBannerService.cs" />
+    <Compile Include="IFreeDateService.cs" />
+    <Compile Include="IFreeTimeService.cs" />
+    <Compile Include="INoticeService.cs" />
+    <Compile Include="IApplyOrderService.cs" />
+    <Compile Include="IArticleService.cs" />
+    <Compile Include="IAuditOrderService.cs" />
+    <Compile Include="IAuditOrganizationService.cs" />
+    <Compile Include="IAdviseService.cs" />
+    <Compile Include="IPointLogService.cs" />
+    <Compile Include="ITagService.cs" />
+    <Compile Include="IExamOrderService.cs" />
+    <Compile Include="IInsuranceCommpayService.cs" />
+    <Compile Include="IInsuranceOrderService.cs" />
+    <Compile Include="IMemberService.cs" />
+    <Compile Include="IRuleService.cs" />
+    <Compile Include="ISchoolService.cs" />
+    <Compile Include="ISeeCarOrderService.cs" />
+    <Compile Include="IShopService.cs" />
+    <Compile Include="IShopCarService.cs" />
+    <Compile Include="IStudyOrderService.cs" />
+    <Compile Include="ISubjectService.cs" />
+    <Compile Include="ITakeAuditOrderService.cs" />
+    <Compile Include="ITeacherService.cs" />
+    <Compile Include="ITrainingCarService.cs" />
+    <Compile Include="ITrainingOrderService.cs" />
+    <Compile Include="IWithDrivingOrderService.cs" />
+    <Compile Include="IAttachmentPicService.cs" />
+    <Compile Include="IDAL.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Report\IAuditReportService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\QSDMS.Model\QX360.Model\QX360.Model.csproj">
+      <Project>{5cb80361-b123-4494-af2c-573cfbab79f1}</Project>
+      <Name>QX360.Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

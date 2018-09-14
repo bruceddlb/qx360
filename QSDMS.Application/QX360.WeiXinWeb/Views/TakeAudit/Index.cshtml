@@ -1,0 +1,161 @@
+﻿@{
+    ViewBag.Title = "预约代审服务";
+}
+@section scripts{
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=@(QSDMS.Util.Config.GetValue("baidumap_client_key"))"></script>
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.List = ko.observableArray([]);
+            self.Lng = ko.observable("");
+            self.Lat = ko.observable("");
+            self.Type = ko.observable("2");     
+            self.BindTakeAudit = function () {
+                var queryJson = {};
+                queryJson["lat"] = self.Lat();
+                queryJson["lng"] = self.Lng();
+                queryJson["type"] = self.Type();
+                $.get("/TakeAudit/GetList", { queryJson: JSON.stringify(queryJson) }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        self.List(data);
+                    }
+                });
+            }
+        
+
+            self.VsAudit = function (id) {
+                //if (!self.Owner().CarNumber()) {
+                //    ShowTips("请先添加您的车辆信息!");
+                //    return;
+                //}
+
+                window.location.href = "/TakeAudit/VsAudit?id=" + id;
+
+            }
+          
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+            $.get("/MapPosition/GetUserPoint", null, function (result) {
+                if (result.IsSuccess) {
+                    var data = result.ResultData["Data"];
+                    var lat = data.Lat;
+                    var lng = data.Lng;
+                    if (lat) {
+                        model.Lng(lng);
+                        model.Lat(lat);
+                        model.BindTakeAudit(false);
+
+                    }
+                } else {
+
+                    //定位当前地址
+                    var geolocation = new BMap.Geolocation();
+                    geolocation.getCurrentPosition(function (r) {
+                        if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+                            //var mk = new BMap.Marker(r.point);
+                            //alert('您的位置：' + r.point.lng + ',' + r.point.lat);
+                            model.Lng(r.point.lng);
+                            model.Lat(r.point.lat);
+                            model.BindTakeAudit();
+
+                            $.post("/MapPosition/SetUserPoint", { "lat": r.point.lat, "lng": r.point.lng }, function (result) {
+
+                            });
+                        }
+                        else {
+                            alert('failed' + this.getStatus());
+                            model.BindTakeAudit(false);
+                        }
+                    },
+                    {
+                        enableHighAccuracy: true
+                    })
+                }
+            });
+
+            //完善信息弹窗
+            $('.Vsl_new').on('click', function () {
+                $('.Vsl_back').show();
+                $('.Vslpopup').show();
+            })
+            $('.Vslpopup_close').on('click', function () {
+                $('.Vsl_back').hide();
+                $('.Vslpopup').hide();
+            })
+            //排序
+            $("#ddlSort").bind("change", function () {
+                model.Type($(this).val());
+                model.BindTakeAudit();
+            })
+
+           
+        });
+
+     
+    </script>
+}
+@section css{
+    <style type="text/css">
+        .word-wrap {
+            overflow: hidden;
+            word-wrap: break-word;
+            word-break: break-all;
+            white-space: nowrap;
+            -o-text-overflow: ellipsis;
+            text-overflow: ellipsis;
+        }
+    </style>
+}
+
+<div class="VsL_vip_banner">
+    <img src="/content/images/daishen_02.jpg">
+</div>
+
+<div class="Vsl_back"></div>
+
+<div class="Vsl_top">温馨提示：仅可预约一周内的时间.</div>
+
+
+<div class="Vsl_hr">
+    <div class="Vsl_hr_left"><i class="iconfont icon-renzheng11"></i>选择代审机构</div>
+    <div class="Vsl_hr_right">
+        <select class="Vsl_select" id="ddlSort">
+            <option value="2">按默认排序</option>
+            <option value="1">按距离排序</option>
+            @*<option value="2">按价格排序</option>*@
+        </select>
+    </div>
+</div>
+
+<ul class="Vsl_dl" data-bind="foreach:List">
+    <dd>
+        <!--ko if:Status==1-->
+        <div class="Vsl_po_btn" data-bind="click:function(){$root.VsAudit(OrganizationId)}">可预约</div>
+        <!--/ko-->
+        <!--ko if:Status!=1-->
+        <div class="Vsl_po_btn2">预约满</div>
+        <!--/ko-->
+        <i class="iconfont icon-jiantou Vsl_po_icon"></i>
+        <img data-bind="attr:{src:FaceImage}" class="Vsl_dd_img">
+        <div class="Vsl_ddst">
+            <div class="Vsl_ddst_h3"><span data-bind="text:Name"></span></div>
+            <div class="Vsl_ddst_mh word-wrap" style="width: 78%;" data-bind="text:'地址：'+AddressInfo,attr:{title:AddressInfo}"></div>
+            <div class="Vsl_ddst_mh2"><i class="iconfont icon-dizhi"></i><font data-bind="text:'距您'+HowLong+'KM'"></font>&nbsp;@*<span style="color:red;float:right;margin-right:10px" data-bind="text:'￥'+MakeMoney"></span>*@</div>
+        </div>
+    </dd>
+</ul>
+
+<div class="page__bd" style="margin-bottom:80px;">
+    <div class="weui-loadmore">
+
+        <!--ko if:List().length==0-->
+        <a href="javascript:void(0);" style="color:#ccc">没有相关信息</a>
+        <!--/ko-->
+    </div>
+</div>
+

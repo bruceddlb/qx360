@@ -1,0 +1,178 @@
+﻿@{
+    ViewBag.Title = "选择地图坐标";
+    Layout = null;
+}
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>
+    <link href="~/Content/styles/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/scripts/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
+    <script src="~/Content/scripts/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <link href="~/Content/styles/animate.min.css" rel="stylesheet" />
+    <!--框架必需end-->
+    <!--bootstrap组件start-->
+    <link href="~/Content/scripts/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/scripts/bootstrap/bootstrap.extension.css" rel="stylesheet" />
+    <script src="~/Content/scripts/bootstrap/bootstrap.min.js"></script>
+
+    <script src="~/Content/scripts/utils/dms-ui.src.js"></script>
+    <script src="~/Content/scripts/utils/dms-form.src.js"></script>
+
+    <link href="~/Content/styles/dms-ui.css" rel="stylesheet" />
+    <link href="~/Content/styles/style.min.css" rel="stylesheet" />
+
+    <link href="~/Content/@QSDMS.Model.OperatorProvider.Provider.Current().Theme/style.min.css" rel="stylesheet" />
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=@(QSDMS.Util.Config.GetValue("baidumap_client_key"))"></script>
+    <script type="text/javascript">
+        $(function () {
+            //var adress = request('address');
+            //if (adress) {
+            //    adress = (adress);
+            //    dingwei(adress);
+            //}
+            $("#btn_ok").bind("click", function () {
+                var lng = $("#lng").val();
+                var lat = $("#lat").val();
+                //top.mappoint.$("#point").val(lng);
+                //查找iframe指定的id
+                var pwind = $('#Form', parent.document);
+                var $window = pwind[0].contentWindow;
+                $window.$("#point").val("经度：" + lng + ",纬度：" + lat);
+                //$window.$("#AddressInfo").val($("#selectaddreess").val());
+                $window.$("#Lng").val(lng);
+                $window.$("#Lat").val(lat);
+                dialogClose();
+            })
+        })
+    </script>
+    <style type="text/css">
+        /*body, html, #allmap {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            font-family: "微软雅黑";
+        }*/
+    </style>
+</head>
+<body>
+    <input type="hidden" name="" id="lng" size="15" onkeypress="if(event.keyCode == 13) return false;">
+    <input type="hidden" name="" id="lat" size="15" onkeypress="if(event.keyCode == 13) return false;">
+    <input type="hidden" id="zoom" name="zoom" value="15" size="5">
+    <!-- 地图那区域 -->
+    <div id="content" style="width: 100%; height: 450px; margin: 0 auto; border: 1px solid #d3d3d3;">
+        <div style="float: left; height: 460px; width: 100%; display: -webkit-box; overflow: hidden; " id="l-map"></div>
+    </div>
+    <div class="clear"></div>
+    <!-- 地图那区域 -->
+    <div style="text-align:right;margin-right:10px;margin-top:50px;">
+        <a id="btn_ok" class="btn btn-success"> 确定</a>
+    </div>
+</body>
+</html>
+<script type="text/javascript">
+    var x = request('x');
+    var y = request('y');
+    var map = new BMap.Map("l-map");
+    var myIcon = new BMap.Icon("http://api.map.baidu.com/img/markers.png", new BMap.Size(23, 25), {
+        offset: new BMap.Size(10, 25), // 指定定位位置
+        imageOffset: new BMap.Size(0, 0 - 10 * 25) // 设置图片偏移
+    });
+    if (x && y) {
+        SetLocation(x, y);
+    } else {
+        //根据浏览器定位
+        var geolocation = new BMap.Geolocation();
+        geolocation.getCurrentPosition(function (r) {
+            if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+                map.centerAndZoom(r.point, 15);
+                map.enableScrollWheelZoom();
+                //添加缩略图控件
+                map.addControl(new BMap.OverviewMapControl({ isOpen: false, anchor: BMAP_ANCHOR_BOTTOM_RIGHT }));
+                //添加缩放平移控件
+                map.addControl(new BMap.NavigationControl());
+                //添加比例尺控件
+                map.addControl(new BMap.ScaleControl());
+
+
+                var mk = new BMap.Marker(r.point, { icon: myIcon });
+                mk.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的标注
+                map.addOverlay(mk);
+                map.panTo(r.point);
+
+            }
+            else {
+                alert('failed' + this.getStatus());
+            }
+        });
+    }
+    // 用经纬度设置地图中心点
+    function SetLocation(x, y) {
+        if (x != "" && y != "") {
+
+            var new_point = new BMap.Point(x, y);
+            map.centerAndZoom(new_point, 15);
+            map.enableScrollWheelZoom();
+            //添加缩略图控件
+            map.addControl(new BMap.OverviewMapControl({ isOpen: false, anchor: BMAP_ANCHOR_BOTTOM_RIGHT }));
+            //添加缩放平移控件
+            map.addControl(new BMap.NavigationControl());
+            //添加比例尺控件
+            map.addControl(new BMap.ScaleControl());
+
+
+            var marker = new BMap.Marker(new_point);  // 创建标注
+            map.addOverlay(marker);              // 将标注添加到地图中
+            map.panTo(new_point);
+        }
+    }
+
+    function 隐藏(id) {
+        $('#' + id).css("display", "none");
+    }
+    function Set一堆样式(Obj, Attr) {
+        $(Obj).css(Attr);
+    }
+    var menu = new BMap.ContextMenu();
+    var txtMenuItem = [
+		{
+		    text: 'By Df',
+		    callback: function () { map.zoomIn() }
+		}
+    ];
+    for (var i = 0; i < txtMenuItem.length; i++) {
+        menu.addItem(new BMap.MenuItem(txtMenuItem[i].text, txtMenuItem[i].callback, 100));
+    }
+    $("body").append("<div id='map_Loading'></div>");
+    $("#map_Loading").html("地图加载中...");
+    Set一堆样式("#map_Loading", { "position": "absolute", "left": "3px", "height": "150px", "color": "#ff0000", "top": "1px" });
+
+
+    map.addEventListener("tilesloaded", function () {
+        console.log("地图加载完毕"); map.addContextMenu(menu);
+        隐藏("map_Loading");
+    });
+
+
+    map.addEventListener('click', function (e) {
+        //alert('点击坐标: '+ e.point.lng +', '+ e.point.lat);
+        map.clearOverlays();
+
+        var mk = new BMap.Marker(e.point, { icon: myIcon });
+        map.addOverlay(mk);
+        map.panTo(e.point);
+        document.getElementById('lng').value = "" + e.point.lng + "";
+        document.getElementById('lat').value = "" + e.point.lat + "";
+        //$.post('/Mall/My/ChangePoint?n='+Math.random(),{lat:e.point.lat,lng:e.point.lng},function(){
+        //    setTimeout("window.location='/Mall/Seller/Cate?n='+Math.random()",500);
+        //});
+        //window.parent.hidemap(e.point.lng + ',' + e.point.lat);
+
+    });
+
+
+
+</script>

@@ -1,0 +1,200 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+    });
+
+    //初始化数据
+    function InitControl() {
+        var queryJson = {};
+        queryJson["istraining"] = "1";
+        //所属驾校
+        $("#ddlSchool").ComboBox({
+            url: "/QX360Manage/ExamPlace/GetDataListJson",
+            param: { queryJson: JSON.stringify(queryJson) },
+            id: "SchoolId",
+            text: "Name",
+            description: "==请选择所属考场==",
+            height: "200px"
+        });
+        $("#ddlTrainingType").ComboBox({
+            url: "/DataItemEnums/GetTrainingType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择实训类型==",
+            height: "200px"
+        });
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/TrainingCar/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.SchoolId) {
+                            $("#ddlSchool").ComboBoxSetValue(data.SchoolId);
+                        }
+                        if (data.TrainingType) {
+                            $("#ddlTrainingType").ComboBoxSetValue(data.TrainingType);
+                        }
+                        //封面
+                        if (data.FaceImage) {
+                            $("#HidFaceImage").val(data.FaceImage);
+                            var host = '@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"] == "" ? string.Format("http://{0}{1}", Request.Url.Host, Request.Url.Port == 80 ? "" : ":" + Request.Url.Port) : System.Configuration.ConfigurationManager.AppSettings["ImageHost"])';
+                            document.getElementById('uploadPreview').src = host + data.FaceImage;
+                        }
+                    }
+                }
+            });
+        }
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["SchoolId"] = $("#ddlSchool").attr('data-value');
+        postData["SchoolName"] = $("#ddlSchool").attr('data-text');
+        postData["TrainingType"] = $("#ddlTrainingType").attr('data-value');
+        postData["TrainingTypeName"] = $("#ddlTrainingType").attr('data-text');
+        postData["FaceImage"] = $("#HidFaceImage").val();
+        $.SaveForm({
+            url: "/QX360Manage/TrainingCar/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+    
+    function uploadFacePic() {
+        $("#uploadPreview").unbind("click").bind("click", function () {
+            $('#uploadFaceImage').trigger("click");
+        })
+        //上传图标
+        $('#uploadFaceImage').change(function () {
+            var f = document.getElementById('uploadFaceImage').files[0];
+            var src = window.URL.createObjectURL(f);
+            document.getElementById('uploadPreview').src = src;
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFaceImage')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+
+            //上传应用图标
+            $.ajax({
+                url: "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]/Upload/UploadFile",
+                type: 'POST',
+            data: formData,
+            async: false,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                if (data && data.IsSuccess) {
+                    $("#HidFaceImage").val(data.ResultData["files"]);
+                }
+                else {
+                    alert(data.Message);
+                }
+            }
+        });
+    });
+    }
+
+    //初始化页面
+    function InitialPage() {
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+        uploadFacePic();
+
+    }
+</script>
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">车辆名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Name" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 车辆封面</td>
+            <td>
+                <input type="hidden" id="HidFaceImage" />
+                <div style="text-align: center;">
+                    <div class="" style="width: 100px; height: 100px;">
+                        <img id="uploadPreview" style="width: 100px; height: 100px; border-radius: 100px; border:0px" src="~/Content/images/add.png" />
+                        <input type="file" name="uploadFaceImage" id="uploadFaceImage" style="display:none">
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">所属考场<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlSchool" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">实训类型<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlTrainingType" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">车牌号码</td>
+            <td class="formValue">
+                <input id="CarNumber" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 排序号</td>
+            <td class="formValue">
+                <input id="SortNum" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NumOrNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">是否有效</td>
+            <td class="formValue">
+                <div class="checkbox">
+                    <label>
+                        <input id="Status" type="checkbox" checked="checked" />
+                        有效
+                    </label>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">备注</td>
+            <td class="formValue">
+                <textarea id="Remark" type="text" class="form-control input-profile" rows="4"></textarea>
+            </td>
+        </tr>
+
+    </table>
+</div>

@@ -1,0 +1,77 @@
+﻿@{
+    ViewBag.Title = "支付";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+
+    });
+
+
+    //初始化数据
+    function InitControl() {
+        $("#ddlCashtype").ComboBox({
+            url: "/DataItemEnums/GetCashType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择支付方式==",
+            height: "200px"
+        })
+
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = {};
+        postData["Cashtype"] = $("#ddlCashtype").attr('data-value');
+        postData["Price"] = $("#Price").val();
+        $.SaveForm({
+            url: "/QX360Manage/TrainingOrder/Pay?keyValue=" + keyValue,
+            param: { json: JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $(window).resize(function (e) {
+        });
+
+    }
+
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">选择支付方式<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlCashtype" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">实训费用<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Price" type="text" class="form-control input-profile" isvalid="yes" checkexpession="Double" />
+            </td>
+        </tr>
+
+    </table>
+</div>
+

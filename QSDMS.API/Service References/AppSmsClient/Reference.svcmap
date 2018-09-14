@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="03b819c1-e44a-43d7-94aa-196750ffda14" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>false</GenerateAsynchronousMethods>
+    <GenerateTaskBasedAsynchronousMethod>true</GenerateTaskBasedAsynchronousMethod>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings />
+    <GenerateSerializableTypes>true</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://192.168.1.200/AppSms.svc" Protocol="http" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="AppSms.disco" MetadataType="Disco" ID="f1eed100-1fb9-4f71-9fff-4bc038a8eeec" SourceId="1" SourceUrl="http://192.168.1.200/AppSms.svc?disco" />
+    <MetadataFile FileName="AppSms.wsdl" MetadataType="Wsdl" ID="866b425b-76c1-4524-8a74-4959b258277c" SourceId="1" SourceUrl="http://192.168.1.200/AppSms.svc?wsdl" />
+    <MetadataFile FileName="AppSms.xsd" MetadataType="Schema" ID="8793b96c-22cb-4991-8391-64a4a1b97dfa" SourceId="1" SourceUrl="http://192.168.1.200/AppSms.svc?xsd=xsd0" />
+    <MetadataFile FileName="AppSms1.xsd" MetadataType="Schema" ID="282fefc5-dff8-4a1d-8acb-43f0619f08ee" SourceId="1" SourceUrl="http://192.168.1.200/AppSms.svc?xsd=xsd3" />
+    <MetadataFile FileName="AppSms2.xsd" MetadataType="Schema" ID="eeb0e13a-b295-4ccd-8aba-f08d9ea00e62" SourceId="1" SourceUrl="http://192.168.1.200/AppSms.svc?xsd=xsd1" />
+    <MetadataFile FileName="AppSms3.xsd" MetadataType="Schema" ID="1e8cbb6e-d01e-4095-bd54-165bfea5f0a4" SourceId="1" SourceUrl="http://192.168.1.200/AppSms.svc?xsd=xsd2" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>

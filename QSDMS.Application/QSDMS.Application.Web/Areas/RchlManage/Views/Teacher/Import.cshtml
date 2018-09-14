@@ -1,0 +1,87 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        $("#btn_import").bind("click", function () {
+            importData();
+        });
+    });
+
+    //保存表单
+    function importData() {
+        $("#importFile").click();
+        $("#importFile").unbind("change").bind("change", function () {
+            var array = new Array('xls', 'xlsx');  //可以上传的文件类型
+            if (!$("#importFile").val()) {
+
+                dialogMsg('让选择要上传的文件', 0);
+                return false;
+            }
+            else {
+                var fileContentType = $("#importFile").val().match(/^(.*)(\.)(.{1,8})$/)[3]; //这个文件类型正则很有用：）
+                var isExists = false;
+                for (var i in array) {
+                    if (fileContentType.toLowerCase() == array[i].toLowerCase()) {
+                        isExists = true;
+                    }
+                }
+                if (isExists == false) {
+                    $("#importFile").val("")
+                    dialogMsg("上传文件类型不正确!", 0);
+                    return false;
+                }
+            }
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#importFile')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+            //上传操作
+            $.ajax({
+                url: "/Teacher/ImportExcel",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        $("#notice").text(result.Message);
+                        setTimeout(function () { $.currentIframe().$("#gridTable").trigger("reloadGrid"); }, 500);
+                    }
+                    else {
+                        dialogMsg(result.Message,0);
+                    }
+                }
+            });
+        });
+    }
+
+</script>
+<div class="alert alert-danger" style="text-align: left; margin: 0px; border-radius: 0px; border-left: none; border-top: none; border-right: none;">
+    <i class="fa fa-question-circle" style="position: relative; top: 1px; font-size: 15px; padding-right: 5px;"></i>
+    说明：在执行此操作之前请仔细按模板要求填写正确数据并核对数据准确性，避免重复导入
+</div>
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;" class="row">
+    <div class="col-md-2">
+        <a href="/Resources/ExcelTemplate/teacher_template.xls" class="">
+            下载模板
+        </a>
+        <a href="javascript:void(0)" id="btn_import" class="btn btn-default">
+            <i class="fa fa-sign-in"></i>&nbsp;导入
+        </a>
+    </div>
+    <input type="file" name="importFile" id="importFile" style="display:none" />
+</div>
+
+<div class="alert alert-success" style="text-align: left; margin: 10px; border-radius: 0px; border-left: none; border-top: none; border-right: none;">
+    <i class="fa fa-info-circle" style="position: relative; top: 1px; font-size: 15px; padding-right: 5px;"></i>
+   当前导入信息：<span id="notice"></span>
+</div>

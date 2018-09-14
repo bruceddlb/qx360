@@ -1,0 +1,132 @@
+﻿@{
+    ViewBag.Title = "我的驾校";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.Applay = ko.observable({
+                ApplayTime: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                SchoolConectTel: ko.observable(""),
+                TagList: ko.observableArray([]),
+                Content: ko.observable(""),
+                SchoolName: ko.observable(""),
+                SchoolFaceImage: ko.observable(""),
+
+                TeacherFaceImage: ko.observable(""),
+                TeacherName: ko.observable(""),
+                LevName: ko.observable(""),
+                TeacherConectTel: ko.observable(""),
+            });
+            self.BindApplay = function () {
+                $.get("/Apply/GetMyApplyInfo", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Applay().ApplayTime(data.CreateTime);
+                            if (data.School) {
+                                self.Applay().SchoolConectTel(data.School.ConectTel);
+                                self.Applay().AddressInfo(data.School.AddressInfo);
+                                self.Applay().SchoolName(data.School.Name);
+                                self.Applay().SchoolFaceImage(data.School.FaceImage);
+                                self.Applay().Content(decodeHtml(data.School.Content));
+                                self.Applay().TagList(data.School.TagList);
+                            }
+                            if (data.Teacher) {
+                                self.Applay().TeacherFaceImage(data.Teacher.FaceImage);
+                                self.Applay().TeacherName(data.Teacher.Name);
+                                self.Applay().LevName(data.Teacher.LevName);
+                                self.Applay().TeacherConectTel(data.Teacher.Mobile);
+                            }
+                        }
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+            self.CallTel = function (mobile) {
+                window.location.href = 'tel:' + mobile;
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindApplay();
+
+        });
+
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+
+    </script>
+}
+<!--ko if:$root.Applay().SchoolName()!=""-->
+<div class="DtSe_top">
+    <ul class="McSc_ul">
+        <li>
+            <img data-bind="attr:{src:$root.Applay().SchoolFaceImage}" class="McSc_li_img">
+            <div class="McSc_list">
+                <div class="McSc_list_h3" data-bind="text:$root.Applay().SchoolName"></div>
+                <div class="McSc_list_mh" data-bind="text:'报名时间：'+formatDate($root.Applay().ApplayTime(),'yyyy-MM-dd')"></div>
+                <div class="McSc_list_sm" data-bind="foreach:$root.Applay().TagList()"><span data-bind="text:Value"></span></div>
+            </div>
+        </li>
+    </ul>
+    <div class="DtSe_add"><i class="iconfont icon-dingwei"></i><span data-bind="text:$root.Applay().AddressInfo"></span><i class="iconfont icon-jiantou Dtse_icon"></i></div>
+    <div class="DtSe_tel" data-bind="click:function(){$root.CallTel($root.Applay().SchoolConectTel())}"><i class="iconfont icon-dianhua"></i><span data-bind="text:$root.Applay().SchoolConectTel"></span><i class="iconfont icon-jiantou Dtse_icon"></i></div>
+</div>
+<!--金牌教练-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>我的教练</h3>
+    <!--ko if:$root.Applay().TeacherName()!=""-->
+    <ul class="McSc_dl">
+        <dd>
+            <img data-bind="attr:{src:$root.Applay().TeacherFaceImage}" class="McSc_dd_img">
+            <div class="McSc_ddst">
+                <div class="McSc_ddst_h3" data-bind="text:$root.Applay().TeacherName"></div>
+                <div class="McSc_ddst_mh" data-bind="text:$root.Applay().SchoolName()+'&nbsp;|&nbsp;'+$root.Applay().LevName()"></div>
+            </div>
+            <a href="#" class="McSc_po_btn" data-bind="click:function(){$root.CallTel($root.Applay().TeacherConectTel())}"><i class="iconfont icon-dianhua1"></i></a>
+        </dd>
+    </ul>
+    <!--/ko-->
+
+</div>
+
+<!--驾校简介-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>驾校简介</h3>
+    <div class="DtSe_txt" data-bind="html:$root.Applay().Content()">
+    </div>
+</div>
+
+<!--/ko-->
+<!--ko if:$root.Applay().SchoolName()==""-->
+<div class=" order_null"><i class="iconfont icon-xiaofeijilu5"></i><span>暂无预约！</span><a href="javascript:void(0);" style="color:#5ba5ed" onclick="window.history.go(-1)">返回</a></div>
+
+<!--/ko-->

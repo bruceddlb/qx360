@@ -1,0 +1,676 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+您 Web 项目的发布/打包进程将使用此文件。您可以通过编辑此 MSBuild 文件
+来自定义该进程的行为。若要了解与此相关的详细信息，请访问 http://go.microsoft.com/fwlink/?LinkID=208121。
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <_PublishTargetUrl>D:\01workspace\10Project\src\水圈\WebSite</_PublishTargetUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="bin/Antlr3.Runtime.dll">
+      <publishTime>07/18/2017 11:27:10</publishTime>
+    </File>
+    <File Include="bin/EMS.Data.IService.dll">
+      <publishTime>07/20/2017 10:28:29</publishTime>
+    </File>
+    <File Include="bin/EntityFramework.dll">
+      <publishTime>07/18/2017 11:25:38</publishTime>
+    </File>
+    <File Include="bin/Hydrosphere.Data.dll">
+      <publishTime>11/02/2017 15:59:23</publishTime>
+    </File>
+    <File Include="bin/Hydrosphere.WeiXinWeb.dll">
+      <publishTime>11/02/2017 16:20:52</publishTime>
+    </File>
+    <File Include="bin/ICSharpCode.SharpZipLib.dll">
+      <publishTime>12/08/2016 21:07:10</publishTime>
+    </File>
+    <File Include="bin/iFramework.Business.dll">
+      <publishTime>08/17/2017 10:58:27</publishTime>
+    </File>
+    <File Include="bin/iFramework.Framework.dll">
+      <publishTime>08/17/2017 10:58:26</publishTime>
+    </File>
+    <File Include="bin/Kaliko.ImageLibrary.dll">
+      <publishTime>05/02/2017 08:11:31</publishTime>
+    </File>
+    <File Include="bin/log4net.dll">
+      <publishTime>12/08/2016 21:26:10</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Web.Infrastructure.dll">
+      <publishTime>07/08/2013 15:15:08</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Web.Mvc.FixedDisplayModes.dll">
+      <publishTime>07/18/2017 11:25:58</publishTime>
+    </File>
+    <File Include="bin/Newtonsoft.Json.dll">
+      <publishTime>10/02/2013 12:10:10</publishTime>
+    </File>
+    <File Include="bin/NPOI.dll">
+      <publishTime>05/30/2016 11:27:50</publishTime>
+    </File>
+    <File Include="bin/NPOI.OOXML.dll">
+      <publishTime>05/30/2016 11:27:49</publishTime>
+    </File>
+    <File Include="bin/NPOI.OpenXml4Net.dll">
+      <publishTime>05/30/2016 11:27:49</publishTime>
+    </File>
+    <File Include="bin/NPOI.OpenXmlFormats.dll">
+      <publishTime>05/30/2016 11:27:50</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Business.Cache.dll">
+      <publishTime>08/17/2017 10:58:32</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Business.dll">
+      <publishTime>08/17/2017 10:58:31</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Cache.dll">
+      <publishTime>08/17/2017 10:58:28</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Cache.Factory.dll">
+      <publishTime>08/17/2017 10:58:29</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Cache.Redis.dll">
+      <publishTime>08/17/2017 10:58:29</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Data.Factory.dll">
+      <publishTime>07/22/2017 16:40:52</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Data.IService.dll">
+      <publishTime>09/13/2017 10:08:06</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Data.Service.SqlServer.dll">
+      <publishTime>09/13/2017 10:08:07</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Model.dll">
+      <publishTime>09/25/2017 17:23:57</publishTime>
+    </File>
+    <File Include="bin/QSDMS.Util.dll">
+      <publishTime>08/17/2017 10:58:26</publishTime>
+    </File>
+    <File Include="bin/Senparc.Weixin.dll">
+      <publishTime>06/01/2015 10:31:24</publishTime>
+    </File>
+    <File Include="bin/Senparc.Weixin.MP.dll">
+      <publishTime>10/26/2015 09:35:59</publishTime>
+    </File>
+    <File Include="bin/Senparc.Weixin.MP.MvcExtension.dll">
+      <publishTime>06/06/2015 16:17:56</publishTime>
+    </File>
+    <File Include="bin/Senparc.Weixin.Open.dll">
+      <publishTime>06/01/2015 10:31:24</publishTime>
+    </File>
+    <File Include="bin/Senparc.Weixin.QY.dll">
+      <publishTime>03/15/2017 15:35:26</publishTime>
+    </File>
+    <File Include="bin/Senparc.Weixin.WxOpen.dll">
+      <publishTime>03/15/2017 15:35:27</publishTime>
+    </File>
+    <File Include="bin/ServiceStack.Common.dll">
+      <publishTime>05/30/2016 11:19:18</publishTime>
+    </File>
+    <File Include="bin/ServiceStack.Interfaces.dll">
+      <publishTime>05/30/2016 11:19:19</publishTime>
+    </File>
+    <File Include="bin/ServiceStack.Redis.dll">
+      <publishTime>05/30/2016 11:19:21</publishTime>
+    </File>
+    <File Include="bin/ServiceStack.Text.dll">
+      <publishTime>05/30/2016 11:19:27</publishTime>
+    </File>
+    <File Include="bin/System.Net.Http.dll">
+      <publishTime>09/26/2012 03:16:08</publishTime>
+    </File>
+    <File Include="bin/System.Net.Http.WebRequest.dll">
+      <publishTime>09/26/2012 03:16:08</publishTime>
+    </File>
+    <File Include="bin/System.Web.Mvc.dll">
+      <publishTime>07/18/2017 11:25:58</publishTime>
+    </File>
+    <File Include="bin/System.Web.Optimization.dll">
+      <publishTime>07/18/2017 11:26:08</publishTime>
+    </File>
+    <File Include="bin/System.Web.Providers.dll">
+      <publishTime>07/18/2017 11:26:03</publishTime>
+    </File>
+    <File Include="bin/System.Web.Razor.dll">
+      <publishTime>07/09/2013 11:05:12</publishTime>
+    </File>
+    <File Include="bin/System.Web.WebPages.Deployment.dll">
+      <publishTime>07/09/2013 11:05:12</publishTime>
+    </File>
+    <File Include="bin/System.Web.WebPages.dll">
+      <publishTime>07/09/2013 11:05:12</publishTime>
+    </File>
+    <File Include="bin/System.Web.WebPages.Razor.dll">
+      <publishTime>07/09/2013 11:05:12</publishTime>
+    </File>
+    <File Include="bin/ThoughtWorks.QRCode.dll">
+      <publishTime>03/31/2017 09:20:22</publishTime>
+    </File>
+    <File Include="bin/WebGrease.dll">
+      <publishTime>07/18/2017 11:27:10</publishTime>
+    </File>
+    <File Include="bin/zh-Hans/System.Web.Razor.resources.dll">
+      <publishTime>07/09/2013 11:35:48</publishTime>
+    </File>
+    <File Include="bin/zh-Hans/System.Web.WebPages.Deployment.resources.dll">
+      <publishTime>07/09/2013 11:36:04</publishTime>
+    </File>
+    <File Include="bin/zh-Hans/System.Web.WebPages.Razor.resources.dll">
+      <publishTime>07/09/2013 11:35:56</publishTime>
+    </File>
+    <File Include="bin/zh-Hans/System.Web.WebPages.resources.dll">
+      <publishTime>07/09/2013 11:35:56</publishTime>
+    </File>
+    <File Include="Content/animate.min.css">
+      <publishTime>09/26/2017 12:01:51</publishTime>
+    </File>
+    <File Include="Content/semantic.css">
+      <publishTime>07/18/2017 14:33:50</publishTime>
+    </File>
+    <File Include="Content/semantic.min.css">
+      <publishTime>07/18/2017 14:33:50</publishTime>
+    </File>
+    <File Include="Content/style.css">
+      <publishTime>11/02/2017 13:19:41</publishTime>
+    </File>
+    <File Include="Content/touchTouch/arrows.png">
+      <publishTime>07/22/2017 00:41:19</publishTime>
+    </File>
+    <File Include="Content/touchTouch/close11.png">
+      <publishTime>07/22/2017 00:41:19</publishTime>
+    </File>
+    <File Include="Content/touchTouch/touchTouch.css">
+      <publishTime>10/30/2017 10:47:33</publishTime>
+    </File>
+    <File Include="Content/touchTouch/touchTouch.jquery.js">
+      <publishTime>10/30/2017 10:47:39</publishTime>
+    </File>
+    <File Include="Content/weui.min.css">
+      <publishTime>07/18/2017 11:25:18</publishTime>
+    </File>
+    <File Include="Global.asax">
+      <publishTime>07/19/2017 22:15:55</publishTime>
+    </File>
+    <File Include="Images/back.png">
+      <publishTime>10/26/2017 16:31:53</publishTime>
+    </File>
+    <File Include="Images/Clear.png">
+      <publishTime>11/02/2017 15:50:32</publishTime>
+    </File>
+    <File Include="Images/close11.png">
+      <publishTime>07/19/2017 17:17:39</publishTime>
+    </File>
+    <File Include="Images/close_16px.png">
+      <publishTime>10/30/2017 11:43:15</publishTime>
+    </File>
+    <File Include="Images/Delete.png">
+      <publishTime>11/01/2017 15:22:32</publishTime>
+    </File>
+    <File Include="Images/down_arrow.png">
+      <publishTime>11/02/2017 14:58:14</publishTime>
+    </File>
+    <File Include="Images/Engineering.png">
+      <publishTime>07/21/2017 18:07:20</publishTime>
+    </File>
+    <File Include="Images/filetype/apk.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/avi.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/bmp.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/cab.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/cs.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/doc.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/docx.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/file.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/folder.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/gif.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/htm.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/html.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/ico.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/java.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/jpeg.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/jpg.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/log.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/mp3.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/mp4.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/pdf.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/png.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/ppt.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/pptx.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/psd.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/rar.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/Scheme.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/swf.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/txt.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/xls.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/xlsx.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/xml.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/filetype/zip.png">
+      <publishTime>11/01/2017 10:06:39</publishTime>
+    </File>
+    <File Include="Images/footer001.png">
+      <publishTime>10/26/2017 13:21:33</publishTime>
+    </File>
+    <File Include="Images/footer002.png">
+      <publishTime>10/26/2017 13:21:42</publishTime>
+    </File>
+    <File Include="Images/footer003.png">
+      <publishTime>10/26/2017 13:21:50</publishTime>
+    </File>
+    <File Include="Images/footer004.png">
+      <publishTime>10/26/2017 13:21:58</publishTime>
+    </File>
+    <File Include="Images/footer01.png">
+      <publishTime>10/26/2017 11:05:43</publishTime>
+    </File>
+    <File Include="Images/footer02.png">
+      <publishTime>10/26/2017 11:05:43</publishTime>
+    </File>
+    <File Include="Images/footer03.png">
+      <publishTime>10/26/2017 11:05:43</publishTime>
+    </File>
+    <File Include="Images/footer04.png">
+      <publishTime>10/26/2017 11:05:43</publishTime>
+    </File>
+    <File Include="Images/footer_logo.png">
+      <publishTime>10/26/2017 11:57:01</publishTime>
+    </File>
+    <File Include="Images/guide-share-tip.png">
+      <publishTime>10/27/2017 18:11:50</publishTime>
+    </File>
+    <File Include="Images/hezuo-icon.png">
+      <publishTime>07/22/2017 10:36:10</publishTime>
+    </File>
+    <File Include="Images/icon-1.png">
+      <publishTime>11/02/2017 09:53:34</publishTime>
+    </File>
+    <File Include="Images/icon-10.png">
+      <publishTime>10/26/2017 15:06:59</publishTime>
+    </File>
+    <File Include="Images/icon-11.png">
+      <publishTime>11/02/2017 09:43:45</publishTime>
+    </File>
+    <File Include="Images/icon-12.png">
+      <publishTime>10/27/2017 14:24:54</publishTime>
+    </File>
+    <File Include="Images/icon-13.png">
+      <publishTime>10/27/2017 14:24:47</publishTime>
+    </File>
+    <File Include="Images/icon-14.png">
+      <publishTime>10/27/2017 14:25:55</publishTime>
+    </File>
+    <File Include="Images/icon-15.png">
+      <publishTime>10/27/2017 14:29:45</publishTime>
+    </File>
+    <File Include="Images/icon-16.png">
+      <publishTime>10/26/2017 15:10:00</publishTime>
+    </File>
+    <File Include="Images/icon-17.png">
+      <publishTime>10/26/2017 15:10:24</publishTime>
+    </File>
+    <File Include="Images/icon-18.png">
+      <publishTime>10/26/2017 15:10:44</publishTime>
+    </File>
+    <File Include="Images/icon-19.png">
+      <publishTime>10/26/2017 15:11:12</publishTime>
+    </File>
+    <File Include="Images/icon-2.png">
+      <publishTime>11/02/2017 09:53:52</publishTime>
+    </File>
+    <File Include="Images/icon-20.png">
+      <publishTime>10/26/2017 15:12:10</publishTime>
+    </File>
+    <File Include="Images/icon-21.png">
+      <publishTime>10/26/2017 15:12:39</publishTime>
+    </File>
+    <File Include="Images/icon-22.png">
+      <publishTime>10/26/2017 15:13:05</publishTime>
+    </File>
+    <File Include="Images/icon-23.png">
+      <publishTime>10/26/2017 15:13:26</publishTime>
+    </File>
+    <File Include="Images/icon-24.png">
+      <publishTime>10/26/2017 15:13:45</publishTime>
+    </File>
+    <File Include="Images/icon-25.png">
+      <publishTime>10/26/2017 15:14:08</publishTime>
+    </File>
+    <File Include="Images/icon-3.png">
+      <publishTime>11/02/2017 09:54:08</publishTime>
+    </File>
+    <File Include="Images/icon-4.png">
+      <publishTime>11/02/2017 09:54:22</publishTime>
+    </File>
+    <File Include="Images/icon-5.png">
+      <publishTime>11/02/2017 09:54:34</publishTime>
+    </File>
+    <File Include="Images/icon-6.png">
+      <publishTime>11/02/2017 09:42:10</publishTime>
+    </File>
+    <File Include="Images/icon-7.png">
+      <publishTime>11/02/2017 09:42:37</publishTime>
+    </File>
+    <File Include="Images/icon-8.png">
+      <publishTime>11/02/2017 09:43:05</publishTime>
+    </File>
+    <File Include="Images/icon-9.png">
+      <publishTime>11/02/2017 09:43:16</publishTime>
+    </File>
+    <File Include="Images/icon-avi.png">
+      <publishTime>10/26/2017 15:15:20</publishTime>
+    </File>
+    <File Include="Images/icon-back.png">
+      <publishTime>10/26/2017 16:31:53</publishTime>
+    </File>
+    <File Include="Images/icon-doc.png">
+      <publishTime>10/26/2017 15:14:57</publishTime>
+    </File>
+    <File Include="Images/icon-jpeg.png">
+      <publishTime>10/26/2017 15:15:51</publishTime>
+    </File>
+    <File Include="Images/icon-pdf.png">
+      <publishTime>10/26/2017 15:16:12</publishTime>
+    </File>
+    <File Include="Images/icon-ppt.png">
+      <publishTime>10/26/2017 15:14:36</publishTime>
+    </File>
+    <File Include="Images/icon.png">
+      <publishTime>10/26/2017 14:19:31</publishTime>
+    </File>
+    <File Include="Images/logo.jpg">
+      <publishTime>07/18/2017 11:25:18</publishTime>
+    </File>
+    <File Include="Images/logtbg.jpg">
+      <publishTime>10/26/2017 18:04:30</publishTime>
+    </File>
+    <File Include="Images/logtbg1.jpg">
+      <publishTime>10/31/2017 11:09:57</publishTime>
+    </File>
+    <File Include="Images/motorola_camera.png">
+      <publishTime>11/01/2017 14:54:27</publishTime>
+    </File>
+    <File Include="Images/need.jpg">
+      <publishTime>09/14/2017 18:05:38</publishTime>
+    </File>
+    <File Include="Images/pinpai-icon.png">
+      <publishTime>07/22/2017 10:35:53</publishTime>
+    </File>
+    <File Include="Images/qrcode.jpg">
+      <publishTime>09/20/2017 17:08:06</publishTime>
+    </File>
+    <File Include="Images/reg-logo.png">
+      <publishTime>07/26/2017 10:37:39</publishTime>
+    </File>
+    <File Include="Images/Rge.png">
+      <publishTime>10/30/2017 14:56:10</publishTime>
+    </File>
+    <File Include="Images/Supplier.png">
+      <publishTime>07/21/2017 18:07:20</publishTime>
+    </File>
+    <File Include="Images/update_icon.png">
+      <publishTime>07/22/2017 10:35:27</publishTime>
+    </File>
+    <File Include="Images/up_arrow.png">
+      <publishTime>11/02/2017 14:59:59</publishTime>
+    </File>
+    <File Include="Images/xuanze.png">
+      <publishTime>09/15/2017 10:25:18</publishTime>
+    </File>
+    <File Include="Images/yindao_1.png">
+      <publishTime>09/26/2017 10:31:48</publishTime>
+    </File>
+    <File Include="Images/yindao_2.png">
+      <publishTime>09/26/2017 10:31:56</publishTime>
+    </File>
+    <File Include="Images/yindao_3.png">
+      <publishTime>09/26/2017 17:04:00</publishTime>
+    </File>
+    <File Include="Images/yindao_4.png">
+      <publishTime>10/29/2017 17:09:34</publishTime>
+    </File>
+    <File Include="packages.config">
+      <publishTime>07/19/2017 22:15:24</publishTime>
+    </File>
+    <File Include="Resources/Config/Develop/appSettings.config">
+      <publishTime>07/18/2017 17:40:30</publishTime>
+    </File>
+    <File Include="Resources/Config/Develop/connectionStrings.config">
+      <publishTime>07/18/2017 17:40:30</publishTime>
+    </File>
+    <File Include="Resources/Config/Localhost/appSettings.config">
+      <publishTime>11/02/2017 16:16:56</publishTime>
+    </File>
+    <File Include="Resources/Config/Localhost/connectionStrings.config">
+      <publishTime>07/20/2017 10:30:53</publishTime>
+    </File>
+    <File Include="Resources/Config/log4net.config">
+      <publishTime>07/18/2017 17:40:30</publishTime>
+    </File>
+    <File Include="Resources/Config/Release/appSettings.config">
+      <publishTime>07/18/2017 17:40:30</publishTime>
+    </File>
+    <File Include="Resources/Config/Release/connectionStrings.config">
+      <publishTime>07/18/2017 17:40:30</publishTime>
+    </File>
+    <File Include="Scripts/lib/icon/more.png">
+      <publishTime>08/12/2016 08:09:06</publishTime>
+    </File>
+    <File Include="Scripts/lib/icon/qq.png">
+      <publishTime>08/12/2016 08:09:06</publishTime>
+    </File>
+    <File Include="Scripts/lib/icon/qqzone.png">
+      <publishTime>08/12/2016 08:09:06</publishTime>
+    </File>
+    <File Include="Scripts/lib/icon/weibo.png">
+      <publishTime>08/12/2016 08:09:06</publishTime>
+    </File>
+    <File Include="Scripts/lib/icon/weixin.png">
+      <publishTime>08/12/2016 08:09:06</publishTime>
+    </File>
+    <File Include="Scripts/lib/icon/weixin_friend.png">
+      <publishTime>08/12/2016 08:09:06</publishTime>
+    </File>
+    <File Include="Scripts/lib/jquery-1.10.2.min.js">
+      <publishTime>07/18/2017 14:36:04</publishTime>
+    </File>
+    <File Include="Scripts/lib/jquery-1.11.1.min.js">
+      <publishTime>07/18/2017 14:46:06</publishTime>
+    </File>
+    <File Include="Scripts/lib/jweixin-1.0.0.js">
+      <publishTime>07/18/2017 12:14:40</publishTime>
+    </File>
+    <File Include="Scripts/lib/knockout-3.4.1.js">
+      <publishTime>07/18/2017 14:26:09</publishTime>
+    </File>
+    <File Include="Scripts/lib/nativeShare.css">
+      <publishTime>08/12/2016 08:09:06</publishTime>
+    </File>
+    <File Include="Scripts/lib/nativeShare.js">
+      <publishTime>09/25/2017 12:55:58</publishTime>
+    </File>
+    <File Include="Scripts/lib/selector.js">
+      <publishTime>07/18/2017 11:25:19</publishTime>
+    </File>
+    <File Include="Scripts/lib/semantic.js">
+      <publishTime>07/18/2017 14:33:37</publishTime>
+    </File>
+    <File Include="Scripts/lib/semantic.min.js">
+      <publishTime>07/18/2017 14:33:37</publishTime>
+    </File>
+    <File Include="Scripts/lib/share.js">
+      <publishTime>09/25/2017 11:35:09</publishTime>
+    </File>
+    <File Include="Scripts/lib/touch.js">
+      <publishTime>07/18/2017 11:25:19</publishTime>
+    </File>
+    <File Include="Scripts/lib/weui.min.js">
+      <publishTime>07/18/2017 12:14:02</publishTime>
+    </File>
+    <File Include="Scripts/lib/zepto.min.js">
+      <publishTime>07/18/2017 11:25:19</publishTime>
+    </File>
+    <File Include="Scripts/vue.min.js">
+      <publishTime>07/18/2017 11:25:19</publishTime>
+    </File>
+    <File Include="Views/Account/Attention.cshtml">
+      <publishTime>09/20/2017 17:27:25</publishTime>
+    </File>
+    <File Include="Views/Account/ClearCache.cshtml">
+      <publishTime>09/20/2017 16:31:24</publishTime>
+    </File>
+    <File Include="Views/Account/Info.cshtml">
+      <publishTime>07/21/2017 22:33:42</publishTime>
+    </File>
+    <File Include="Views/Account/List.cshtml">
+      <publishTime>07/18/2017 12:08:34</publishTime>
+    </File>
+    <File Include="Views/Account/Register.cshtml">
+      <publishTime>09/20/2017 17:38:46</publishTime>
+    </File>
+    <File Include="Views/Account/SelectRole.cshtml">
+      <publishTime>09/20/2017 17:37:00</publishTime>
+    </File>
+    <File Include="Views/Account/Success.cshtml">
+      <publishTime>11/01/2017 17:50:36</publishTime>
+    </File>
+    <File Include="Views/Article/Detail.cshtml">
+      <publishTime>11/01/2017 21:41:28</publishTime>
+    </File>
+    <File Include="Views/Article/List.cshtml">
+      <publishTime>10/30/2017 14:21:58</publishTime>
+    </File>
+    <File Include="Views/CardCase/About.cshtml">
+      <publishTime>10/26/2017 15:58:23</publishTime>
+    </File>
+    <File Include="Views/CardCase/Center.cshtml">
+      <publishTime>11/02/2017 15:58:29</publishTime>
+    </File>
+    <File Include="Views/CardCase/Create.cshtml">
+      <publishTime>11/02/2017 10:30:44</publishTime>
+    </File>
+    <File Include="Views/CardCase/Edit.cshtml">
+      <publishTime>10/30/2017 14:04:58</publishTime>
+    </File>
+    <File Include="Views/CardCase/List.cshtml">
+      <publishTime>11/01/2017 15:28:01</publishTime>
+    </File>
+    <File Include="Views/CardCase/Packge.cshtml">
+      <publishTime>11/01/2017 21:27:13</publishTime>
+    </File>
+    <File Include="Views/CardCase/PackgeInfo.cshtml">
+      <publishTime>11/02/2017 15:19:36</publishTime>
+    </File>
+    <File Include="Views/CardCase/ShareCard.cshtml">
+      <publishTime>11/02/2017 15:10:14</publishTime>
+    </File>
+    <File Include="Views/CardCase/Show.cshtml">
+      <publishTime>11/02/2017 16:20:32</publishTime>
+    </File>
+    <File Include="Views/Engineering/Edit.cshtml">
+      <publishTime>11/01/2017 17:25:52</publishTime>
+    </File>
+    <File Include="Views/Engineering/Register - 复制.cshtml">
+      <publishTime>07/19/2017 16:17:23</publishTime>
+    </File>
+    <File Include="Views/Engineering/Register.cshtml">
+      <publishTime>11/01/2017 17:48:41</publishTime>
+    </File>
+    <File Include="Views/Home/index.cshtml">
+      <publishTime>09/25/2017 12:43:01</publishTime>
+    </File>
+    <File Include="Views/Project/List.cshtml">
+      <publishTime>07/21/2017 23:11:34</publishTime>
+    </File>
+    <File Include="Views/Shared/Error.cshtml">
+      <publishTime>07/18/2017 11:25:19</publishTime>
+    </File>
+    <File Include="Views/Shared/_CardLayout.cshtml">
+      <publishTime>10/30/2017 16:56:55</publishTime>
+    </File>
+    <File Include="Views/Shared/_Layout.cshtml">
+      <publishTime>11/01/2017 17:45:39</publishTime>
+    </File>
+    <File Include="Views/Supplier/Edit.cshtml">
+      <publishTime>11/01/2017 17:47:57</publishTime>
+    </File>
+    <File Include="Views/Supplier/Register.cshtml">
+      <publishTime>11/01/2017 17:49:08</publishTime>
+    </File>
+    <File Include="Views/Web.config">
+      <publishTime>07/18/2017 11:25:19</publishTime>
+    </File>
+    <File Include="Views/Wx/Info.cshtml">
+      <publishTime>07/21/2017 21:24:25</publishTime>
+    </File>
+    <File Include="Views/_ViewStart.cshtml">
+      <publishTime>07/18/2017 11:25:19</publishTime>
+    </File>
+    <File Include="Web.config">
+      <publishTime>11/02/2017 15:59:25</publishTime>
+    </File>
+  </ItemGroup>
+</Project>

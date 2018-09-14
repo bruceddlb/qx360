@@ -1,0 +1,189 @@
+﻿@{
+    ViewBag.Title = "查看";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+<script src="~/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="~/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+    <style>
+        #imgs li {
+            float: left;           
+            margin-right: 5px;
+        }
+
+        #imgs li img {
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+}
+<script>
+    var keyValue = '@ViewBag.EngineerId';
+    $(function () {
+        InitialPage();
+        InitControl();       
+    });
+
+    //初始化数据
+    function InitControl() {
+        //省份
+        $("#ProvinceId").ComboBox({
+            url: "/SystemManage/Area/GetAreaListJson",
+            param: { parentId: "0" },
+            id: "AreaCode",
+            text: "AreaName",
+            description: "选择省",
+            height: "170px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            $("#CityId").ComboBox({
+                url: "/SystemManage/Area/GetAreaListJson",
+                param: { parentId: value },
+                id: "AreaCode",
+                text: "AreaName",
+                description: "选择市",
+                height: "170px"
+            });
+        });
+        //城市
+        $("#CityId").ComboBox({
+            description: "选择市",
+            height: "170px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            if (value) {
+                $("#CountyId").ComboBox({
+                    url: "/SystemManage/Area/GetAreaListJson",
+                    param: { parentId: value },
+                    id: "AreaCode",
+                    text: "AreaName",
+                    description: "选择县/区",
+                    height: "170px"
+                });
+            }
+        });
+        //县/区
+        $("#CountyId").ComboBox({
+            description: "选择县/区",
+            height: "170px"
+        });
+
+        //设置控件值
+        $.SetForm({
+            url: "/AccountMange/Engineering/GetFormJson",
+            param: { keyValue: keyValue },
+            success: function (data) {
+                if (data != null) {
+                    $("#form1").SetWebControls(data);
+                    if (data.ProvinceId) {
+                        $("#ProvinceId").trigger("change");
+                    }
+                    if (data.CityId) {
+                        $("#CityId").ComboBoxSetValue(data.CityId).trigger("change");
+                    }
+                    $("#CountyId").ComboBoxSetValue(data.CountyId);
+
+                    //
+                    getPic(data.EngineerId);
+                }
+            }
+        });       
+    }
+
+    function getPic(id) {
+        $.ajax({
+            url: "/AccountMange/AttachmentPic/GetPicList",
+            data: { objectid: id },
+            type: "get",
+            dataType: "json",
+            success: function (data) {
+                if (data.IsSuccess) {
+                    var datapic = data.ResultData["data"];
+                    var html = "";
+                    for (var i = 0; i < datapic.length; i++) {
+                        var item = datapic[i];
+                        //html += '<li><img src="' + item.PicName + '"/></li>';
+                        var path ="@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + item.PicName;
+                        html += '<li><a class="magnifier" href="' + path + '">';
+                        html += '<img src="' + path + '"/>';
+                        html += '</a>';
+                        html += '</li>';
+                    }
+
+                    $("#imgs").append(html);
+
+                    //查看图片
+                    jQuery('.magnifier').touchTouch();
+
+                } else {
+
+                }
+            }
+        });
+    }
+
+    //初始化页面
+    function InitialPage() {
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+
+    }
+</script>
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">公司名称</td>
+            <td class="formValue">
+                <input id="ComName" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系人</td>
+            <td class="formValue">
+                <input id="ContactName" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">手机号码</td>
+            <td class="formValue">
+                <input id="ContactTel" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">职务</td>
+            <td class="formValue">
+                <input id="Job" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">所在地</td>
+            <td class="formValue">
+                <div style="float: left; class =" form-control input-profile">
+                    <div id="ProvinceId" type="select" class="ui-select" style="float: left; width: 100px; margin-right: 1px;"></div>
+                    <div id="CityId" type="select" class="ui-select" style="float: left; width: 100px; margin-right: 1px;"></div>
+                    <div id="CountyId" type="select" class="ui-select" style="float: left; width: 100px; margin-right: 1px;"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">业务领域</td>
+            <td class="formValue">
+                <textarea id="BussAreas" class="form-control input-profile" style="height: 70px;"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">公司照片</td>
+            <td class="formValue">
+                <ul id="imgs"></ul>
+            </td>
+        </tr>
+    </table>
+</div>

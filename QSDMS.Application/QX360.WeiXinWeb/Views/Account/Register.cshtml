@@ -1,0 +1,154 @@
+﻿@{
+    ViewBag.Title = "会员注册";
+}
+@section scripts{
+    <script>
+        var InterValObj; //timer变量，控制时间
+        var count = 180; //间隔函数，1秒执行
+        var curCount;//当前剩余秒数
+
+        function ViewModel() {
+            var self = this;
+            self.SendCodeText = ko.observable("获取验证码");
+            self.AginNewUserPwd = ko.observable("");
+            self.Account = ko.observable({
+                MemberName: ko.observable(""),
+                Mobile: ko.observable(""),
+                Pwd: ko.observable(""),
+                OpenId: ko.observable("@ViewBag.Openid"),
+                sms_verify_code: ko.observable("")
+
+            });
+            //保存
+            self.Save = function () {
+                if (!self.Account().Mobile()) {
+                    ShowTips("请输入手机号码");
+                    return;
+                }
+                if (!self.Account().sms_verify_code()) {
+                    ShowTips("请输入手机验证码");
+                    return;
+                }
+                if (!self.Account().MemberName()) {
+                    ShowTips("请输入您的姓名");
+                    return;
+                }
+                if (!self.Account().Pwd()) {
+                    ShowTips("请设置登陆密码");
+                    return;
+                }
+                if (!self.AginNewUserPwd()) {
+                    ShowTips("请输入确认密码");
+                    return;
+                }
+                if (self.Account().Pwd() != self.AginNewUserPwd()) {
+                    ShowTips("确认密码不一致");
+                    return;
+                }
+                $.post("/Account/Register", self.Account(), function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message);
+                        setTimeout(function () {
+                            window.location.href = "/Account/Login?oauthflag=1&openid=" + self.Account().OpenId() + "&returnurl=";
+                        }, 200);
+
+                    }
+                    else {
+                        ShowTips(result.Message);
+                    }
+                })
+            }
+            //获取验证码
+            self.GetCode = function () {
+                if (!self.Account().Mobile()) {
+                    ShowTips("请输入手机号码");
+                    return;
+                }
+                var myreg = /^(((13[0-9]{1})|(14[0-9]{1})|(15[0-9]{1})|(16[0-9]{1})|(17[0-9]{1})|(18[0-9]{1})|(19[0-9]{1}))+\d{8})$/;
+                if (!myreg.test(self.Account().Mobile())) {
+                    ShowTips("请输入正确的手机号码");
+                    return;
+                }
+                $.post("/Account/SendVerifySms", { mobile: self.Account().Mobile }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips("验证码已发送!");
+                        //alert(result.Message);
+                        curCount = count;
+                        //设置button效果，开始计时
+                        $("#btnSendCode").attr("disabled", "true");
+                        self.SendCodeText(curCount + "秒");
+                        InterValObj = window.setInterval(self.SetRemainTime, 1000); //启动计时器，1秒执行一次
+                    }
+                    else {
+                        ShowTips(result.Message);
+                    }
+                })
+            }
+
+            //定时器
+            self.SetRemainTime = function () {
+                if (curCount == 0) {
+                    window.clearInterval(InterValObj);//停止计时器
+                    $("#btnSendCode").removeAttr("disabled");//启用按钮
+                    self.SendCodeText("重新发送验证码");
+                }
+                else {
+                    curCount--;
+                    self.SendCodeText(curCount + "秒");
+                }
+            }
+            self.Login = function () {
+                window.location.href = "/Account/Login?openid=" + self.Account().OpenId();
+            }
+
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+
+        })
+
+    </script>
+}
+<div class="Mber_top">
+    <div class="Mber_top_h1">会员注册</div>
+</div>
+
+<div class="Mber_con">
+    <div class="Mber_row">
+        <i class="iconfont icon-shoujihaoma2"></i>
+        <div class="Mber_input">
+            <input type="text" placeholder="请输入手机号码" class="Mber_input_text" data-bind="value:$root.Account().Mobile">
+        </div>
+    </div>
+    <div class="Mber_row">
+        <i class="iconfont icon-yanzhengma1"></i>
+        <div class="Mber_input Mber_input2">
+            <input type="text" placeholder="请输入验证码" class="Mber_input_text" data-bind="value:$root.Account().sms_verify_code"><button class="Mber_Code" data-bind="text:$root.SendCodeText,event:{click:function(){$root.GetCode();}}" id="btnSendCode"></button>
+        </div>
+    </div>
+    <div class="Mber_row">
+        <i class="iconfont icon-mima"></i>
+        <div class="Mber_input">
+            <input type="text" placeholder="请输入姓名" class="Mber_input_text" data-bind="value:$root.Account().MemberName">
+        </div>
+    </div>
+    <div class="Mber_row">
+        <i class="iconfont icon-mima"></i>
+        <div class="Mber_input">
+            <input type="password" placeholder="请输入密码" class="Mber_input_text" data-bind="value:$root.Account().Pwd">
+        </div>
+    </div>
+    <div class="Mber_row">
+        <i class="iconfont icon-mima"></i>
+        <div class="Mber_input">
+            <input type="password" placeholder="请输入确认密码" class="Mber_input_text" data-bind="value:$root.AginNewUserPwd">
+        </div>
+    </div>
+</div>
+
+<div class="Mber_btn">
+    <input type="submit" value="注册" class="Mber_sub" data-bind="click:function(){$root.Save() }">
+</div>
+<div class="Mber_sm">已有账号，<a href="/Account/Login">立即登陆</a></div>

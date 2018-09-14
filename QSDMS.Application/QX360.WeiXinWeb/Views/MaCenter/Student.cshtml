@@ -1,0 +1,47 @@
+﻿@{
+    ViewBag.Title = "我的学员";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.List = ko.observableArray([]);
+            self.KeyWord = ko.observable("");
+            self.BindList = function () {
+                $.get("/Apply/GetTeacherApplyList", { keyword: self.KeyWord() }, function (result) {
+                    if (result.IsSuccess) {
+                        self.List.removeAll();
+                        var data = result.ResultData["List"];
+                        self.List(data);
+
+                    }
+                });
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindList();
+
+        })
+
+    </script>
+}
+<div class="MaStu_div">
+    <div class="MaStu_search">
+        <input type="search" placeholder="请输入关键字查找" class="MaStu_input" data-bind="value:$root.KeyWord">
+        <span class="MaStu_span" data-bind="click:function(){$root.BindList()}"><i class="iconfont icon-sousuo"></i></span>
+    </div>
+</div>
+
+<ul class="MaStu_ul" data-bind="foreach:$root.List">
+    <li>
+        <div class="MaStu_h2"><i class="iconfont icon-touxiang"></i><em data-bind="text:MemberName+' '+MemberMobile"></em></div>
+        <div class="MaStu_text">最近一次预约：<em data-bind="text:formatDate(ServiceDate,'yyyy-MM-dd')+' '+ServiceTime"></em></div>
+        <div class="MaStu_text">报名时间：<em data-bind="text:formatDate(CreateTime,'yyyy-MM-dd')"></em></div>
+    </li>
+</ul>
+
+<!--ko if:List().length==0-->
+<div class=" order_null"><i class="iconfont icon-xiaofeijilu5"></i><span>暂无预约！</span></div>
+<!--/ko-->

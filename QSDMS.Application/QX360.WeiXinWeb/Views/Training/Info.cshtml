@@ -1,0 +1,141 @@
+﻿@{
+    ViewBag.Title = "考场详情";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        var type = request('type');
+        var trainingtype = request('trainingtype');
+        function ViewModel() {
+            var self = this;
+            self.Type = ko.observable(type);
+            self.School = ko.observable({
+                Id:ko.observable(""),
+                Name: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                ConectTel: ko.observable(""),
+                SubjectList: ko.observableArray([]),
+                TeacherList: ko.observableArray([]),
+                TagList: ko.observableArray([]),
+                AttachmentPicList: ko.observableArray([]),
+                Content: ko.observable(""),
+                TrainingPrice: ko.observable(""),
+                VideoContent: ko.observable("")
+
+            });
+            self.BindSchool = function () {
+                $.get("/School/GetSchoolModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.School().Id(data.SchoolId);
+                            self.School().Name(data.Name);
+                            self.School().AddressInfo(data.AddressInfo);
+                            self.School().ConectTel(data.ConectTel);
+                            self.School().AttachmentPicList(data.AttachmentPicList);
+                            self.School().SubjectList(data.SubjectList);
+                            self.School().TagList(data.TagList);
+                            self.School().Content(decodeHtml(data.Content));
+                            self.School().TrainingPrice(data.TrainingPrice);
+                            self.School().VideoContent(decodeHtml(data.VideoContent));
+                        }
+                        var mySwiper = new Swiper('.swiper-container', {
+                            pagination: '.pagination',
+                            slidesPerView: 1,
+                            loop: true,
+                            autoplay: 3000,
+                            autoplayDisableOnInteraction: false,
+                            speed: 500
+                        });
+                    }
+                });
+            }
+            self.CallTel = function () {
+                window.location.href = 'tel:' + self.School().ConectTel();
+            }
+            self.CreateSubrict=function(){
+                window.location.href='/Training/Car?id='+self.School().Id()+'&type='+self.Type()+'&subjectid='+trainingtype;
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindSchool();
+
+        });
+
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+
+    </script>
+}
+@section css{
+    <style type="text/css">
+    </style>
+}
+<div class="slide" style="height:4rem;">
+    <div class="swiper-container" style="height:4rem;">
+        <div class="swiper-wrapper" data-bind="foreach:$root.School().AttachmentPicList()">
+            <div class="swiper-slide">
+                <img data-bind="attr:{src:PicName}" alt="pic" class="s_img" />
+            </div>
+        </div>
+        <div class="pagination s_buts s_right"></div>
+    </div>
+</div>
+
+<div class="DtSe_top">
+    <div class="DtSe_head">
+        <div class="DtSe_h1" data-bind="text:$root.School().Name()"></div>
+        <div class="Dto_list_sm" data-bind="foreach:$root.School().TagList()"><span data-bind="text:Value"></span></div>
+        <div class="DtSe_Price" data-bind="text:'￥'+$root.School().TrainingPrice()+'起'"></div>
+    </div>
+    <div class="DtSe_add"><i class="iconfont icon-dingwei"></i><span data-bind="text:$root.School().AddressInfo()"></span><i class="iconfont icon-jiantou Dtse_icon"></i></div>
+    <div class="DtSe_tel"><i class="iconfont icon-dianhua"></i><span data-bind="text:$root.School().ConectTel()"></span><i style="float:right;margin-right:10px;margin-top:4px;" data-bind="click:function(){$root.CallTel();}">免费咨询</i><i class="iconfont icon-jiantou Dtse_icon"></i></div>
+</div>
+
+<!--最近开班-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>实训科目</h3>
+    <ul class="DtSe_ul" data-bind="foreach:$root.School().SubjectList()">
+        <li>
+            <div class="DtSe_h5" data-bind="text:SubjectName"></div>
+            <div class="DtSe_nub"><span>费用 <font data-bind="text:'￥'+Price"></font></span></div>
+            <div class="DtSe_sm" data-bind="text:Remark"></div>
+        </li>
+    </ul>
+</div>
+
+<!--驾校简介-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>考场简介</h3>
+    <div class="" data-bind="html:$root.School().VideoContent()">
+    </div>
+    <div class="DtSe_txt" data-bind="html:$root.School().Content()">
+    </div>
+</div>
+<div style="height:100px"></div>
+<div class="Dtle_footer"><button type="button" class="Dtle_btn2" id="DtBtn" data-bind="click:function(){$root.CreateSubrict();}">预约实训</button></div>

@@ -1,0 +1,341 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+
+    });
+
+
+    //初始化数据
+    function InitControl() {
+
+        //$("#ddlmember").ComboBox({
+        //    url: "/QX360Manage/Member/GetListJson",
+        //    param: { parentId: "0" },
+        //    id: "MemberId",
+        //    text: "NikeName",
+        //    description: "==选择学员==",
+        //    height: "170px",
+        //    allowSearch: true
+        //}).bind("change", function () {
+        //    var value = $(this).attr('data-value');
+        //    $.SetForm({
+        //        url: "/QX360Manage/Member/GetFormJson",
+        //        param: { keyValue: value },
+        //        success: function (data) {
+        //            if (data != null) {
+        //                if (data.Mobile) {
+        //                    $("#MemberMobile").val(data.Mobile);
+        //                }
+        //            }
+        //        }
+        //    });
+        //});
+        //所属驾校
+        $("#ddlschool").ComboBox({
+            url: "/QX360Manage/School/GetDataListJson",
+            param: null,
+            id: "SchoolId",
+            text: "Name",
+            description: "==请选择所属驾校==",
+            height: "200px",
+            allowSearch: true
+        }).bind("change", function () {
+            $("#ddlsubject").attr("data-value", "").attr("data-text", "").text("");
+            $("#ddlteacher").attr("data-value", "").attr("data-text", "").text("");
+            var value = $(this).attr('data-value');
+            $.SetForm({
+                url: "/QX360Manage/School/GetFormJson",
+                param: { keyValue: value },
+                success: function (data) {
+                    if (data != null) {
+                        if (data.StudyPrice) {
+                            $("#TotalMoney").val(data.StudyPrice);
+                        }
+                    }
+                }
+            });
+            var queryJson = {};
+            queryJson["schoolid"] = value;
+
+            $("#ddlsubject").ComboBox({
+                url: "/QX360Manage/Subject/GetListJson",
+                param: { queryJson: JSON.stringify(queryJson) },
+                id: "ItemId",
+                text: "SubjectName",
+                description: "==请选择学车类型==",
+                height: "170px",
+                allowSearch: true
+            }).bind("change", function () {
+                value = $(this).attr('data-value');
+                $.SetForm({
+                    url: "/QX360Manage/Subject/GetFormJson",
+                    param: { schollid: queryJson["schoolid"], itemid: value },
+                    success: function (data) {
+                        if (data != null) {
+                            if (data.Price) {
+                                $("#TotalMoney").val(data.Price);
+                            }
+                        }
+                    }
+                });
+            });
+            $("#ddlteacher").ComboBox({
+                url: "/QX360Manage/Teacher/GetListJson",
+                param: { queryJson: JSON.stringify(queryJson) },
+                id: "TeacherId",
+                text: "Name",
+                description: "==请选择教练==",
+                height: "170px"
+
+            });
+        });
+        $("#ddlteacher").ComboBox({
+            description: "==请选择教练==",
+            height: "170px"
+        });
+        $("#ddlsubject").ComboBox({
+            description: "==请选择学车类型==",
+            height: "170px"
+        });
+        //省份
+        $("#ProvinceId").ComboBox({
+            url: "/SystemManage/Area/GetAreaListJson",
+            param: { parentId: "0" },
+            id: "AreaCode",
+            text: "AreaName",
+            description: "选择省",
+            height: "170px",
+            allowSearch: true
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            $("#CityId").ComboBox({
+                url: "/SystemManage/Area/GetAreaListJson",
+                param: { parentId: value },
+                id: "AreaCode",
+                text: "AreaName",
+                description: "选择市",
+                height: "170px"
+
+            });
+        });
+        //城市
+        $("#CityId").ComboBox({
+            description: "选择市",
+            height: "170px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            if (value) {
+                $("#CountyId").ComboBox({
+                    url: "/SystemManage/Area/GetAreaListJson",
+                    param: { parentId: value },
+                    id: "AreaCode",
+                    text: "AreaName",
+                    description: "选择县/区",
+                    height: "170px"
+                });
+            }
+        });
+        //县/区
+        $("#CountyId").ComboBox({
+            description: "选择县/区",
+            height: "170px"
+        });
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/ApplyOrder/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.TeacherId) {
+                            $("#ddlTeacher").ComboBoxSetValue(data.TeacherId);
+                        }
+                    }
+                }
+            });
+        }
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["MemberId"] = $("#hidMemberId").val();
+        postData["MemberName"] = $("#txtMemberName").val();
+        postData["ProvinceId"] = $("#ProvinceId").attr('data-value');
+        postData["ProvinceName"] = $("#ProvinceId").attr('data-text');
+        postData["CityId"] = $("#CityId").attr('data-value');
+        postData["CityName"] = $("#CityId").attr('data-text');
+        postData["CountyId"] = $("#CountyId").attr('data-value');
+        postData["CountyName"] = $("#CountyId").attr('data-text');
+        postData["SchoolId"] = $("#ddlschool").attr('data-value');
+        postData["SchoolName"] = $("#ddlschool").attr('data-text');
+        postData["TeacherId"] = $("#ddlteacher").attr('data-value');
+        postData["TeacherName"] = $("#ddlteacher").attr('data-text');
+        postData["SubjectId"] = $("#ddlsubject").attr('data-value');
+        postData["SubjectName"] = $("#ddlsubject").attr('data-text');
+        $.SaveForm({
+            url: "/QX360Manage/ApplyOrder/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $(window).resize(function (e) {
+        });
+
+    }
+
+    function ShowSelectMember() {
+        var show = function () {
+            var $subnePanel = $("#MemberPanel");
+            var control = $("#txtMemberName");
+            var divpa = document.getElementById("MemberPanel");
+            var offset = control.offset();
+            divpa.style.top = (offset.top + control.height() + -6) + "px";
+            divpa.style.left = (offset.left) + "px";
+            $subnePanel.removeClass("hide");
+            $subnePanel.width(control.width() + 25);
+
+            $subnePanel.css("position", "absolute");
+            $subnePanel.css("z-index", "1000");
+            $subnePanel.unbind("mouseout").bind('mouseout', function () {
+                var $this = $(this);
+                if ($this.length != 0) {
+                    var width = $this.width();
+                    var offset = $this.offset();
+                    var w = $(document).width();
+                    var top = offset.top + $this.height();
+                    var left = 0;
+                    if (offset.left + width + 9 > w) {
+                        left = offset.left + $this.width() - width + 4;
+                    }
+                    else {
+                        left = offset.left;
+                    }
+                    var ev = window.event;
+                    var x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    var y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                    if (!(x >= left && x <= left + width - 2 &&
+                        y >= offset.top && y <= top - 2)) {
+
+                        // $subnePanel.addClass("hide");
+                    }
+                }
+            });
+        }
+        show();
+    }
+
+    function MemberCallBack(data) {
+        if (data) {
+            $("#hidMemberId").val(data.memberId);
+            $("#txtMemberName").val(data.memberName);
+            $("#MemberMobile").val(data.mobile);
+        }
+        $("#MemberPanel").addClass("hide");
+    }
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">选择学员<font face="宋体">*</font></td>
+            <td class="formValue">
+                @*<div id="ddlmember" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    </div>*@
+                <input type="hidden" id="hidMemberId" />
+                <input id="txtMemberName" type="text" class="form-control input-profile" style="" onclick="ShowSelectMember()" readonly isvalid="yes" checkexpession="NotNull" /><span onclick="    SelectPoint()" class="input-button" title="选择考场">...</span>
+
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系电话<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="MemberMobile" type="text" class="form-control input-profile" placeholder="联系电话" isvalid="yes" checkexpession="Mobile" />
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle"> 服务时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="ServiceTime" type="text" class="form-control input-profile" onfocus="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm'})" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 上门地址<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div style="float:left;" class="">
+                    <div id="ProvinceId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;" isvalid="yes" checkexpession="NotNull"></div>
+                    <div id="CityId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;"></div>
+                    <div id="CountyId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 详细地址<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="AddressInfo" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">预约驾校<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlschool" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">学车课程<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlsubject" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">分配教练<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlteacher" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">已付金额<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="PayMoney" type="text" class="form-control input-profile" placeholder="已付金额" isvalid="yes" checkexpession="Double" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">总金额</td>
+            <td class="formValue">
+                <input id="TotalMoney" type="text" class="form-control input-profile" placeholder="总金额" isvalid="yes" checkexpession="Double" />
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<div id="MemberPanel" class="hide" style="border: 1px solid #ccc; width: 100%; background: #fff; height: 500px; overflow: hidden">
+    <iframe id="SelectMember" name="SelectMember" height="100%" width="100%" src="/QX360Manage/Select/SelectMember" frameborder="0" style=""></iframe>
+</div>

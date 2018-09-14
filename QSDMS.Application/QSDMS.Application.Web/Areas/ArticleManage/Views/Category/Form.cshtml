@@ -1,0 +1,109 @@
+﻿@{
+    ViewBag.Title = "文章分类";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+
+        $("#uploadPreview").unbind("click").bind("click", function () {
+            $('#uploadFile').trigger("click");
+        })
+        //上传图标
+        $('#uploadFile').change(function () {
+            var f = document.getElementById('uploadFile').files[0];
+            var src = window.URL.createObjectURL(f);
+            document.getElementById('uploadPreview').src = src;
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFile')[0].files, function (i, file) {
+                formData.append('fileDataFileName', file);
+            });
+
+            //上传应用图标
+            $.ajax({
+                url: "/ArticleManage/Category/UploadPic",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data && data.IsSuccess) {                       
+                        $("#HidIcon").val(data.ResultData["path"]);
+                    }
+                    else {
+                        alert(data.Message);
+                    }
+                }
+            });
+        });
+    })
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/ArticleManage/Category/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                    if (data.IconPath) {
+                        var host = '@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"] == "" ? string.Format("http://{0}{1}", Request.Url.Host, Request.Url.Port == 80 ? "" : ":" + Request.Url.Port) : System.Configuration.ConfigurationManager.AppSettings["ImageHost"])';
+                        document.getElementById('uploadPreview').src = host + data.IconPath;
+                    }
+                }
+            });
+        } else {
+
+        }
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["IconPath"] = $("#HidIcon").val();
+        $.SaveForm({
+            url: "/ArticleManage/Category/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <input type="hidden" id="HidIcon" />
+    <table class="form">
+        <tr>
+            <td class="formTitle">名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="ClassName" type="text" class="form-control" placeholder="请输入名称" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">排序号</td>
+            <td class="formValue">
+                <input id="SortNum" type="text" class="form-control" placeholder="请输入值" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">分类图标</td>
+            <td>
+                <div style="margin-top: 40px; text-align: center;">
+                    <div class="" style="width: 100px; height: 100px;">
+                        <img id="uploadPreview" style="width: 100px; height: 100px; border-radius: 100px; border:0px" src="~/Content/images/add.png" />
+                        <input type="file" name="uploadFile" id="uploadFile" style="display:none">
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+

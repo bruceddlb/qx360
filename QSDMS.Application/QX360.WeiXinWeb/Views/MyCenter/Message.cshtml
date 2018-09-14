@@ -1,0 +1,42 @@
+﻿@{
+    ViewBag.Title = "我的消息";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.List = ko.observableArray([]);
+            self.BindList = function () {
+                $.get("/Notice/GetMyNotice", null, function (result) {
+                    if (result.IsSuccess) {
+                        self.List.removeAll();
+                        var data = result.ResultData["List"];
+                        self.List(data);
+                    }
+                });
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindList();
+        })
+
+
+    </script>
+}
+
+
+<ul class="McNs_ul" data-bind="foreach:$root.List">
+    <li>
+        <a data-bind="attr:{href:'/MyCenter/ArticleDetail?id='+ArticleId}">
+            <div class="McNs_h"><em>系统消息</em><span data-bind="text:formatDate(Createtime,'yyyy-MM-dd hh:mm')"></span></div>
+            <div class="McNs_txt" data-bind="text:ArticleName">
+
+            </div>
+        </a>
+    </li>
+</ul>
+<!--ko if:List().length==0-->
+<div class=" order_null"><i class="iconfont icon-xiaofeijilu5"></i><span>暂无消息！</span></div>
+<!--/ko-->

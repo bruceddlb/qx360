@@ -1,0 +1,155 @@
+﻿@{
+    ViewBag.Title = "我的信息";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.Account = ko.observable({
+                FaceImage: ko.observable(""),
+                ViewFaceImage: ko.observable(""),
+                Name: ko.observable(""),
+                Mobile: ko.observable(""),
+                MasterAccount: ko.observable(""),
+                IdCard: ko.observable(""),
+            });
+            self.BindUser = function () {
+                $.post("/Teacher/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Account().Name(data.Name);
+                            self.Account().Mobile(data.Mobile);
+                            self.Account().MasterAccount(data.MasterAccount);
+                            self.Account().IdCard(data.IdCard);
+                            if (data.FaceImage) {
+                                var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + data.FaceImage;
+                                self.Account().FaceImage(data.FaceImage);
+                                self.Account().ViewFaceImage(newpath);
+                            } 
+                        }
+                    }
+                });
+            }
+            self.Save = function () {
+                if (!self.Account().Name()) {
+                    ShowTips("请输入姓名");
+                    return;
+                }
+                var tel = self.Account().Mobile();
+                if (!tel) {
+                    ShowTips("请输入联系电话");
+                    return;
+                }
+                //var isPhone = /^([0-9]{3,4}-)?[0-9]{7,8}$/;
+                var isMob = /^(((13[0-9]{1})|(15[0-9]{1})|(17[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+                if (isMob.test(tel)) {
+
+                } else {
+                    ShowTips("请输入正确的手机号码");
+                    return;
+                }
+                var $target = $(event.target);
+                $target.attr('disabled', 'disabled');
+
+                $.post("/Teacher/UpdateInfo", { json: ko.toJSON(self.Account()) }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, 1);
+                        setTimeout(function () {
+                            window.location.href = "/MaCenter/Index";
+                        }, 200)
+
+                    }
+                    else {
+                        ShowTips(result.Message);
+                        $target.removeAttr('disabled');
+                    }
+                })
+            }
+
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+            model.BindUser();
+
+            $('#uploadFile_FaceLogo').change(function () {
+                var f = document.getElementById('uploadFile_FaceLogo').files[0];
+                var src = window.URL.createObjectURL(f);
+                //document.getElementById('uploadPreview').src = src;
+                var formData = new FormData();
+                //为FormData对象添加数据
+                $.each($('#uploadFile_FaceLogo')[0].files, function (i, file) {
+                    formData.append('file', file);
+                });
+                //上传应用图标
+                $.ajax({
+                    url: "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]/Upload/UploadFile",
+                    type: 'POST',
+                    data: formData,
+                    async: false,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        if (data && data.IsSuccess) {
+                            var path = data.ResultData["files"];
+                            var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                            model.Account().FaceImage(path);
+                            model.Account().ViewFaceImage(newpath);
+                        }
+                        else {
+                            alert(data.Message);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}
+<ul class="Mcin_ul">
+
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">头像</span>
+        <font class="Mcin_list_right">
+            <i class="iconfont icon-jiantou Mcin_mm_i"></i>
+            <span class="Mcin_mm2">
+                <img data-bind="attr:{src:$root.Account().ViewFaceImage()==''?'/images/face.png':$root.Account().ViewFaceImage}">
+                <input type="file" class="Mcin_file" name="uploadFile_FaceLogo" id="uploadFile_FaceLogo">
+            </span>
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">教练账号</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" data-bind="value:$root.Account().MasterAccount" readonly>
+
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">教练姓名</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" data-bind="value:$root.Account().Name">
+
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">手机号</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" data-bind="value:$root.Account().Mobile">
+
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">身份证号</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" data-bind="value:$root.Account().IdCard">
+
+        </font>
+    </li>
+</ul>
+
+<div class="Mcin_btn"><button type="button" class="Mcin_botton2" data-bind="click:function(){$root.Save();}">保存修改</button></div>
+

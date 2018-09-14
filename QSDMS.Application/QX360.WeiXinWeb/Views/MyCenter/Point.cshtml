@@ -1,0 +1,68 @@
+﻿@{
+    ViewBag.Title = "我的积分";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.List = ko.observableArray([]);
+            self.CurrentPoint = ko.observable("0");
+            self.TodayPoint = ko.observable("0");
+            self.TotalPoint = ko.observable("0");
+            self.BindData = function () {
+                $.post("/Account/GetPoint", null, function (result) {
+                    if (result.IsSuccess) {
+                        self.List.removeAll();
+                        var data = result.ResultData["List"];
+                        self.List(data);
+                        self.CurrentPoint(result.ResultData["CurrentPoint"]);
+                        self.TodayPoint(result.ResultData["TodayPoint"]);
+                        self.TotalPoint(result.ResultData["TotalPoint"]);
+                    }
+                });
+            }
+
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindData();
+        })
+
+    </script>
+}
+<div class="Mcms_top">
+
+    <div class="Mcms_left">
+        <div class="Mcms_top_num" data-bind="text:$root.TodayPoint"></div>
+        <div class="Mcms_top_title">今日获得积分</div>
+    </div>
+    <div class="Mcms_center">
+        <div class="Mcms_top_num2" data-bind="text:$root.CurrentPoint"></div>
+        <div class="Mcms_top_title">当前积分</div>
+    </div>
+    <div class="Mcms_left">
+        <div class="Mcms_top_num" data-bind="text:$root.TotalPoint"></div>
+        <div class="Mcms_top_title">累计获得积分</div>
+    </div>
+
+    <div class="Mcms_top_btn"><span>预订更多订单可获得更多积分</span></div>
+</div>
+
+<div class="Mcms_hr">积分记录<a href="#"><i class="iconfont icon-e64c"></i>积分说明</a></div>
+
+<ul class="Mcms_ul" data-bind="foreach:$root.List">
+
+    <li>
+        <!--ko if:Operate=="1"-->
+        <div class="Mcms_plus" data-bind="text:'+'+Point"></div>
+        <!--/ko -->
+        <!--ko if:Operate!="1"-->
+        <div class="Mcms_reduce" data-bind="text:'-'+Point"></div>
+        <!--/ko -->
+        <div class="Mcms_name" data-bind="text:Remark"></div>
+        <div class="Mcms_time" data-bind="text:formatDate(AddTime,'yyyy-MM-dd')"></div>
+    </li>
+</ul>
+
+

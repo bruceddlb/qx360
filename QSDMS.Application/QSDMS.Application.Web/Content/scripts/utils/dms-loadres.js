@@ -1,0 +1,11 @@
+﻿document.write('<link href="~/Content/styles/bootstrap.min.css" rel="stylesheet" />');
+document.write('<link href="~/Content/styles/animate.min.css" rel="stylesheet" />');
+document.write('<link href="~/Content/styles/font-awesome.min.css" rel="stylesheet" />');
+document.write('<script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>');
+document.write('<script src="~/Content/scripts/bootstrap/bootstrap.min.js"></script>');
+document.write('<script src="~/Content/scripts/plugins/cookie/jquery.cookie.js"></script>');
+document.write(' <script src="~/Content/scripts/plugins/slimscroll/jquery.slimscroll.min.js"></script>');
+document.write('<script src="~/Content/scripts/plugins/metisMenu/jquery.metisMenu.js"></script>');
+document.write('<script src="~/Content/scripts/plugins/dialog/dialog.js"></script>');
+document.write(' <script src="~/Content/scripts/utils/dms-ui.src.js"></script>');
+document.write(' <script src="~/Content/scripts/utils/dms-clientdata.src.js"></script>');

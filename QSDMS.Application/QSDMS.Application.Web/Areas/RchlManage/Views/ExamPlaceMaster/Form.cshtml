@@ -1,0 +1,271 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+  
+    $(function () {
+        InitialPage();
+        InitControl();
+     
+    });
+    //初始化数据
+    function InitControl() {
+        $("#uploadPreview").unbind("click").bind("click", function () {
+            $('#uploadFile').trigger("click");
+        })
+        //上传图标
+        $('#uploadFile').change(function () {
+            var f = document.getElementById('uploadFile').files[0];
+            var src = window.URL.createObjectURL(f);
+            document.getElementById('uploadPreview').src = src;
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFile')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+
+            //上传应用图标
+            $.ajax({
+                url: "/Upload/UploadFile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data && data.IsSuccess) {
+                        $("#HidFaceImage").val(data.ResultData["files"]);
+                    }
+                    else {
+                        alert(data.Message);
+                    }
+                }
+            });
+        });
+        //查询该登陆账号所拥有的考场信息
+        var queryJson = {};
+        queryJson["istraining"] = "1";
+        $.ajax({
+            type: "GET",
+            url: "/QX360Manage/ExamPlace/GetDataListJson",
+            async: false,
+            data: { queryJson: JSON.stringify(queryJson) },
+            success: function (json) {
+                if (json) {
+                    var data = eval(json);
+                    var li = "";
+                    for (var i in data) {
+                        var item = data[i];
+                        li += '<li><input type="checkbox" data-value=' + item.SchoolId + ' style="padding: 0px 5px;"/>&nbsp;' + item.Name + '</li>';
+                    }
+                    $("#servicespanel").empty().append(li);
+                }
+            }
+        });
+
+        if (!!keyValue) {
+            $("#MasterAccount").attr("readonly", "readonly");
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/ExamPlaceMaster/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.ExamPlaceIds) {
+                            $("#hidCountyId").val(data.ExamPlaceIds);
+                            $("#servicespanel input[type='checkbox']").each(function () {
+                                var $this = $(this);
+                                var areaid = $this.attr("data-value");
+                                var ids = data.ExamPlaceIds.split(',');
+                                for (var i = 0; i < ids.length; i++) {
+                                    if (areaid == ids[i]) {
+                                        $this.attr("checked", 'checked');
+                                    }
+                                }
+
+                            });
+
+                        }
+                        if (data.ExamPlaceNames) {
+                            $("#txtCounty").val(data.ExamPlaceNames);
+                        }
+                        if (data.FaceImage) {
+                            var host = '@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"] == "" ? string.Format("http://{0}{1}", Request.Url.Host, Request.Url.Port == 80 ? "" : ":" + Request.Url.Port) : System.Configuration.ConfigurationManager.AppSettings["ImageHost"])';
+                            document.getElementById('uploadPreview').src = host + data.FaceImage;
+                        }
+                    }
+                }
+            });
+        }
+
+     
+    }
+    //保存表单
+    function AcceptClick() {
+       
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["FaceImage"] = $("#HidFaceImage").val();
+        postData["ExamPlaceIds"] = $("#hidCountyId").val();
+        postData["ExamPlaceNames"] = $("#txtCounty").val();
+        $.SaveForm({
+            url: "/QX360Manage/ExamPlaceMaster/SaveForm?keyValue=" + keyValue,
+            param: { json: JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+
+    }
+    function SelectAuthorize() {
+        var showAuthorizeList = function () {
+            var $subnePanel = $("#authorizePanel");
+            var control = $("#txtCounty");
+            var divpa = document.getElementById("authorizePanel");
+            var offset = control.offset();
+            divpa.style.top = (offset.top + control.height() + -6) + "px";
+            divpa.style.left = (offset.left) + "px";
+            $subnePanel.removeClass("hide");
+            $subnePanel.width(control.width());
+
+            $subnePanel.css("position", "absolute");
+            $subnePanel.css("z-index", "1000");
+            $subnePanel.unbind("mouseout").bind('mouseout', function () {
+                var $this = $(this);
+                if ($this.length != 0) {
+                    var width = $this.width();
+                    var offset = $this.offset();
+                    var w = $(document).width();
+                    var top = offset.top + $this.height();
+                    var left = 0;
+                    if (offset.left + width + 9 > w) {
+                        left = offset.left + $this.width() - width + 4;
+                    }
+                    else {
+                        left = offset.left;
+                    }
+                    var ev = window.event;
+                    var x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    var y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                    if (!(x >= left && x <= left + width - 2 &&
+                        y >= offset.top && y <= top - 2)) {
+
+                        $subnePanel.addClass("hide");
+                    }
+                }
+            });
+
+            //确定事件
+            $("#btn_userauthorize").bind("click", function () {
+                var text = "";
+                var ids = "";
+                $("#servicespanel input[type='checkbox']").each(function () {
+                    var $this = $(this);
+                    if ($this.is(":checked")) {
+                        var areaid = $this.attr("data-value");
+                        ids += areaid + ",";
+                        var areaname = $this.parent().text().replace(/^\s+|\s+$/g, "");
+                        text += areaname + ",";
+                    }
+                });
+                if (ids) {
+                    $("#hidCountyId").val(ids.substring(0, ids.length - 1));
+                    control.val(text.substring(0, text.length - 1));
+                } else {
+                    $("#hidCountyId").val("");
+                    control.val("");
+                }
+                $subnePanel.addClass("hide");
+            })
+        }
+        showAuthorizeList();
+    }
+</script>
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">管理员名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="MasterName" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">管理员电话<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="MasterTel" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">照片</td>
+            <td>
+                <input type="hidden" id="HidFaceImage" />
+                <div style="text-align: center;">
+                    <div class="" style="width: 100px; height: 100px;">
+                        <img id="uploadPreview" style="width: 100px; height: 100px; border-radius: 100px; border:0px" src="~/Content/images/add.png" />
+                        <input type="file" name="uploadFile" id="uploadFile" style="display:none">
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">登陆账号<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="MasterAccount" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">登陆密码<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="MasterPwd" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" value="888888" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">管理考场<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input type="hidden" id="hidCountyId" />
+                <input id="txtCounty" type="text" class="form-control input-profile" style="" onclick="SelectAuthorize()" readonly isvalid="yes" checkexpession="NotNull" /><span onclick="SelectPoint()" class="input-button" title="选择考场">...</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">备注</td>
+            <td class="formValue">
+                <textarea id="Remark" class="form-control" placeholder=""></textarea>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div id="authorizePanel" class="hide" style="border: 1px solid #ccc; width: 100%; background: #fff; height:260px; overflow: auto;">
+    <div id="authorizeTree" style="margin: 10px;">
+        <div class="ui-select-option-content">
+            <ul id="servicespanel" style=""></ul>
+        </div>
+    </div>
+    <div style="text-align:right;margin-right:10px">
+        <a id="btn_userauthorize" class="btn btn-success"> 确定</a>
+    </div>
+</div>

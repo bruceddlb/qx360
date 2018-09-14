@@ -1,0 +1,262 @@
+﻿@{
+    ViewBag.Title = "代审订单";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    var queryJson = request('queryjson');
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+    });
+    //初始化页面
+    function InitialPage() {
+        $("#ddlstatus").ComboBox({
+            url: "/DataItemEnums/GetPayStatus",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择订单状态==",
+            height: "200px"
+        });
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                //$("#gridTable").setGridHeight($(window).height() - 160);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var $gridTable = $("#gridTable");
+        $gridTable.jqGrid({
+            url: "/QX360Manage/TakeAuditOrder/GetPageListJson",
+            datatype: "json",
+            postData: { queryJson: queryJson },//如果默认其他条件
+            height: $(window).height() - 170,
+            autowidth: true,
+            colModel: [
+                { label: "主键", name: "TakeAuditOrderId", hidden: true },
+
+                { label: "订单号", name: "TakeAuditOrderNo", index: "TakeAuditOrderNo", width: 150, align: "center" },
+                 { label: "用户姓名", name: "MemberName", index: "MemberName", width: 100, align: "center" },
+
+                 
+                     //{ label: "车架号", name: "CarFrameNum", index: "CarFrameNum", width: 100, align: "center" },
+                    { label: "联系电话", name: "Mobile", index: "Mobile", width: 120, align: "center" },
+                     { label: "车牌号", name: "CarNum", index: "CarNum", width: 100, align: "center" },
+                    { label: "车辆类型", name: "CarTypeName", index: "CarTypeName", width: 100, align: "center" },
+                      {
+                          label: "用户地址", name: "AddressInfo", index: "AddressInfo", width: 150, align: "center",
+                          formatter: function (cellvalue, options, rowObject) {
+                              return cellvalue;
+                          }
+                      },
+                {
+                    label: "预约时间", name: "ServiceTime", index: "ServiceTime", width: 150, align: "center",
+                    formatter: function (cellvalue, options, rowObject) {
+                        return cellvalue;
+                    }
+                },
+                 {
+                     label: "代审机构", name: "OrganizationName", index: "OrganizationName", width: 150, align: "center",
+                     formatter: function (cellvalue, options, rowObject) {
+                         return cellvalue;
+                     }
+                 },
+                  {
+                      label: "费用", name: "Price", index: "Price", width: 150, align: "left",
+                      formatter: function (cellvalue, options, rowObject) {
+                          return "￥" + (cellvalue == null ? 0 : cellvalue);
+                      }
+                  },
+      { label: "支付方式", name: "CashTypeName", index: "CashTypeName", width: 80, align: "center" },
+                {
+                    label: "状态", name: "StatusName", index: "StatusName", width: 100, align: "center",
+                    formatter: function (cellvalue, options, rowObject) {
+                        return cellvalue;
+                    }
+                }, {
+                    label: "查看评价", name: "", index: "", width: 100, align: "center",
+                    formatter: function (cellvalue, options, rowObject) {
+                        if (rowObject["Status"] == "@((int)QX360.Model.Enums.PaySatus.已评价)") {
+                            return '<span onclick=ShowAuditCommittee("' + rowObject["TakeAuditOrderId"] + '") style=" cursor:pointer">查看评价</span>';
+                        } else {
+                            return "--";
+                        }
+                    }
+                }
+            ],
+            multiselect: true,
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'CreateTime',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+        });
+        //查询条件设置
+        $("#queryCondition .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#queryCondition .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {};
+            queryJson["keyword"] = $("#txt_Keyword").val();
+            queryJson["condition"] = $("#queryCondition").find('.dropdown-text').attr('data-value');
+            queryJson["status"] = $("#ddlstatus").attr('data-value');
+
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+    }
+    //新增
+    function btn_add() {
+
+
+    };
+    //编辑
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue("TakeAuditOrderId");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "Form",
+                title: '编辑信息',
+                url: '/QX360Manage/TakeAuditOrder/Form?keyValue=' + keyValue,
+                width: "800px", height: "600px",
+
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $("#gridTable").jqGridRowValue("TakeAuditOrderId");
+        if (checkedArray(keyValue)) {
+            $.RemoveForm({
+                url: "/QX360Manage/TakeAuditOrder/RemoveForm",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#gridTable").trigger("reloadGrid");
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的行！', 0);
+        }
+    }
+
+    function btn_pay() {
+        //var keyValue = $("#gridTable").jqGridRowValue("TakeAuditOrderId");
+        //if (checkedArray(keyValue)) {
+        //    $.ConfirmAjax({
+        //        msg: "注：您确定此操作吗？",
+        //        url: "/QX360Manage/TakeAuditOrder/Pay",
+        //        param: { keyValue: keyValue },
+        //        success: function (result) {
+        //            if (result.IsSuccess) {
+        //                $("#gridTable").trigger("reloadGrid");
+        //            }
+        //        },
+        //        error: function (result) {
+        //            dialogMsg(result.Message, 0);
+
+        //        }
+        //    })
+        //}
+        var keyValue = $("#gridTable").jqGridRowValue("TakeAuditOrderId");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "Form",
+                title: '订单支付',
+                url: '/QX360Manage/TakeAuditOrder/Pay?keyValue=' + keyValue,
+                width: "800px", height: "600px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+
+    //导出
+    function btn_export() {
+        var queryJson = {};
+        var keyValue = $("#gridTable").jqGridRowValue("TakeAuditOrderId");
+        queryJson["checkedids"] = keyValue;
+        queryJson["keyword"] = $("#txt_Keyword").val();
+        queryJson["condition"] = $("#queryCondition").find('.dropdown-text').attr('data-value');
+        queryJson["status"] = $("#ddlstatus").attr('data-value');
+
+        var actionUrl = "/QX360Manage/TakeAuditOrder/ExportExcel";
+        var iscompletedMsg = "iscompletedMsg";
+        var para = "queryJson|" + JSON.stringify(queryJson);
+        doProgressExport(para, actionUrl, iscompletedMsg, "uploadFlag");
+    }
+    function ShowAuditCommittee(id) {
+        dialogOpen({
+            id: "ShowAuditCommittee",
+            title: '查看评价',
+            url: '/QX360Manage/AuditCommittee/Detail?keyValue=' + id,
+            width: "1000px",
+            height: "600px",
+            btn: null
+        });
+    }
+</script>
+<div class="row">
+    <div class="toolbarPanel">
+        <div class="row">
+            <div class="col-md-1">
+                <div id="queryCondition" class="btn-group">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">选择条件</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a data-value="TakeAuditOrderno">订单号</a></li>
+                        <li><a data-value="MemberName">姓名</a></li>
+                        <li><a data-value="Mobile">联系方式</a></li>
+                        <li><a data-value="CarNum">车牌号</a></li>
+                        <li><a data-value="OrganizationName">代审机构</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="col-md-2">
+                <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" style="" />
+            </div>
+            <div class="col-md-2">
+                <div id="ddlstatus" type="select" class="ui-select">
+                </div>
+            </div>
+            <div class="col-md-1">
+                <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+            </div>
+
+            <div class="toolbar">
+                <div class="btn-group animated fadeInDownBig">
+                    <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                    @*<a id="btn-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>*@
+                    <a id="btn-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                    <a id="btn-pay" class="btn btn-default" onclick="btn_pay()"><i class="fa fa fa-bookmark"></i>&nbsp;支付</a>
+                    <a id="btn-export" class="btn btn-default" onclick="btn_export()"><i class="fa fa-sign-out"></i>&nbsp;导出</a>
+                    <span style="line-height: 26px" class='' id="uploadFlag">
+                        <span id="iscompletedMsg"
+                              style="display: none;"><font color='red'>正在处理，请稍候...</font></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+        <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+    </div>
+</div>

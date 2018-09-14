@@ -1,0 +1,109 @@
+﻿@{
+    ViewBag.Title = "本周学车预约单";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.CurrentWeekList = ko.observableArray([]);
+            self.List = ko.observableArray([]);
+            self.Status = ko.observable("@((int)QX360.Model.Enums.StudySubscribeStatus.预约成功)");
+            self.ServiceDate = ko.observable("");
+            self.BindList = function () {
+                $.get("/Study/GetTeacherStudyList", { status: self.Status(), servicedate: self.ServiceDate() }, function (result) {
+                    if (result.IsSuccess) {
+                        self.List.removeAll();
+                        var data = result.ResultData["List"];
+                        self.List(data);
+                    }
+                });
+            }
+            self.BindWeek = function () {
+                $.get("/FreeTime/GetCurrentWeekList", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        self.CurrentWeekList(data);
+                        $('.Mslt').on('click', function () {
+                            $('.Malco_snav_list').hide()
+                        })
+                    }
+                });
+            }
+            self.SetCommittee = function (id) {
+                window.location.href = "/MaCenter/TeacherCommittee?id=" + id;
+            }
+            self.Search = function (date) {
+                self.ServiceDate(date);
+                self.BindList();
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindList();
+            model.BindWeek();
+            //菜单切换
+            $('.Malcorder_nav dd span').on('click', function () {
+                $('.Malcorder_nav dd span').removeClass('Malcornav_span')
+                $(this).addClass('Malcornav_span');
+                model.Status($(this).attr("data-status"));
+                model.ServiceDate("");
+                model.BindList();
+            })
+            $('.Malco_font').on('click', function () {
+                if ($('.Malco_snav_list').is(':visible')) {
+                    $('.Malco_snav_list').hide()
+                } else {
+                    $('.Malco_snav_list').show()
+                }
+            })
+
+        })
+
+    </script>
+}
+
+<dl class="Malcorder_nav">
+    <dd><span data-status="1" class="Malcornav_span">成功</span></dd>
+    <dd><span data-status="3">完成</span></dd>
+    <dd><span data-status="2">取消</span></dd>
+    <dd><span data-status="5">评价</span></dd>
+    <dd class="Malco_nav_snav">
+        <i class="iconfont icon-shaixuan Malco_font"></i>
+        <div class="Malco_snav_list">
+            <img src="/Content/images/jiantou_03.png" class="Malco_snav_list_img">
+            <div data-bind="foreach:$root.CurrentWeekList()">
+                <div class="Mslt" data-bind="click:function(){$root.Search(formatDate(FreeDate,'yyyy-MM-dd'))}"><em data-bind="text:WeekName.replace('星期','本周')"></em></div>
+            </div>
+        </div>
+    </dd>
+</dl>
+
+
+<ul class="Malcorder_con" data-bind="foreach:$root.List">
+    <li>
+        <i class="iconfont icon-jiantou2 Malcorder_icon"></i>
+        <div class="Malcorder_row1">
+            <div class="Malcorder_time"><i class="iconfont icon-jibenxinxi1"></i>预约单号：<em data-bind="text:StudyOrderNo"></em></div>
+        </div>
+        <div class="Malcorcon_div">
+            <div class="Malcorcon_title">
+                <font>预约日期 :</font><em data-bind="text:ServiceTime"></em>
+            </div>
+            <div class="Malcorcon_title">
+                <font>预  约 人 :</font><em data-bind="text:MemberName"></em>&nbsp;  <em>|</em>  &nbsp;<em data-bind="text:MemberMobile"></em>
+            </div>
+        </div>
+        <div class="Malcorder_btn">
+            <div class="Malcorder_state2">状态:<span class="Malcorcon_ok" data-bind="text:StatusName"></span></div>
+            <!--ko if:Status=="3"-->
+            <div class="Malcorder_btn_a" data-bind="click:function(){$root.SetCommittee(StudyOrderId)}">评价</div>
+            <!--/ko-->
+        </div>
+    </li>
+
+</ul>
+
+<!--ko if:List().length==0-->
+<div class=" order_null"><i class="iconfont icon-xiaofeijilu5"></i><span>暂无预约！</span></div>
+<!--/ko-->

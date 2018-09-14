@@ -1,0 +1,68 @@
+﻿@{
+    ViewBag.Title = "评论";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+
+<script>
+    var keyValue = request('keyValue');
+
+    $(function () {
+
+        initControl();
+    })
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/QX360Manage/TeacherCommittee/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+
+                }
+            });
+        } else {
+
+        }
+    }
+
+
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">教练名称</td>
+            <td class="formValue">
+                <input id="TeacherName" type="text" class="form-control" placeholder="" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">评分</td>
+            <td class="formValue">
+                <input id="CommitLev" type="text" class="form-control" placeholder="" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">评价内容</td>
+            <td class="formValue">
+                <div id="" style="" class="">
+                    <textarea id="CommitContent" class="form-control" rows="5" style="width:100%"></textarea>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">评价时间</td>
+            <td class="formValue">
+                <input id="CommitTime" type="text" class="form-control" placeholder="" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">学员名称</td>
+            <td class="formValue">
+                <input id="MemberName" type="text" class="form-control" placeholder="" />
+            </td>
+        </tr>
+    </table>
+</div>
+

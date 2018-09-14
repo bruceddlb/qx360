@@ -1,0 +1,99 @@
+﻿@{
+    ViewBag.Title = "考场工作平台";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = "@ViewBag.Id";
+        function ViewModel() {
+            var self = this;
+            self.ExamPlace = ko.observable({
+                Id: ko.observable(""),
+                Name: ko.observable(""),
+                FaceImage: ko.observable(""),
+                ConectTel: ko.observable(""),
+                ConectName: ko.observable(""),
+                SubjectList: ko.observableArray([])
+            });
+            self.BindExamPlace = function () {
+                $.get("/ExamPlaceCenter/GetExamPlaceCenterModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.ExamPlace().Id(data.ExamPlaceMasterId);
+                            self.ExamPlace().FaceImage(data.FaceImage);
+                            self.ExamPlace().Name(data.ExamPlaceNames);
+                            self.ExamPlace().ConectName(data.MasterName);
+                            self.ExamPlace().ConectTel(data.MasterTel);
+                            var subject = result.ResultData["SubjectList"];                            
+                            self.ExamPlace().SubjectList(subject);
+                        }
+                    }
+                })
+            }
+            self.Training = function (trainingtype,examplaceid) {
+                window.location.href = "/ExamPlaceCenter/Training?trainingtype=" + trainingtype + "&schoolid=" + examplaceid;
+            }
+
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindExamPlace();
+        })
+
+    </script>
+}
+<div class="Mac_top">
+    <img data-bind="attr:{src:$root.ExamPlace().FaceImage()==''?'/images/face.png':$root.ExamPlace().FaceImage}" class="Mac_top_left">
+    <div class="Mac_top_right">
+        <div class="Mac_top_name" data-bind="text:$root.ExamPlace().Name"></div>
+        <div class="Mac_top_tel"><em data-bind="text:$root.ExamPlace().ConectName"></em>&nbsp; |&nbsp; <em data-bind="text:$root.ExamPlace().ConectTel"></em></div>
+    </div>
+</div>
+
+<div class="BcMenu" data-bind="foreach:$root.ExamPlace().SubjectList">
+    <a href="#" data-bind="click:function(){$root.Training(ItemId,SchoolId);}">
+        <div class="BcMenu_list" data-bind="attr:{class:ItemId=='1'?'BcMenu_list':'BcMenu_list BcMenu_list2'}">
+            <i class="iconfont icon-jiantou BcMenu_icon"></i>
+            <div class="BcMl_left"><i class="iconfont icon-chenggong2"></i></div>
+            <div class="BcMl_right">
+                <div class="BcMl_h2" data-bind="text:ItemId=='1'?'科目二':'科目三'"></div>
+                <div class="BcMl_sm" data-bind="text:SchoolName"></div>
+            </div>
+        </div>
+    </a>
+    @*<a href="#" data-bind="click:function(){$root.Training(2);}">
+            <div class="BcMenu_list BcMenu_list2">
+                <i class="iconfont icon-jiantou BcMenu_icon"></i>
+                <div class="BcMl_left"><i class="iconfont icon-chenggong2"></i></div>
+                <div class="BcMl_right">
+                    <div class="BcMl_h2">
+                        <div class="BcMl_h2">科目三</div>
+                        <div class="BcMl_sm">科目三实训</div>
+                    </div>
+                </div>
+            </div>
+        </a>*@
+</div>
+
+
+<ul class="McMy_ul">
+    <li class="McMy_list">
+        <a href="/ExamPlaceCenter/Information">
+            <span class="McMy_list_left"><i class="iconfont icon-zhanghao"></i>个人信息</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+    <li class="McMy_list">
+        <a href="/ExamPlaceCenter/Password">
+            <span class="McMy_list_left"><i class="iconfont icon-mima"></i>修改密码</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+    <li class="McMy_list">
+        <a href="/ExamPlaceCenter/Login?sig=out">
+            <span class="McMy_list_left"><i class="iconfont icon-emoji"></i>退出登陆</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+</ul>

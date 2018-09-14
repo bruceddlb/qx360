@@ -1,0 +1,169 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+<script>
+    var _ImageList = [];
+    var editor;
+    var dtips;
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        dtips = $("#destips");
+        InitControl();
+        $("#btn_finish").bind("click", function () {
+            AcceptClick();
+        })
+    });
+
+
+    //初始化数据
+    function InitControl() {
+        $("#ddlMemberLev").ComboBox({
+            url: "/DataItemEnums/GetUserType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择会员类型==",
+            height: "200px"
+        });
+        $("#ddlRuleOperation").ComboBox({
+            url: "/DataItemEnums/GetOperationType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择用户操作类型==",
+            height: "200px"
+        });
+        $("#ddlType").ComboBox({
+            url: "/DataItemEnums/GetGiveType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择积分赠送方式==",
+            height: "200px"
+        });
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/Rule/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.RuleOperation) {
+                            $("#ddlRuleOperation").ComboBoxSetValue(data.RuleOperation);
+                        }
+                        if (data.MemberLevId) {
+                            $("#ddlMemberLev").ComboBoxSetValue(data.MemberLevId);
+                        }
+                        if (data.Type) {
+                            $("#ddlType").ComboBoxSetValue(data.Type);
+                        }
+                    }
+                }
+            });
+        }
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["RuleOperation"] = $("#ddlRuleOperation").attr('data-value');
+        postData["MemberLevId"] = $("#ddlMemberLev").attr('data-value');
+     
+        if (postData["MemberLevId"]) {
+            postData["MemberLevName"] = $("#ddlMemberLev").attr('data-text');
+        } else {
+            postData["MemberLevId"] = "-1";
+            postData["MemberLevName"] = "全体用户";
+        }
+        postData["Type"] = $("#ddlType").attr('data-value');
+        $.SaveForm({
+            url: "/QX360Manage/Rule/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $(window).resize(function (e) {
+        });
+
+    }
+
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+
+        <tr>
+            <td class="formTitle"> 规则名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Name" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">适应用户</td>
+            <td class="formValue">
+                <div id="ddlMemberLev" type="select" class="ui-select">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">用户操作<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlRuleOperation" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">赠送方式<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlType" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">赠送比例<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div class="" style="margin-left:-14px">
+                    <div class="col-md-3">
+                        <input id="CosMoney" type="text" class="form-control input-profile" placeholder="消费金额" isvalid="yes" checkexpession="NotNull" />
+                    </div>
+                    <div class="col-md-3">
+                        <input id="GivePoint" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" placeholder="赠送积分" />
+                    </div>
+                </div>
+
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">每日限额</td>
+            <td class="formValue">
+                <input id="LimitingValue" type="text" class="form-control input-profile" placeholder="消费金额" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"></td>
+            <td class="formValue">
+                为空则默认为不限制
+            </td>
+        </tr>
+    </table>
+</div>
+

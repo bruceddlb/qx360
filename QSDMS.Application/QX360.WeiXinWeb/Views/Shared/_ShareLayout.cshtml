@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv=Content-Type content=text/html; charset=utf-8 />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>@ViewBag.Title</title>
+    <link rel="stylesheet" href="/Content/weui.min.css">
+    <link href="~/Content/style.css" rel="stylesheet" />
+    @RenderSection("css", false)
+    <script src="~/Scripts/lib/jquery-1.11.1.min.js"></script>
+    <script src="~/Scripts/lib/weui.min.js"></script>
+    <script src="~/Scripts/lib/knockout-3.4.1.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var $loadingToast = $('#loadingToast');
+            if ($loadingToast.css('display') != 'none') return;
+            $loadingToast.fadeIn(100);
+            setTimeout(function () {
+                $loadingToast.fadeOut(100);
+            }, 200);
+
+            if (pageName().toLowerCase().indexOf('article') > -1) {
+                var $article = $("#menu").find("a[rel='article']");
+                $article.siblings().removeClass("weui-bar__item--on");
+                $article.addClass("weui-bar__item--on");
+            } else if (pageName().toLowerCase().indexOf('cardcase') > -1) {
+                var $cardcase = $("#menu").find("a[rel='cardcase']");
+                $cardcase.siblings().removeClass("weui-bar__item--on");
+                $cardcase.addClass("weui-bar__item--on");
+            } else {
+
+            }
+
+
+        })
+        //取当前页面名称(带后缀名)
+        function pageName() {
+            var strUrl = location.href;
+            //var arrUrl = strUrl.split("/");
+            //var strPage = arrUrl[arrUrl.length - 1];
+            return strUrl;
+        }
+        //打开提示
+        function ShowTips(txt, type) {
+            var $toast = $('#toast');
+            if ($toast.css('display') != 'none') return;
+            $toast.find("p").text(txt);
+            if (type) {
+                if (type = "ok") {
+                    $toast.find("i").removeClass("weui-icon-info-circle").addClass("weui-icon-success-no-circle");
+                } else {
+                    $toast.find("i").removeClass("weui-icon-success-no-circle").addClass("weui-icon-info-circle");
+                }
+            }
+            $toast.fadeIn(100);
+            setTimeout(function () {
+                $toast.fadeOut(100);
+            }, 2000);
+        }
+        //确认提示
+        function ConfirmDialog(fn, txt) {
+            var $this = $("#divconfirmDialog");
+            $this.fadeIn(200);
+            if (txt) {
+                $this.find("p").text(txt);
+            }
+            $this.find("a[rel='no']").unbind("click").bind("click", function () {
+                $this.fadeOut(200);
+            });
+            $this.find("a[rel='ok']").unbind("click").bind("click", function () {
+                if (fn) {
+                    fn();
+                    $this.fadeOut(200);
+                }
+            });
+        }
+        //获取url参数
+        function request(keyValue) {
+            var search = location.search.slice(1);
+            var arr = search.split("&");
+            for (var i = 0; i < arr.length; i++) {
+                var ar = arr[i].split("=");
+                if (ar[0] == keyValue) {
+                    if (unescape(ar[1]) == 'undefined') {
+                        return "";
+                    } else {
+                        return unescape(ar[1]);
+                    }
+                }
+            }
+            return "";
+        }
+        function newGuid() {
+            var guid = "";
+            for (var i = 1; i <= 32; i++) {
+                var n = Math.floor(Math.random() * 16.0).toString(16);
+                guid += n;
+                if ((i == 8) || (i == 12) || (i == 16) || (i == 20)) guid += "-";
+            }
+            return guid;
+        }
+    </script>
+    @RenderSection("scripts", false)
+</head>
+<body ontouchstart>
+    <section class="ui-container">
+        @RenderBody()
+    </section>
+
+    <!-- loading toast -->
+    <div id="loadingToast" style="display:none;">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+    <!--BEGIN toast-->
+    <div id="toast" style="display: none;">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-icon-info-circle weui-icon_toast"></i>
+            <p class="weui-toast__content">已完成</p>
+        </div>
+    </div>
+    <!--end toast-->
+    <!--BEGIN dialog-->
+    <div class="js_dialog" id="divconfirmDialog" style="display: none;">
+        <div class="weui-mask"></div>
+        <div class="weui-dialog">
+            <div class="weui-dialog__hd">
+                <i class="weui-icon-warn weui-icon_msg"></i>
+                <p class="weui-dialog__bd" style="padding:10px;">确定要进行此操作吗?</p>
+                <div class="weui-dialog__ft">
+                    <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_default" rel="no">取消</a>
+                    <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary" rel="ok">确定</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+﻿@{
+    ViewBag.Title = "自定义设置";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.List = ko.observableArray([]);
+            self.BindList = function () {
+                $.get("/Message/GetMessageAlterType", null, function (result) {
+                    if (result.IsSuccess) {
+                        self.List.removeAll();
+                        var data = result.ResultData["List"];
+                        self.List(data);
+                    }
+                });
+            }
+            self.Set = function (type) {
+                var alter = type;
+                //$("#IsBandCar").is(":checked") == true ? "1" : "0"
+                var status = ($("input[data-id='" + type + "']").is(":checked") == true ? "1" : "0");
+                $.post("/Message/SetUp", { status: status, altertype: alter }, function (result) {
+                    if (result.IsSuccess) {
+                        //ShowTips(result.Message, "ok");                       
+                        self.BindList();
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindList();
+        })
+
+
+    </script>
+}
+
+
+
+
+
+<ul class="DcS_ul" style="margin-top:0;" data-bind="foreach:$root.List">
+    <li>
+        <div class="DcS_left"><em data-bind="text:ItemName"></em></div>
+        <div class="DcS_right DcS_right2" style="margin-top:0.1rem;">
+            <!--ko if:Status==1-->
+            <input class="mui-switch mui-switch-animbg" type="checkbox" data-bind="attr:{'data-id':ItemId},click:function(){$root.Set(ItemId)}" checked>
+            <!--/ko-->
+            <!--ko if:Status!=1-->
+            <input class="mui-switch mui-switch-animbg" type="checkbox" data-bind="attr:{'data-id':ItemId},click:function(){$root.Set(ItemId)}">
+            <!--/ko-->
+        </div>
+    </li>
+</ul>
+

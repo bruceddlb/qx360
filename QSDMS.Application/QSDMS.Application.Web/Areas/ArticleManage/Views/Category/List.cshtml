@@ -1,0 +1,146 @@
+﻿@{
+    ViewBag.Title = "分类列表";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $("#gridTable").setGridHeight($(window).height() - 160);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $("#gridTable");
+        var queryJson = {};
+        $gridTable.jqGrid({
+            url: "/ArticleManage/Category/GetPageListJson",
+            datatype: "json",
+            postData: { queryJson: JSON.stringify(queryJson) },
+            height: $(window).height() - 160,
+            autowidth: true,
+            colModel: [
+                { label: '主键', name: 'ClassId', hidden: true },
+                 {
+                     label: "图标", name: "IconPath", index: "IconPath", width: 80, align: "center",
+                     formatter: function (cellvalue, options, rowObject) {
+                        var host = '@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"] == "" ? string.Format("http://{0}{1}", Request.Url.Host, Request.Url.Port == 80 ? "" : ":" + Request.Url.Port) : System.Configuration.ConfigurationManager.AppSettings["ImageHost"])';
+
+                         if (cellvalue != null) {
+                             return "<img src='" +host+ cellvalue + "' style='width:30px;height:30px;'/>";
+                         } else {
+                             return "";
+                         }
+                     }
+                 },
+                { label: '名称', name: 'ClassName', ItemNameindex: 'ClassName', width: 200, align: 'center', sortable: true },
+                { label: '排序号', name: 'SortNum', index: 'SortNum', width: 200, align: 'center', sortable: false },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'SortNum',
+            sortorder: 'asc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+
+        });
+
+        //查询事件
+             $("#btn_Search").click(function () {
+                 var queryJson = {};
+                 queryJson["keyword"] = $("#txt_Keyword").val();
+                 $gridTable.jqGrid('setGridParam', {
+                     postData: { queryJson: JSON.stringify(queryJson) }
+                 }).trigger('reloadGrid');
+             });
+        //查询回车
+             $('#txt_Keyword').bind('keypress', function (event) {
+                 if (event.keyCode == "13") {
+                     $('#btn_Search').trigger("click");
+                 }
+             });
+         }
+
+         function btn_add() {
+             dialogOpen({
+                 id: "Form",
+                 title: '创建',
+                 url: '/ArticleManage/Category/Form',
+                 width: "500px",
+                 height: "370px",
+                 callBack: function (iframeId) {
+                     top.frames[iframeId].AcceptClick();
+                 }
+             });
+         }
+
+         //修改
+         function btn_edit() {
+             var keyValue = $("#gridTable").jqGridRowValue("ClassId");
+             if (checkedRow(keyValue)) {
+                 dialogOpen({
+                     id: "Form",
+                     title: '编辑',
+                     url: '/ArticleManage/Category/Form?keyValue=' + keyValue,
+                     width: "500px",
+                     height: "370px",
+                     callBack: function (iframeId) {
+                         top.frames[iframeId].AcceptClick();
+                     }
+                 });
+             }
+         }
+         //删除
+         function btn_delete() {
+             var keyValue = $("#gridTable").jqGridRowValue("ClassId");
+             if (keyValue) {
+                 $.RemoveForm({
+                     url: "/ArticleManage/Category/RemoveForm",
+                     param: { keyValue: keyValue },
+                     success: function (data) {
+                         $("#gridTable").trigger("reloadGrid");
+                     }
+                 })
+             } else {
+                 dialogMsg('请选择需要删除的数据！', 0);
+             }
+         }
+</script>
+<div class="toolbarPanel">
+    <div class="row">
+
+        <div class="col-md-2">
+            <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" />
+        </div>
+        <div class="col-md-1">
+            <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+        </div>
+
+
+        <div class="toolbar">
+            <div class="btn-group animated fadeInDownBig">
+                <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                <a id="btn-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新建</a>
+                <a id="btn-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                <a id="btn-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+            </div>
+        </div>
+    </div>
+
+</div><div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+</div>

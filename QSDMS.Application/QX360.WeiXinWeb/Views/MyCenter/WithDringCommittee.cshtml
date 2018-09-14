@@ -1,0 +1,78 @@
+﻿@{
+    ViewBag.Title = "陪驾评价";
+}
+
+<script type="text/javascript">
+    var id = request('id');
+    function ViewModel() {
+        var self = this;
+        self.CommitLev = ko.observable("");
+        self.CommitContent = ko.observable("");
+        self.WithDringOrderId = ko.observable(id);
+        self.Send = function () {
+            var postData = {};
+            var count = 0;
+            $("#comlev i").each(function () {
+                var $this = $(this);
+                if ($this.css("color") == "rgb(255, 68, 37)") {
+                    count++;
+                }
+            })
+            self.CommitLev(count);
+            if (!self.CommitLev()) {
+                ShowTips("请选择评分");
+                return;
+            }
+            if (!self.CommitContent()) {
+                ShowTips("请填写评价");
+                return;
+            }
+
+            postData["CommitLev"] = self.CommitLev();
+            postData["CommitContent"] = self.CommitContent();
+            postData["WithDringOrderId"] = self.WithDringOrderId();;
+            $.post("/WithDringCommittee/Send", { json: JSON.stringify(postData) }, function (result) {
+                if (result.IsSuccess) {
+                    ShowTips(result.Message, "ok");
+                    setTimeout(function () {
+                        window.location.href = "/MyCenter/WithDriving";
+                    }, 200);
+
+                } else {
+                    ShowTips(result.Message);
+                }
+            });
+        }
+    }
+    $(function () {
+        var model = new ViewModel();
+        ko.applyBindings(model);
+
+        $('.LeEv_xing font i').on('click', function () {
+            var ii = $('.LeEv_xing font i')
+            $(ii).css('color', '#ccc')
+            for (var i = 0; i <= $(this).index() ; i++) {
+                $(ii[i]).css('color', '#ff4425')
+            }
+        })
+    })
+</script>
+
+<style>
+</style>
+<div class="LeEv">学车评价</div>
+
+<div class="LeEv_div">
+    <div class="LeEv_xing">
+        <span>评分：</span>
+        <font id="comlev">
+            <i class="iconfont icon-xing1"></i>
+            <i class="iconfont icon-xing1"></i>
+            <i class="iconfont icon-xing1"></i>
+            <i class="iconfont icon-xing1"></i>
+            <i class="iconfont icon-xing1"></i>
+        </font>
+    </div>
+    <div class="LeEv_text"><textarea placeholder="请输入评价内容" data-bind="value:$root.CommitContent"></textarea></div>
+</div>
+<div class="LeEv_btn"><button type="button" class="Mcin_botton2" data-bind="click:function(){$root.Send()}">提交评价</button></div>

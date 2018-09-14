@@ -1,0 +1,268 @@
+﻿@{
+    ViewBag.Title = "管理员工作平台";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = "@ViewBag.Id";
+        function ViewModel() {
+            var self = this;
+            self.StartTime = ko.observable("@QSDMS.Util.Time.GetDate(0)");
+            self.EndTime = ko.observable("@QSDMS.Util.Time.GetDate(0)");
+            self.Master = ko.observable({
+                Id: ko.observable(""),
+                Name: ko.observable(""),
+                FaceImage: ko.observable(""),
+                ConectTel: ko.observable(""),
+                ConectName: ko.observable(""),
+                SubjectList: ko.observableArray([])
+            });
+            self.BindMaster = function () {
+                $.get("/MasterCenter/GetMasterCenterModel", { id: id, startTime: self.StartTime(), endTime: self.EndTime() }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Master().Id(data.UserId);
+                            self.Master().FaceImage(data.HeadIcon);
+                            self.Master().Name(data.Account);
+                            self.Master().ConectName(data.RealName);
+                            self.Master().ConectTel(data.Mobile);
+                            var subject = result.ResultData["SubjectList"];
+                            self.Master().SubjectList(subject);
+                        }
+                    }
+                })
+            }
+            self.Search = function () {
+                self.BindMaster();
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindMaster();
+
+            //选择时间
+            var showDateDom = $('#StartTime');
+            // 初始化时间
+            var now = new Date();
+            var nowYear = now.getFullYear();
+            var nowMonth = now.getMonth() + 1;
+            var nowDate = now.getDate();
+            showDateDom.attr('data-year', nowYear);
+            showDateDom.attr('data-month', nowMonth);
+            showDateDom.attr('data-date', nowDate);
+            // 数据初始化
+            function formatYear(nowYear) {
+                var arr = [];
+                for (var i = nowYear - 5; i <= nowYear + 5; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '年'
+                    });
+                }
+                return arr;
+            }
+            function formatMonth() {
+                var arr = [];
+                for (var i = 1; i <= 12; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '月'
+                    });
+                }
+                return arr;
+            }
+            function formatDate(count) {
+                var arr = [];
+                for (var i = 1; i <= count; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '日'
+                    });
+                }
+                return arr;
+            }
+            var yearData = function (callback) {
+                callback(formatYear(nowYear))
+            }
+            var monthData = function (year, callback) {
+                callback(formatMonth());
+            };
+            var dateData = function (year, month, callback) {
+                if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                    callback(formatDate(31));
+                }
+                else if (/^(4|6|9|11)$/.test(month)) {
+                    callback(formatDate(30));
+                }
+                else if (/^2$/.test(month)) {
+                    if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                        callback(formatDate(29));
+                    }
+                    else {
+                        callback(formatDate(28));
+                    }
+                }
+                else {
+                    throw new Error('month is illegal');
+                }
+            };
+            showDateDom.bind('click', function () {
+                var oneLevelId = showDateDom.attr('data-year');
+                var twoLevelId = showDateDom.attr('data-month');
+                var threeLevelId = showDateDom.attr('data-date');
+                var bankSelect = new IosSelect(3,
+                   [yearData, monthData, dateData],
+                    {
+                        container: '.container',
+                        title: '开始时间',
+                        itemHeight: 35,
+                        itemShowCount: 9,
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                            showDateDom.attr('data-year', selectOneObj.id);
+                            showDateDom.attr('data-month', selectTwoObj.id);
+                            showDateDom.attr('data-date', selectThreeObj.id);
+                            showDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value);
+
+                            var date = selectOneObj.value.replace("年", '') + "-" + selectTwoObj.value.replace("月", '') + "-" + selectThreeObj.value.replace("日", '');
+                            model.StartTime(date);
+                        }
+                    });
+            });
+
+            var showDateDom1 = $('#EndTime');
+            // 初始化时间
+            var now = new Date();
+            var nowYear = now.getFullYear();
+            var nowMonth = now.getMonth() + 1;
+            var nowDate = now.getDate();
+            showDateDom1.attr('data-year', nowYear);
+            showDateDom1.attr('data-month', nowMonth);
+            showDateDom1.attr('data-date', nowDate);
+            // 数据初始化
+            function formatYear(nowYear) {
+                var arr = [];
+                for (var i = nowYear - 5; i <= nowYear + 5; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '年'
+                    });
+                }
+                return arr;
+            }
+            function formatMonth() {
+                var arr = [];
+                for (var i = 1; i <= 12; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '月'
+                    });
+                }
+                return arr;
+            }
+            function formatDate(count) {
+                var arr = [];
+                for (var i = 1; i <= count; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '日'
+                    });
+                }
+                return arr;
+            }
+            var yearData = function (callback) {
+                callback(formatYear(nowYear))
+            }
+            var monthData = function (year, callback) {
+                callback(formatMonth());
+            };
+            var dateData = function (year, month, callback) {
+                if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                    callback(formatDate(31));
+                }
+                else if (/^(4|6|9|11)$/.test(month)) {
+                    callback(formatDate(30));
+                }
+                else if (/^2$/.test(month)) {
+                    if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                        callback(formatDate(29));
+                    }
+                    else {
+                        callback(formatDate(28));
+                    }
+                }
+                else {
+                    throw new Error('month is illegal');
+                }
+            };
+            showDateDom1.bind('click', function () {
+                var oneLevelId = showDateDom1.attr('data-year');
+                var twoLevelId = showDateDom1.attr('data-month');
+                var threeLevelId = showDateDom1.attr('data-date');
+                var bankSelect = new IosSelect(3,
+                   [yearData, monthData, dateData],
+                    {
+                        container: '.container',
+                        title: '开始时间',
+                        itemHeight: 35,
+                        itemShowCount: 9,
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                            showDateDom1.attr('data-year', selectOneObj.id);
+                            showDateDom1.attr('data-month', selectTwoObj.id);
+                            showDateDom1.attr('data-date', selectThreeObj.id);
+                            showDateDom1.val(selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value);
+
+                            var date = selectOneObj.value.replace("年", '') + "-" + selectTwoObj.value.replace("月", '') + "-" + selectThreeObj.value.replace("日", '');
+                            model.EndTime(date);
+                        }
+                    });
+            });
+        })
+
+    </script>
+}
+<div class="Mac_top">
+    <img data-bind="attr:{src:$root.Master().FaceImage()==null?'/images/face.png':$root.Master().FaceImage}" class="Mac_top_left">
+    <div class="Mac_top_right">
+        <div class="Mac_top_name" data-bind="text:$root.Master().Name"></div>
+        <div class="Mac_top_tel"><em data-bind="text:$root.Master().ConectName"></em>&nbsp; |&nbsp; <em data-bind="text:$root.Master().ConectTel"></em></div>
+    </div>
+</div>
+<div style="padding-left:10px;background:#fff;height:60px;">
+    <div style="width: 40%;float:left">开始时间：<input type="text" style="font-size: 0.2rem;height: 30px; margin-bottom: 0.15rem; border: none; margin-top: 0.15rem; border-radius: 0.05rem; outline: none; box-shadow: 0 1px 2px #ddd;" placeholder="选择时间" class="" value="@QSDMS.Util.Time.GetDate(0)" id="StartTime" readonly></div>
+    <div style=" width: 40%;float:left"> 结束时间：<input type="text" style="font-size: 0.2rem;height: 30px; margin-bottom: 0.15rem; border: none; margin-top: 0.15rem;border-radius: 0.05rem; outline: none; box-shadow: 0 1px 2px #ddd;" placeholder="选择时间" class="" value="@QSDMS.Util.Time.GetDate(0)" id="EndTime" readonly></div>
+    <div style=" width: 20%;float:left;position:relative;cursor:pointer" data-bind="click:function(){$root.Search();}"><span style="position: absolute; top: 0.1rem; left: 0.2rem; color: #999;" class=""><i class="iconfont icon-sousuo" style="font-size:30px"></i></span></div>
+</div>
+<div style="clear:both"></div>
+<div data-bind="foreach:$root.Master().SubjectList">
+    <div>
+        <div class="Mac_hr" style="text-align:center"><span data-bind="text:Name"></span></div>
+        <div class="Mac_tab" data-bind="foreach:KpiList">
+            <div class="Mact_left">
+                <span data-bind="text:Count"></span>
+                <span style="color: #72bf34; font-size: 0.24rem;" data-bind="text:Name"></span>
+            </div>
+            <i class="iconfont icon-sandiancaidan Mact_center"></i>
+        </div>
+    </div>
+</div>
+@*<ul class="McMy_ul">
+        <li class="McMy_list">
+            <a href="/MasterCenter/Password">
+                <span class="McMy_list_left"><i class="iconfont icon-mima"></i>修改密码</span>
+                <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+            </a>
+        </li>
+        <li class="McMy_list">
+            <a href="/MasterCenter/Login?sig=out">
+                <span class="McMy_list_left"><i class="iconfont icon-emoji"></i>退出登陆</span>
+                <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+            </a>
+        </li>
+    </ul>*@

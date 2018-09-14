@@ -1,0 +1,337 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+
+    });
+
+
+    //初始化数据
+    function InitControl() {
+        $("#ddlusertype").ComboBox({
+            url: "/DataItemEnums/GetTrainingUserType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择预约类型==",
+            height: "200px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            var url = "/QX360Manage/Select/SelectMember";
+            if (value == "2") {
+                url = "/QX360Manage/Select/SelectTeacher";
+            }
+            setTimeout(function () {
+                // $("#SelectMember").attr("src", url);
+                document.getElementById("SelectMember").src = url;
+
+            }, 200)
+        });
+        $("#ddlmember").ComboBox({
+            description: "==请选择预约人==",
+            height: "170px",
+            allowSearch: true
+        })
+
+        ////所属驾校
+        $("#ddlSchool").ComboBox({
+            url: "/QX360Manage/ExamPlace/GetDataListJson",
+            param: null,
+            id: "SchoolId",
+            text: "Name",
+            description: "==请选择考场==",
+            height: "200px",
+            allowSearch: true
+        }).bind("change", function () {
+
+            $("#ddltrainingtype").attr("data-value", "").attr("data-text", "").text("");
+            var value = $(this).attr('data-value');
+            var queryJson = {};
+            queryJson["schoolid"] = value;
+            $("#ddltrainingtype").ComboBox({
+                url: "/QX360Manage/Subject/GetListJson",
+                param: { queryJson: JSON.stringify(queryJson) },
+                id: "ItemId",
+                text: "SubjectName",
+                description: "==请选择实训类型==",
+                height: "170px",
+                allowSearch: true
+            }).bind("change", function () {
+                value = $(this).attr('data-value');
+                $.SetForm({
+                    url: "/QX360Manage/Subject/GetFormJson",
+                    param: { schollid: queryJson["schoolid"], itemid: value },
+                    success: function (data) {
+                        if (data != null) {
+                            if (data.Price) {
+                                $("#Price").val(data.Price);
+                            }
+                        }
+                    }
+                });
+                $("#ddlcar").attr("data-value", "").attr("data-text", "").text("");
+                queryJson = {};
+                queryJson["schoolid"] = queryJson["schoolid"];
+                queryJson["trainingtype"] = value;
+                $("#ddlcar").ComboBox({
+                    url: "/QX360Manage/TrainingCar/GetListJson",
+                    param: { queryJson: JSON.stringify(queryJson) },
+                    id: "TrainingCarId",
+                    text: "Name",
+                    description: "==请选择车辆==",
+                    height: "200px",
+                    allowSearch: true
+                }).bind("change", function () {
+                    value = $(this).attr('data-value');
+                    $.SetForm({
+                        url: "/QX360Manage/TrainingCar/GetFormJson",
+                        param: { keyValue: value },
+                        success: function (data) {
+                            if (data != null) {
+                                if (data.CarNumber) {
+                                    $("#CarNumber").val(data.CarNumber);
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+
+        });
+        //城市
+        $("#ddlcar").ComboBox({
+            description: "==请选择实训车辆==",
+            height: "170px",
+            allowSearch: true
+        })
+        $("#ddltrainingtype").ComboBox({
+            description: "==请选择实训类型==",
+            height: "170px",
+            allowSearch: true
+        })
+
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = {};
+        postData["TrainingCarId"] = $("#ddlcar").attr('data-value');
+        postData["TrainingCarName"] = $("#ddlcar").attr('data-text');
+        postData["SchoolId"] = $("#ddlSchool").attr('data-value');
+        postData["SchoolName"] = $("#ddlSchool").attr('data-text');
+        postData["UserType"] = $("#ddlusertype").attr('data-value');
+        postData["Price"] = $("#Price").val();
+        postData["TrainingCarNumber"] = $("#CarNumber").val();
+        postData["MemberId"] = $("#hidMemberId").val();
+        postData["MemberName"] = $("#txtMemberName").val();
+        postData["MemberMobile"] = $("#MemberMobile").val();
+        postData["ServiceDate"] = $("#hidServiceDate").val();
+        postData["ServiceTime"] = $("#hidServiceTime").val();
+        postData["TrainingType"] = $("#ddltrainingtype").attr('data-value');
+        postData["TrainingTypeName"] = $("#ddltrainingtype").attr('data-text');
+        if ($("#hidjson").val()) {
+            postData["DetailList"] = eval($("#hidjson").val());
+        }
+        var issend = $("#isSend").is(":checked") == true ? 1 : 0;
+        $.SaveForm({
+            url: "/QX360Manage/TrainingOrder/SaveForm?keyValue=" + keyValue + "&issend=" + issend,
+            param: { json: JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $(window).resize(function (e) {
+        });
+
+    }
+
+    //设置位置坐标
+    function SelectFreeTime() {
+        var txt = "";
+        var carid = $("#ddlcar").attr('data-value');
+        var schoolid = $("#ddlSchool").attr('data-value');
+        if (!carid) {
+            dialogMsg('请选择实训车辆！', 0);
+            return false;
+        }
+        dialogOpen({
+            id: "SelectFreeTime",
+            title: '选择预约时间',
+            url: '/QX360Manage/TrainingOrder/SelectTime?objectid=' + carid + "&schoolid=" + schoolid,
+            width: "1000px", height: "600px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+
+
+    function SelectAuthorize() {
+        if ($("#ddlusertype").attr('data-value') == undefined) {
+            dialogMsg("请选择预约类型", 0);
+            return;
+        }
+
+        var showAuthorizeList = function () {
+            var $subnePanel = $("#authorizePanel");
+            var control = $("#txtMemberName");
+            var divpa = document.getElementById("authorizePanel");
+            var offset = control.offset();
+            divpa.style.top = (offset.top + control.height() + -6) + "px";
+            divpa.style.left = (offset.left) + "px";
+            $subnePanel.removeClass("hide");
+            $subnePanel.width(control.width() + 25);
+
+            $subnePanel.css("position", "absolute");
+            $subnePanel.css("z-index", "1000");
+            $subnePanel.unbind("mouseout").bind('mouseout', function () {
+                var $this = $(this);
+                if ($this.length != 0) {
+                    var width = $this.width();
+                    var offset = $this.offset();
+                    var w = $(document).width();
+                    var top = offset.top + $this.height();
+                    var left = 0;
+                    if (offset.left + width + 9 > w) {
+                        left = offset.left + $this.width() - width + 4;
+                    }
+                    else {
+                        left = offset.left;
+                    }
+                    var ev = window.event;
+                    var x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    var y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                    if (!(x >= left && x <= left + width - 2 &&
+                        y >= offset.top && y <= top - 2)) {
+
+                         $subnePanel.addClass("hide");
+                    }
+                }
+            });
+        }
+        showAuthorizeList();
+    }
+    function MemberCallBack(data) {
+        if (data) {
+            $("#hidMemberId").val(data.memberId);
+            $("#txtMemberName").val(data.memberName);
+            $("#MemberMobile").val(data.mobile);
+        }
+        $("#authorizePanel").addClass("hide");
+    }
+    function TeacherCallBack(data) {
+        if (data) {
+            $("#hidMemberId").val(data.memberId);
+            $("#txtMemberName").val(data.memberName);
+            $("#MemberMobile").val(data.mobile);
+        }
+        $("#authorizePanel").addClass("hide");
+    }
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">选择预约类型<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlusertype" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">预约人<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input type="hidden" id="hidMemberId" />
+                <input id="txtMemberName" type="text" class="form-control input-profile" style="" onclick="SelectAuthorize()" readonly isvalid="yes" checkexpession="NotNull" /><span onclick="SelectPoint()" class="input-button" title="选择考场">...</span>
+
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系方式</td>
+            <td class="formValue">
+                <input id="MemberMobile" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">预约考场<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlSchool" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">实训类型<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddltrainingtype" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">预约车辆<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlcar" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">车牌号</td>
+            <td class="formValue">
+
+                <input id="CarNumber" type="text" class="form-control input-profile" readonly />
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">实训费用<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Price" type="text" class="form-control input-profile" isvalid="yes" checkexpession="Double" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">预约时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="txtservicetime" type="text" class="form-control input-profile" readonly onclick="SelectFreeTime()" isvalid="yes" checkexpession="NotNull" /><span onclick="SelectFreeTime()" class="input-button" title="选取预约时间">...</span>
+
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">发送短信通知</td>
+            <td class="formValue">
+                <div class="checkbox">
+                    <label>
+                        <input id="isSend" type="checkbox" checked />
+                        是
+                    </label>
+                </div>
+            </td>
+        </tr>
+
+    </table>
+    <input type="hidden" id="hidjson" />
+    <input type="hidden" id="hidServiceDate" />
+    <input type="hidden" id="hidServiceTime" />
+</div>
+
+
+<div id="authorizePanel" class="hide" style="border: 1px solid #ccc; width: 100%; background: #fff; height:500px;overflow:hidden">
+    <iframe id="SelectMember" name="SelectMember" height="100%" width="100%" src="/QX360Manage/Select/SelectMember" frameborder="0" style=""></iframe>
+</div>

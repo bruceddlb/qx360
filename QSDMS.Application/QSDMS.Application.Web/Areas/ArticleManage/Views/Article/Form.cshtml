@@ -1,0 +1,225 @@
+﻿@{
+    ViewBag.Title = "文章编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+
+@section Head{
+    <script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+    <link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+    <link href="/Content/scripts/plugins/simditor/css/simditor.css" rel="stylesheet" />
+    <script src="/Content/scripts/plugins/simditor/js/module.min.js"></script>
+    <script src="/Content/scripts/plugins/simditor/js/uploader.min.js"></script>
+    <script src="/Content/scripts/plugins/simditor/js/hotkeys.min.js"></script>
+    <script src="/Content/scripts/plugins/simditor/js/simditor.min.js?uid=@(QSDMS.Util.Util.NewLowerGuid())"></script>
+    <style>
+       
+    </style>
+}
+<script>
+    var editor = null;
+    var _ImageList = [];
+    function stopDefault(e) {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        } else {
+            window.event.returnValue = false;
+        }
+
+        return false;
+    }
+    var keyValue = request('keyValue');
+    $(function () {
+        //类型
+        $("#ddlType").ComboBox({
+            url: "/ArticleManage/Category/GetListJson",
+            param: { EnCode: "wzlx" },
+            id: "ClassId",
+            text: "ClassName",
+            description: "==请选择类型==",
+            height: "200px"
+        });
+
+        initControl();
+
+        editor = new Simditor({
+            height: '500px',
+            textarea: $('#Content'),
+            placeholder: '这里输入内容...',
+            toolbar: [
+            'title',
+            'bold',
+            'italic',
+            'underline',
+            'strikethrough',
+            'fontScale',
+            'color',
+            'ol',
+            'ul',
+            'blockquote',
+            'table',
+            'link',
+            'image',
+            'hr',
+            'indent',
+            'outdent',
+            'alignment',
+            'letterspace',
+            'lineheight'
+            ],
+            upload: {
+                url: '/ArticleManage/Article/SavePic', //文件上传的接口地址
+                params: null, //键值对,指定文件上传接口的额外参数,上传的时候随文件一起提交
+                fileKey: 'fileDataFileName', //服务器端获取文件数据的参数名
+                connectionCount: 3,
+                leaveConfirm: '正在上传文件'
+            }, success: function (data) {
+                alert(data);
+            }
+        });
+        //设置富文本框内容
+        editor.setValue(decodeHtml($("#Hid_ArticleContent").val()));
+
+    });
+    // HTML编码
+    function encodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        }
+
+        return value.replace(/&/g, "&amp;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/</g, "&lt;")
+                    .replace(/'/, "&quot;");
+    }
+
+
+    /// <summary>
+    /// HTML解码
+    /// </summary>
+    function decodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        };
+        return value.replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&amp;/g, "&")
+                    .replace(/&quot;/g, "'");
+    }
+
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/ArticleManage/Article/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                    if (data.ArticleContent) {
+                        $("#Hid_ArticleContent").val(data.ArticleContent);
+                    }
+                    if (data.CategoryId) {
+                        $("#ddlType").ComboBoxSetValue(data.CategoryId);
+                    }
+                }
+            });
+        } else {
+
+        }
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = {};
+        postData["ArticleTitle"] = $("#ArticleTitle").val();
+        postData["SortDesc"] = $("#SortDesc").val();
+        postData["CategoryId"] = $("#ddlType").attr('data-value');
+        postData["Address"] = $("#Address").val();
+        postData["ContactName"] = $("#ContactName").val();
+        postData["ContactTel"] = $("#ContactTel").val();
+        postData["IsTop"] = $("#IsTop").is(":checked") ? "1" : "0";
+        postData["IsPublic"] = $("#IsPublic").is(":checked") ? "1" : "0";
+        postData["ArticleContent"] = encodeHtml(editor.getValue());
+
+        if (postData["ArticleTitle"] == "") {
+            dialogMsg("请输入文章标题", '0');
+            return;
+        }
+
+        $.SaveForm({
+            url: "/ArticleManage/Article/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+
+</script>
+<div style="margin: 10px; max-height: 780px; overflow: auto; ">
+    <input type="hidden" id="Hid_ArticleContent" />
+    <table class="form">
+
+        <tr>
+            <td class="formTitle">文章标题<font face="宋体">*</font></td>
+            <td class="formValue" colspan="3">
+                <input id="ArticleTitle" type="text" class="form-control" placeholder="请输入文章标题" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">文章摘要<font face="宋体">*</font></td>
+            <td class="formValue" colspan="3">
+                <input id="SortDesc" type="text" class="form-control" placeholder="请输入文章摘要" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">所属类别<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlType" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+            <td class="formTitle">地点<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Address" type="text" class="form-control" placeholder="请输入地点" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系人<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="ContactName" type="text" class="form-control" placeholder="请输入联系人" isvalid="yes" checkexpession="NotNull" />
+            </td>
+            <td class="formTitle">联系电话<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="ContactTel" type="text" class="form-control" placeholder="请输入联系电话" isvalid="yes" checkexpession="NotNull" />
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td class="formTitle">置顶</td>
+            <td class="formValue">
+                <input id="IsTop" type="checkbox" />
+                是
+            </td>
+            <td class="formTitle">立即发布</td>
+            <td class="formValue">
+                <input id="IsPublic" type="checkbox" checked="checked" />
+                是
+            </td>
+        </tr>
+
+
+        <tr>
+            <td class="formTitle">文章内容</td>
+            <td class="formValue" colspan="3">
+                <textarea id="Content" class="form-control" rows="5"></textarea>
+            </td>
+        </tr>
+    </table>
+</div>
+

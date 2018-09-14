@@ -1,0 +1,137 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+
+    var editor;
+    var dtips;
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+
+        InitControl();
+
+    });
+
+
+    //初始化数据
+    function InitControl() {
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/CourseItem/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.ClassId) {
+                            $("#ClassId").ComboBoxSetValue(data.ClassId).trigger("change");
+                        }
+                        if (data.CourseId) {
+                            $("#CourseId").ComboBoxSetValue(data.CourseId);
+                        }
+                    }
+                }
+            });
+        }
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        //注意 提交json 字符串，在后台反序列化对象
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["CourseId"] = $("#CourseId").attr('data-value');
+        postData["ClassId"] = $("#ClassId").attr('data-value');       
+        $.SaveForm({
+            url: "/QX360Manage/CourseItem/SaveForm?keyValue=" + keyValue,
+            param: { json: JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        //课程
+        $("#ClassId").ComboBox({
+            url: "/QX360Manage/Class/GetListJson",
+            param: null,
+            id: "ClassId",
+            text: "ClassName",
+            description: "==选择课程==",
+            height: "170px",
+            allowSearch: true
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            var queryJson = {};
+            queryJson["classid"] = value;
+            $("#CourseId").ComboBox({
+                url: "/QX360Manage/Course/GetListJson",
+                param: { queryJson: JSON.stringify(queryJson) },
+                id: "CourseId",
+                text: "CourseName",
+                description: "==选择科目==",
+                height: "170px"
+
+            });
+        });
+        //科目
+        $("#CourseId").ComboBox({
+            description: "==选择科目==",
+            height: "170px"
+        });
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+
+        });
+
+    }
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle"> 所属课程<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ClassId" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 所属科目<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="CourseId" type="text" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 项目<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Name" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 排序号</td>
+            <td class="formValue">
+                <input id="SortNum" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NumOrNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">备注</td>
+            <td class="formValue">
+                <textarea id="Remark" class="form-control" placeholder=""></textarea>
+            </td>
+        </tr>
+    </table>
+</div>
+

@@ -1,0 +1,113 @@
+﻿<!--框架必需start-->
+<script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>
+
+<link href="/Content/scripts/plugins/simditor/css/simditor.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/simditor/js/module.min.js"></script>
+<script src="/Content/scripts/plugins/simditor/js/uploader.min.js"></script>
+<script src="/Content/scripts/plugins/simditor/js/hotkeys.min.js"></script>
+<script src="/Content/scripts/plugins/simditor/js/simditor.js"></script>
+<style>
+
+</style>
+
+<script>
+    var editor = null;
+    function stopDefault(e) {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        } else {
+            window.event.returnValue = false;
+        }
+
+        return false;
+    }
+
+    $(function () {
+
+        editor = new Simditor({
+            height:'500px',
+            textarea: $('#Content'),
+            placeholder: '这里输入内容...',
+            toolbar: [
+            'title',
+            'bold',
+            'italic',
+            'underline',
+            'strikethrough',
+            'fontScale',
+            'color',
+            'ol',
+            'ul',
+            'blockquote',
+            'code',
+            'table',
+            'link',
+            'image',
+            'hr',
+            'indent',
+            'outdent',
+            'alignment',
+            'letterspace',
+            'lineheight'
+            ],
+            upload: {
+                url: '/ArticleManage/Article/SavePic', //文件上传的接口地址
+                params: null, //键值对,指定文件上传接口的额外参数,上传的时候随文件一起提交
+                fileKey: 'fileDataFileName', //服务器端获取文件数据的参数名
+                connectionCount: 3,
+                leaveConfirm: '正在上传文件'
+            }, success: function (data) {
+                alert(data);
+            }
+        });
+        //设置富文本框内容
+        editor.setValue(decodeHtml($("#Hid_ArticleContent").val()));
+
+        $("#Button1").bind("click", function () {
+            console.log(editor.getValue());
+            console.log(encodeHtml(editor.getValue()));
+        })
+    });
+    // HTML编码
+    function encodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        }
+
+        return value.replace(/&/g, "&amp;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/</g, "&lt;")
+                    .replace(/'/, "&quot;");
+    }
+
+
+    /// <summary>
+    /// HTML解码
+    /// </summary>
+    function decodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        };
+        return value.replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&amp;/g, "&")
+                    .replace(/&quot;/g, "'");
+    }
+
+
+</script>
+<div style="margin: 10px; max-height: 780px; overflow: auto; ">
+    <input type="hidden" id="Hid_ArticleContent" />
+    <table class="form">
+
+
+        <tr>
+            <td class="formTitle">文章内容</td>
+            <td class="formValue" colspan="3">
+                <textarea id="Content" class="form-control" rows="5"></textarea>
+            </td>
+        </tr>
+    </table>
+    <input id="Button1" type="button" value="button" />
+</div>
+

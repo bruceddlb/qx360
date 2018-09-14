@@ -1,0 +1,208 @@
+﻿@{
+    ViewBag.Title = "首页看板";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<style></style>
+<script>
+    $(function () {
+        $.SetForm({
+            url: "/QX360Manage/Index/GetHomeJson",
+            param: null,
+            success: function (data) {
+                if (data != null) {
+                    if (data.StudyCount) {
+                        $("#StudyCount").html(data.StudyCount);
+                    }
+                    if (data.TrainingCount) {
+                        $("#TrainingCount").html(data.TrainingCount);
+                    }
+                    if (data.WithDrivingCount) {
+                        $("#WithDrivingCount").html(data.WithDrivingCount);
+                    }
+                    if (data.AuditCount) {
+                        $("#AuditCount").html(data.AuditCount);
+                    }
+                    if (data.TakeAuditCount) {
+                        $("#TakeAuditCount").html(data.TakeAuditCount);
+                    }
+                    if (data.ApplyOrderList.length>0) {
+                        var html = "";
+                        for (var i = 0; i < data.ApplyOrderList.length; i++) {
+                            var item = data.ApplyOrderList[i];
+                            html += ' <div style="line-height: 39px; border-bottom: 1px solid #ccc;">';
+                            html += '<a href="javascript:;" onclick=OpenNav("0b882267-75ec-4d13-ae35-9018554a1e26") style="text-decoration: none;">[待支付]&nbsp;&nbsp;&nbsp;驾校报名(订单号：' + item.ApplyOrderNo + '，学员信息：' + item.MemberName + ',' + item.MemberMobile + ')</a>';
+                            html += ' <label style="float: right">' + item.CreateTime + '</label>';
+                            html += '  </div>';
+                        }                       
+                        $("#divApply").html(html);
+                    } else {
+                        $("#divApply").html("暂无信息...");
+                    }
+                    if (data.TrainingOrderList.length > 0) {
+                        var html = "";
+                        for (var i = 0; i < data.TrainingOrderList.length; i++) {
+                            var item = data.TrainingOrderList[i];
+                            html += ' <div style="line-height: 39px; border-bottom: 1px solid #ccc;">';
+                            html += '<a href="javascript:;" onclick=OpenNav("dfe9153c-bc81-4cad-9deb-f4e9d84aa374") style="text-decoration: none;">[待审核]&nbsp;&nbsp;&nbsp;预约实训(订单号：' + item.TrainingOrderNo + '，预约人：' + item.MemberName + ',' + item.MemberMobile + ')</a>';
+                            html += ' <label style="float: right">' + item.CreateTime + '</label>';
+                            html += '  </div>';
+                        }
+                        $("#divTraining").html(html);
+                    } else {
+                        $("#divTraining").html("暂无信息...");
+                        
+                    }
+                }
+            }
+        });
+    })
+    function OpenNav(id) {
+        window.parent.OpenNav(id);
+    }
+</script>
+<div class="" style="">
+    <div class="portal-panel" style="background:white" id="home">
+        <div class="row">
+            <div class="portal-panel-title">
+                <i class="fa fa-bar-chart-o"></i>&nbsp;&nbsp;统计指标
+            </div>
+            <div class="portal-panel-content" style="margin-top: 15px; overflow: hidden;">
+                <div class="row">
+                    <div style="width: 20%; position: relative; float: left;" class="panel" id="A001">
+                        <div class="task-stat" style="background-color: #578ebe;">
+                            <div class="visual">
+                                <i class="fa fa-bar-chart-o"></i>
+                            </div>
+                            <div class="details">
+                                <div class="number" id="StudyCount">
+                                    0
+                                </div>
+                                <div class="desc">
+                                    学车订单
+                                </div>
+                            </div>
+                            <a class="more" style="background-color: #4884b8;" href="javascript:;" onclick="OpenNav('2134a2bf-59fe-4d87-ace4-cc46c96cebb7')">
+                                查看更多 <i class="fa fa-arrow-circle-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div style="width: 20%; position: relative; float: left;" class="panel" id="A002">
+                        <div class="task-stat" style="background-color: #e35b5a;">
+                            <div class="visual">
+                                <i class="fa fa-bar-chart-o"></i>
+                            </div>
+                            <div class="details">
+                                <div class="number" id="TrainingCount">
+                                    0
+                                </div>
+                                <div class="desc">
+                                    实训订单
+                                </div>
+                            </div>
+                            <a class="more" style="background-color: #e04a49;" href="javascript:;" onclick="OpenNav('dfe9153c-bc81-4cad-9deb-f4e9d84aa374')">
+                                查看更多 <i class="fa fa-arrow-circle-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div style="width: 20%; position: relative; float: left;" class="panel" id="A003">
+                        <div class="task-stat" style="background-color: #44b6ae;">
+                            <div class="visual">
+                                <i class="fa fa-bar-chart-o"></i>
+                            </div>
+                            <div class="details">
+                                <div class="number" id="WithDrivingCount">
+                                    0
+                                </div>
+                                <div class="desc">
+                                    陪驾订单
+                                </div>
+                            </div>
+                            <a class="more" style="background-color: #3ea7a0;" href="javascript:;" onclick="OpenNav('f78c9152-13ee-429e-b315-1e583f406c1a')">
+                                查看更多 <i class="fa fa-arrow-circle-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div style="width: 20%; position: relative; float: left;" class="panel" id="A004">
+                        <div class="task-stat" style="background-color: #8775a7;">
+                            <div class="visual">
+                                <i class="fa fa-bar-chart-o"></i>
+                            </div>
+                            <div class="details">
+                                <div class="number" id="AuditCount">
+                                    0
+                                </div>
+                                <div class="desc">
+                                    年检订单
+                                </div>
+                            </div>
+                            <a class="more" style="background-color: #7c699f;" href="javascript:;" onclick="OpenNav('d4a02321-0423-42cb-9f48-4fec0656dfa9')">
+                                查看更多 <i class="fa fa-arrow-circle-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div style="width: 20%; position: relative; float: left;" class="panel" id="A005">
+                        <div class="task-stat" style="background-color: #3598dc;">
+                            <div class="visual">
+                                <i class="fa fa-bar-chart-o"></i>
+                            </div>
+                            <div class="details">
+                                <div class="number" id="TakeAuditCount">
+                                    0
+                                </div>
+                                <div class="desc">
+                                    代审订单
+                                </div>
+                            </div>
+                            <a class="more" style="background-color: #258fd7;" href="javascript:;" onclick="OpenNav('d3787b04-1b2a-4b55-916d-b1dfbd792925')">
+                                查看更多 <i class="fa fa-arrow-circle-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          
+        </div>
+        <div class="row panel" style="overflow: hidden; margin-bottom: 10px;" id="A006">
+            <div style="width: 100%; float: left;">
+                <div class="portal-panel-title">
+                    <i class="fa fa-coffee"></i>&nbsp;&nbsp;报名待支付订单（Top 10）
+                </div>
+                <div class="portal-panel-content" style="overflow: hidden; padding-top: 20px; padding-left: 30px; padding-right: 50px;" id="divApply">
+                    <div style="line-height: 39px; border-bottom: 1px solid #ccc;">
+                        <a href="#" style="text-decoration: none;">[审批]&nbsp;&nbsp;&nbsp;驾校报名</a>
+                        <label style="float: right">2016-05-25</label>
+                    </div>
+                    <div style="line-height: 39px; border-bottom: 1px solid #ccc;">
+                        <a href="#" style="text-decoration: none;">[审批]&nbsp;&nbsp;&nbsp;驾校报名</a>
+                        <label style="float: right">2016-04-01</label>
+                    </div>
+                    <div style="line-height: 39px; border-bottom: 1px solid #ccc;">
+                        <a href="#" style="text-decoration: none;">[审批]&nbsp;&nbsp;&nbsp;驾校报名</a>
+                        <label style="float: right">2015-09-11</label>
+                    </div>
+                    <div style="line-height: 39px; border-bottom: 1px solid #ccc;">
+                        <a href="#" style="text-decoration: none;">[审批]&nbsp;&nbsp;&nbsp;驾校报名</a>
+                        <label style="float: right">2015-02-19</label>
+                    </div>
+                    <div style="line-height: 39px; border-bottom: 1px solid #ccc;">
+                        <a href="#" style="text-decoration: none;">[审批]&nbsp;&nbsp;&nbsp;驾校报名</a>
+                        <label style="float: right">2015-02-26</label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="row panel" style="overflow: hidden; margin-bottom: 10px;" id="A007">
+            <div style="width: 100%; float: left;">
+                <div class="portal-panel-title">
+                    <i class="fa fa-coffee"></i>&nbsp;&nbsp;实训待审核订单（Top 10）
+                </div>
+                <div class="portal-panel-content" style="overflow: hidden; padding-top: 20px; padding-left: 30px; padding-right: 50px;" id="divTraining">
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script>$('#home').authorizePanel()</script>
+</div>

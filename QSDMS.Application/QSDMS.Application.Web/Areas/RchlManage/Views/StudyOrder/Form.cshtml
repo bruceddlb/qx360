@@ -1,0 +1,321 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+
+    });
+
+
+    //初始化数据
+    function InitControl() {
+        $("#ddlType").ComboBox({
+            url: "/DataItemEnums/GetStudyType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择学车类型==",
+            height: "200px"
+        });
+        //$("#ddlmember").ComboBox({
+        //    url: "/QX360Manage/Member/GetListJson",
+        //    param: { parentId: "0" },
+        //    id: "MemberId",
+        //    text: "NikeName",
+        //    description: "==选择学员==",
+        //    height: "170px",
+        //    allowSearch: true
+        //}).bind("change", function () {
+        //    var value = $(this).attr('data-value');
+        //    $.SetForm({
+        //        url: "/QX360Manage/Member/GetFormJson",
+        //        param: { keyValue: value },
+        //        success: function (data) {
+        //            if (data != null) {
+        //                if (data.Mobile) {
+        //                    $("#MemberMobile").val(data.Mobile);
+        //                    $("#hidSchoolid").val(data.SchoolId);
+        //                    $("#SchoolName").val(data.SchoolName);
+
+        //                    $("#ddlTeacher").attr("data-value", "").attr("data-text", "").text("");
+        //                    var queryJson = {};
+        //                    queryJson["schoolid"] = data.SchoolId;
+        //                    $("#ddlTeacher").ComboBox({
+        //                        url: "/QX360Manage/Teacher/GetListJson",
+        //                        param: { queryJson: JSON.stringify(queryJson) },
+        //                        id: "TeacherId",
+        //                        text: "Name",
+        //                        description: "==请选择教练==",
+        //                        height: "170px"
+        //                    });
+        //                }
+        //            }
+        //        }
+        //    });
+        //});
+
+        //$("#ddlTeacher").ComboBox({
+        //    description: "==请选择教练==",
+        //    height: "170px"
+        //})
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = {};
+        postData["TeacherId"] = $("#hidTeacherId").val();
+        postData["TeacherName"] = $("#txtTeacherName").val();
+        postData["SchoolId"] = $("#hidSchoolid").val();
+        postData["SchoolName"] = $("#SchoolName").val();
+        postData["StudyType"] = $("#ddlType").attr('data-value');
+        postData["MemberId"] = $("#hidMemberId").val();
+        postData["MemberName"] = $("#txtMemberName").val();
+        postData["MemberMobile"] = $("#MemberMobile").val();
+        postData["ServiceDate"] = $("#hidServiceDate").val();
+        postData["ServiceTime"] = $("#hidServiceTime").val();
+        if ($("#hidjson").val()) {
+            postData["DetailList"] = eval($("#hidjson").val());
+        }
+        var issend = $("#isSend").is(":checked") == true ? 1 : 0;
+        $.SaveForm({
+            url: "/QX360Manage/StudyOrder/SaveForm?keyValue=" + keyValue + "&issend=" + issend,
+            param: { json: JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $(window).resize(function (e) {
+        });
+
+    }
+
+    //设置位置坐标
+    function SelectFreeTime() {
+        var txt = "";
+        var teacherid = $("#hidTeacherId").val();
+        var schoolid = $("#hidSchoolid").val();
+        if (!teacherid) {
+            dialogMsg('请选择预约教练！', 0);
+            return false;
+        }
+        dialogOpen({
+            id: "SelectFreeTime",
+            title: '选择预约时间',
+            url: '/QX360Manage/StudyOrder/SelectTime?objectid=' + teacherid + "&schoolid=" + schoolid,
+            width: "1000px", height: "600px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+
+
+    function ShowSelectMember() {
+        var show = function () {
+            var $subnePanel = $("#MemberPanel");
+            var control = $("#txtMemberName");
+            var divpa = document.getElementById("MemberPanel");
+            var offset = control.offset();
+            divpa.style.top = (offset.top + control.height() + -6) + "px";
+            divpa.style.left = (offset.left) + "px";
+            $subnePanel.removeClass("hide");
+            $subnePanel.width(control.width()+25);
+
+            $subnePanel.css("position", "absolute");
+            $subnePanel.css("z-index", "1000");
+            $subnePanel.unbind("mouseout").bind('mouseout', function () {
+                var $this = $(this);
+                if ($this.length != 0) {
+                    var width = $this.width();
+                    var offset = $this.offset();
+                    var w = $(document).width();
+                    var top = offset.top + $this.height();
+                    var left = 0;
+                    if (offset.left + width + 9 > w) {
+                        left = offset.left + $this.width() - width + 4;
+                    }
+                    else {
+                        left = offset.left;
+                    }
+                    var ev = window.event;
+                    var x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    var y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                    if (!(x >= left && x <= left + width - 2 &&
+                        y >= offset.top && y <= top - 2)) {
+
+                        // $subnePanel.addClass("hide");
+                    }
+                }
+            });
+        }
+        show();
+    }
+    function ShowSelectTeacher() {
+        var show = function () {
+            var $subnePanel = $("#TeacherPanel");
+            var control = $("#txtTeacherName");
+            var divpa = document.getElementById("TeacherPanel");
+            var offset = control.offset();
+            divpa.style.top = (offset.top + control.height() + -6) + "px";
+            divpa.style.left = (offset.left) + "px";
+            $subnePanel.removeClass("hide");
+            $subnePanel.width(control.width() + 25);
+
+            $subnePanel.css("position", "absolute");
+            $subnePanel.css("z-index", "1000");
+            $subnePanel.unbind("mouseout").bind('mouseout', function () {
+                var $this = $(this);
+                if ($this.length != 0) {
+                    var width = $this.width();
+                    var offset = $this.offset();
+                    var w = $(document).width();
+                    var top = offset.top + $this.height();
+                    var left = 0;
+                    if (offset.left + width + 9 > w) {
+                        left = offset.left + $this.width() - width + 4;
+                    }
+                    else {
+                        left = offset.left;
+                    }
+                    var ev = window.event;
+                    var x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    var y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                    if (!(x >= left && x <= left + width - 2 &&
+                        y >= offset.top && y <= top - 2)) {
+
+                        // $subnePanel.addClass("hide");
+                    }
+                }
+            });
+        }
+        show();
+    }
+    function MemberCallBack(data) {
+        if (data) {
+            $("#hidMemberId").val(data.memberId);
+            $("#txtMemberName").val(data.memberName);
+            $("#MemberMobile").val(data.mobile);
+            $("#hidSchoolid").val(data.schoolId)
+            $("#SchoolName").val(data.schoolName);
+            if (data.schoolId) {
+                var queryJson = {};
+                queryJson["schoolid"] = data.schoolId;
+                queryJson = JSON.stringify(queryJson)
+                var url = "/QX360Manage/Select/SelectTeacher?queryjson=" + queryJson;
+                setTimeout(function () {
+                    $("#SelectTeacher").attr("src", url);
+                }, 200)
+            } else {
+                dialogMsg('请先设置驾校信息！', 0);
+                return false;
+            }
+        }
+        $("#MemberPanel").addClass("hide");
+    }
+    function TeacherCallBack(data) {
+        if (data) {
+            $("#hidTeacherId").val(data.memberId);
+            $("#txtTeacherName").val(data.memberName);
+        }
+        $("#TeacherPanel").addClass("hide");
+    }
+
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">选择学员<font face="宋体">*</font></td>
+            <td class="formValue">
+                @*<div id="ddlmember" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    </div>*@
+                <input type="hidden" id="hidMemberId" />
+                <input id="txtMemberName" type="text" class="form-control input-profile" style="" onclick="ShowSelectMember()" readonly isvalid="yes" checkexpession="NotNull" /><span onclick="    SelectPoint()" class="input-button" title="选择考场">...</span>
+
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系方式</td>
+            <td class="formValue">
+                <input id="MemberMobile" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">学车类型<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlType" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">预约驾校</td>
+            <td class="formValue">
+                <input type="hidden" id="hidSchoolid" />
+                <input id="SchoolName" type="text" class="form-control input-profile" readonly />
+            </td>
+        </tr>
+        @*<tr>
+                <td class="formTitle">预约驾校<font face="宋体">*</font></td>
+                <td class="formValue">
+                    <div id="ddlSchool" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    </div>
+                </td>
+            </tr>*@
+        <tr>
+            <td class="formTitle">预约教练<font face="宋体">*</font></td>
+            <td class="formValue">
+                @*<div id="ddlTeacher" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    </div>*@
+                <input type="hidden" id="hidTeacherId" />
+                <input id="txtTeacherName" type="text" class="form-control input-profile" style="" onclick="ShowSelectTeacher()" readonly isvalid="yes" checkexpession="NotNull" /><span onclick="    SelectPoint()" class="input-button" title="选择考场">...</span>
+
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">预约时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="txtservicetime" type="text" class="form-control input-profile" readonly onclick="SelectFreeTime()" isvalid="yes" checkexpession="NotNull" /><span onclick="SelectFreeTime()" class="input-button" title="选取预约时间">...</span>
+
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">发送短信通知</td>
+            <td class="formValue">
+                <div class="checkbox">
+                    <label>
+                        <input id="isSend" type="checkbox" checked />
+                        是
+                    </label>
+                </div>
+            </td>
+        </tr>
+
+    </table>
+    <input type="hidden" id="hidjson" />
+    <input type="hidden" id="hidServiceDate" />
+    <input type="hidden" id="hidServiceTime" />
+</div>
+
+<div id="MemberPanel" class="hide" style="border: 1px solid #ccc; width: 100%; background: #fff; height:500px;overflow:hidden">
+    <iframe id="SelectMember" name="SelectMember" height="100%" width="100%" src="/QX360Manage/Select/SelectMember" frameborder="0" style=""></iframe>
+</div>
+<div id="TeacherPanel" class="hide" style="border: 1px solid #ccc; width: 100%; background: #fff; height: 500px; overflow: hidden">
+    <iframe id="SelectTeacher" name="SelectTeacher" height="100%" width="100%" src="" frameborder="0" style=""></iframe>
+</div>

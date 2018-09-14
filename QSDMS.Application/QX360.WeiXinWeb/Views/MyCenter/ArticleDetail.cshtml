@@ -1,0 +1,64 @@
+﻿@{
+    ViewBag.Title = "文章明细";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        function ViewModel() {
+            var self = this;
+            self.Article = ko.observable({
+                Title: ko.observable(""),
+                CreateDate: ko.observable(""),
+                Content: ko.observable(""),
+            });
+            self.BindArticle = function () {
+                $.get("/Notice/GetArticleDetail", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {                          
+                            self.Article().Title(data.Title);
+                            self.Article().CreateDate(data.CreateDate);
+                            self.Article().Content(decodeHtml(data.Content));
+                        }
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindArticle();
+
+        });
+
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+
+    </script>
+}
+<div class="McNsde_h" ><em data-bind="text:$root.Article().Title()"></em><span data-bind="text:formatDate($root.Article().CreateDate(),'yyyy-MM-dd hh:mm')"></span></div>
+<div class="McNsde_txt" data-bind="html:$root.Article().Content()">
+</div>

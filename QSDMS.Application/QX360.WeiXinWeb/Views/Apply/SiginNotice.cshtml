@@ -1,0 +1,29 @@
+﻿@{
+    ViewBag.Title = "提示";
+}
+<script>
+
+
+    var id = request('id');
+    function ViewModel() {
+        var self = this;
+        self.OpenSigin = function () {
+            var host = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]";
+            window.location.href = host + "/DownFile/DownSigin?id=" + id;
+        }
+    }
+
+    $(function () {
+        var model = new ViewModel();
+        ko.applyBindings(model);
+
+    });
+</script>
+<div class="Dtrn_top">
+    <img src="/content/images/return.jpg">
+    <div class="Dtrn_top_h2"><i class="iconfont icon-chenggong Dtrn_top_icon"></i><br />签约成功</div>
+    <div class="Dtrn_top_txt"><a href="#" data-bind="click:function(){$root.OpenSigin()}" style="color:#ffffff;text-decoration:underline">点击下载查看协议</a></div>
+    <p class=""></p>
+</div>
+
+

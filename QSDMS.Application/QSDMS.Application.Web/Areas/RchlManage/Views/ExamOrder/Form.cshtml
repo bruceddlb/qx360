@@ -1,0 +1,164 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+
+    });
+
+
+    //初始化数据
+    function InitControl() {
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/ExamOrder/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.ClassId) {
+                            $("#ClassId").ComboBoxSetValue(data.ClassId).trigger("change");
+                        }
+                        if (data.SubjectId) {
+                            $("#CourseId").ComboBoxSetValue(data.SubjectId);
+                        }
+                        if (data.Status) {
+                            $("#ddlstatus").ComboBoxSetValue(data.Status);
+                        }
+                        if (data.MemberId) {
+                            $("#ddlmember").ComboBoxSetValue(data.MemberId);
+                        }
+                    }
+                }
+            });
+        }
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["ClassId"] = $("#ClassId").attr('data-value');
+        postData["ClassName"] = $("#ClassId").attr('data-text');
+        postData["SubjectId"] = $("#CourseId").attr('data-value');
+        postData["SubjectName"] = $("#CourseId").attr('data-text');
+        postData["MemberId"] = $("#ddlmember").attr('data-value');
+        postData["MemberName"] = $("#ddlmember").attr('data-text');
+        postData["MemberMobile"] = $("#ddlmember").attr('title');
+        postData["Status"] = $("#ddlstatus").attr("data-value");
+        $.SaveForm({
+            url: "/QX360Manage/ExamOrder/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $(window).resize(function (e) {
+        });
+        $("#ddlstatus").ComboBox({
+            url: "/DataItemEnums/GetExamStatus",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择订单状态==",
+            height: "200px"
+        });
+
+        $("#ddlmember").ComboBox({
+            url: "/QX360Manage/Member/GetListJson",
+            param: null,
+            id: "MemberId",
+            text: "NikeName",
+            title: "Mobile",
+            description: "==请选择用户==",
+            height: "200px",
+            allowSearch: true
+        });
+        //课程
+        $("#ClassId").ComboBox({
+            url: "/QX360Manage/Class/GetListJson",
+            param: null,
+            id: "ClassId",
+            text: "ClassName",
+            description: "==选择课程==",
+            height: "170px",
+            allowSearch: true
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            var queryJson = {};
+            queryJson["classid"] = value;
+            $("#CourseId").ComboBox({
+                url: "/QX360Manage/Course/GetListJson",
+                param: { queryJson: JSON.stringify(queryJson) },
+                id: "CourseId",
+                text: "CourseName",
+                description: "==选择科目==",
+                height: "170px"
+
+            });
+        });
+        //科目
+        $("#CourseId").ComboBox({
+            description: "==选择科目==",
+            height: "170px"
+        });
+    }
+
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+
+        <tr>
+            <td class="formTitle"> 考试用户<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlmember" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 所属课程<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ClassId" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 所属科目<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="CourseId" type="text" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">考试状态<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlstatus" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 完成时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="ExamDate" type="text" class="form-control input-profile" onfocus="WdatePicker({dateFmt:'yyyy-MM-dd'})" />
+            </td>
+        </tr>
+    </table>
+</div>
+

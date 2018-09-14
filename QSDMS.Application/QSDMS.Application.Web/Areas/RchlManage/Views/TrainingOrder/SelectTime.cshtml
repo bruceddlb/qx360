@@ -1,0 +1,314 @@
+﻿@{
+    ViewBag.Title = "选择时间";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+    <script src="~/Content/scripts/plugins/tab/jquery.idTabs.min.js"></script>
+    <script>
+        var objectid = request('objectid');//对象id
+        var schoolid = request('schoolid');//对象id
+        $(function () {
+            BindDataByObjectId(objectid);
+
+            $(".tab-content li").click(function () {
+                var $this = $(this);
+                if (!!$this.hasClass("subscribe")) {
+                    return;
+                }
+                if (!!$this.hasClass("locksubscribe")) {
+                    return;
+                }
+                if (!!$this.hasClass("nosubscribe")) {
+                    $(this).addClass("active");
+                    $(this).removeClass("nosubscribe");
+                } else {
+                    $(this).addClass("nosubscribe");
+                    $(this).removeClass("active");
+                }
+
+
+            });
+        });
+
+        function BindDataByObjectId(objectid) {
+            $.SetForm({
+                url: "/QX360Manage/TrainingFreeTime/GetWeekDateJson",
+                param: { objectid: objectid, schoolid: schoolid },
+                success: function (rs) {
+                    if (rs.IsSuccess) {
+                        AddWeek(rs.ResultData["List"]);
+                    } else {
+                        dialogMsg(rs.Message, 0);
+                    }
+                }
+            });
+        }
+
+
+        function AddWeek(data) {
+            var currentday;
+            //定义变量
+            var len = data.length;
+            var i = 0;
+            $("#tabsbox").empty();
+            $("#tabContent").empty();
+            //创建方法
+            var createWeekItem = function () {
+                var content = "";
+                var li = "";
+                var item = data[i];
+                if (item.IsCurrentDay) {
+                    currentday = item.TrainingFreeDateId;
+                }
+                li += '<li data-id="' + item.TrainingFreeDateId + '" data-week="' + item.Week + '" data-date="' + formatDate(item.FreeDate, "yyyy-MM-dd") + '"><a href="#' + item.TrainingFreeDateId + '">' + formatDate(item.FreeDate, "yyyy-MM-dd") + '&nbsp;<span>' + item.WeekName + '</span></a></li>';
+                content += '<div id="' + item.TrainingFreeDateId + '">';
+                content += '<ul id="time_' + item.TrainingFreeDateId + '" class="sys_spec_text"></ul>';
+                content += '</div>';
+                $("#tabsbox").append(li);
+                $("#tabContent").append(content);
+                if (item.FreeTimeList) {
+                    for (var j = 0; j < item.FreeTimeList.length; j++) {
+                        var freetime = item.FreeTimeList[j];
+                        CallBack(freetime.TrainingFreeDateId, freetime.TrainingFreeTimeId, freetime.TimeSection, freetime.FreeStatus);
+                    }
+                }
+                i++;//更新循环变量
+                if (i < len) {
+                    createWeekItem();
+                }
+            }
+            //第一次调用
+            createWeekItem();
+            $("#tabs ul").idTabs(currentday, function (id) {
+                var _id = id.replace("#", "");
+                $("#tabsbox li").each(function () {
+                    var $this = $(this);
+                    var pid = $this.attr("data-id");
+                    if (pid != _id) {
+                        $("#time_" + pid + " li").each(function () {
+                            var $tthis = $(this);
+                            if ($tthis.hasClass("active")) {
+                                $tthis.removeClass("active");
+                                $tthis.addClass("nosubscribe");
+                            }
+                        });
+                    } else {
+                        //默认点击tab事件,这个点击再获取自定义时间段，这里就不跟系统时间的业务裹在一起了。单独处理
+                        //alert(pid)
+                        BindCustomerTime(pid);
+                    }
+
+                })
+                return true;
+            });
+        }
+
+        function CallBack(pid, id, time, status) {
+            var text = "";
+            var css = "";
+            if (status == "@((int)QX360.Model.Enums.FreeTimeStatus.已预约)") {
+                css = "subscribe";
+            }
+            else if (status == "@((int)QX360.Model.Enums.FreeTimeStatus.锁定)") {
+                css = "locksubscribe";
+            } else {
+                css = "nosubscribe";
+            }
+            var a = '<li class=\"' + css + '\"   style="position:relative" data-id="' + id + '" data-status="' + status + '" data-time="' + time + '" >';
+            a += '<a>' + time + '</a></li>';
+            $("#time_" + pid).append(a);
+        }
+        function AcceptClick() {
+            var freetimes = [];
+            var servicedate = "";
+            var servicetime = "";
+            $("#tabsbox li").each(function () {
+                var $date = $(this);
+                $("#time_" + $date.attr("data-id") + " li").each(function () {
+                    var $time = $(this);
+                    if ($time.hasClass("active")) {
+                        var freetime = {};
+                        servicedate = $date.attr("data-date");
+                        freetime["ServiceDate"] = $date.attr("data-date");
+                        freetime["ServiceTime"] = $time.attr("data-time");
+                        freetime["TrainingFreeTimeId"] = $time.attr("data-id");
+                        freetimes.push(freetime);
+                        servicetime += $time.attr("data-time") + ",";
+                    }
+                });
+            });
+            //其他选择
+            var freedateid = "";
+            if (freetimes.length == 0) {
+                $("#tabsbox li").each(function () {
+                    var $li = $(this).find("a");
+                    if ($li.hasClass("selected")) {
+                        servicedate = $li.parent().attr("data-date");
+                        freedateid = $li.parent().attr("data-id");
+                    }
+                })
+                $("#time_panel li").each(function () {
+                    var $time = $(this);
+                    if ($time.hasClass("active")) {
+                        var freetime = {};
+                        freetime["ServiceDate"] = servicedate;
+                        freetime["ServiceTime"] = $time.attr("data-time");
+                        freetime["TrainingFreeTimeId"] = "-1";
+                        freetime["SubritTimeType"] = "2";//表示自定义时间类型
+                        freetime["FreedateId"] = freedateid;
+                        freetimes.push(freetime);
+                        servicetime += $time.attr("data-time") + ",";
+                    }
+                })
+            }
+            if (!servicetime) {
+                dialogMsg('请选择实训时间！', 0);
+                return;
+            }
+            var pwind = $('#Form', parent.document);
+            var $window = pwind[0].contentWindow;
+            $window.$("#txtservicetime").val(servicedate + " " + servicetime);
+            $window.$("#hidServiceDate").val(servicedate);
+            $window.$("#hidServiceTime").val(servicetime);
+            $window.$("#hidjson").val(JSON.stringify(freetimes));
+            dialogClose();
+        }
+
+        //添加时间
+        function AddTime() {
+            dialogOpen({
+                id: "addtime",
+                title: '新增时间段',
+                url: '/QX360Manage/TrainingOrder/AddTime',
+                width: "1000px", height: "600px",
+
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+        //子类对调方法
+        function AddCallBack(id, time1, time2) {
+            var text = "";
+            var time = time1 + '-' + time2;
+            var css = "active";
+            var a = '<li class=\"' + css + '\"   style="position:relative" data-id="' + id + '" data-time="' + time + '" >';
+            a += '<a>' + time + '</a>';
+            a += '<i class="" style="position: absolute;right: -2px;;top: -5px;background:url(/content/images/close.png);width:16px;height:16px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+
+            a += '</li>';
+            $("#time_panel").append(a);
+            $("#time_panel li").each(function () {
+                $(this).find("i").bind("click", function () {
+                    var $parent = $(this).parent();
+                    var keyValue = $parent.attr("data-id");
+                    $parent.remove();
+                })
+            })
+        }
+
+        //绑定已预约的自定义时间段
+        function BindCustomerTime(fredateid) {
+            $.SetForm({
+                url: "/QX360Manage/TrainingFreeTime/GetFreeTimeCustomerJson",
+                param: { fredateid: fredateid },
+                success: function (rs) {
+                    if (rs.IsSuccess) {
+                        $("#time_panel").empty();
+                        var data = rs.ResultData["List"];
+                        for (var i = 0; i < data.length; i++) {
+                            var item = data[i];
+                            var text = "";
+                           
+                            var css = "subscribe";
+                            var a = '<li class=\"' + css + '\"   style="position:relative" >';
+                            a += '<a>' + item.TimeSection + '</a>';
+                            a += '</li>';
+                            $("#time_panel").append(a);
+                        }
+                    } else {
+                        dialogMsg(rs.Message, 0);
+                    }
+                }
+            });
+        }
+    </script>
+}
+<style>
+    .tabsbox {
+        border-bottom: 1px solid #dce6e7;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+        .tabsbox li {
+            background: #fff;
+            display: inline-block;
+            border: 1px solid #dce6e7;
+            border-bottom: none;
+            line-height: 35px;
+            text-align: center;
+            margin-right: 2px;
+        }
+
+            .tabsbox li a {
+                padding: 0px 10px;
+            }
+
+                .tabsbox li a.selected {
+                    background-color: #fff;
+                    border-top: 5px solid #2F4050;
+                    display: block;
+                    margin: 0px;
+                    font-weight: bold;
+                }
+
+        .tabsbox ul li a {
+            text-decoration: none;
+        }
+
+
+
+    .sys_spec_text li.subscribe a {
+        color: #fff;
+        background: #f6b211;
+    }
+
+    .sys_spec_text li.nosubscribe a {
+        color: #fff;
+        background: #16a72b;
+    }
+
+    .sys_spec_text li.locksubscribe a {
+        color: #fff;
+        background: #b6bdc4;
+    }
+</style>
+<div class="row">
+    <div class="alert alert-danger" style="text-align: left; margin: 0px; border-radius: 0px; border-left: none; border-top: none; border-right: none;">
+        <i class="fa fa-question-circle" style="position: relative; top: 1px; font-size: 15px; padding-right: 5px;"></i>
+        说明：已勾选状态表示表示当前选择,绿色背景表示可预约状态,黄色背景表示已预约状态
+    </div>
+    <div id="tabs">
+        <ul class="tabsbox" id="tabsbox"></ul>
+        <div class="tab-content" id="tabContent">
+
+        </div>
+    </div>
+
+</div>
+<div class="row">
+    <div class="alert alert-info" style="text-align: left; margin: 0px; border-radius: 0px; border-left: none; border-top: none; border-right: none;">
+        <i class="fa fa-question-circle" style="position: relative; top: 1px; font-size: 15px; padding-right: 5px;"></i>
+        说明：其他时间段设置,可自行设置预约时间段
+    </div>
+    <div>
+        <div class="">
+            <ul class="sys_spec_text" id="time_panel"></ul>
+        </div>
+        <div style="padding:10px;" class="clear">
+            <a class="btn btn-default" rel="add" onclick=AddTime() title="添加时间段">+添加</a>
+        </div>
+    </div>
+</div>

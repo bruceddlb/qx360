@@ -1,0 +1,198 @@
+﻿@{
+    ViewBag.Title = "驾校详情";
+}
+@section scripts{
+    @*<script src="~/Content/ueditor/third-party/video-js/video.js"></script>
+        <link href="~/Content/ueditor/third-party/video-js/video-js.css" rel="stylesheet" />*@
+    <script src="~/Content/ueditor/ueditor.parse.js"></script>
+    <script type="text/javascript">
+        var id = request('id');
+        function ViewModel() {
+            var self = this;
+            self.School = ko.observable({
+                Name: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                ConectTel: ko.observable(""),
+                SubjectList: ko.observableArray([]),
+                TeacherList: ko.observableArray([]),
+                TagList: ko.observableArray([]),
+                AttachmentPicList: ko.observableArray([]),
+                Content: ko.observable(""),
+                StudyPrice: ko.observable(""),
+                VideoContent: ko.observable(""),
+                Lng: ko.observable(""),
+                Lat: ko.observable(""),
+                ConectName: ko.observable(""),
+            });
+            self.BindSchool = function () {
+                $.get("/School/GetSchoolModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.School().Name(data.Name);
+                            self.School().AddressInfo(data.AddressInfo);
+                            self.School().ConectTel(data.ConectTel);
+                            self.School().AttachmentPicList(data.AttachmentPicList);
+                            self.School().SubjectList(data.SubjectList);
+                            self.School().TeacherList(data.TeacherList);
+                            self.School().TagList(data.TagList);
+                            self.School().Content(decodeHtml(data.Content));
+                            self.School().StudyPrice(data.StudyPrice);
+                            if (data.VideoContent) {
+                                self.School().VideoContent("@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"])" + data.VideoContent);
+                            }
+                            self.School().Lng(data.Lng);
+                            self.School().Lat(data.Lat);
+                            self.School().ConectName(data.ConectName);
+                        }
+                        var mySwiper = new Swiper('.swiper-container', {
+                            pagination: '.pagination',
+                            slidesPerView: 1,
+                            loop: true,
+                            autoplay: 3000,
+                            autoplayDisableOnInteraction: false,
+                            speed: 500
+                        });
+                    }
+                });
+            }
+            self.CallTel = function () {
+                window.location.href = 'tel:' + self.School().ConectTel();
+            }
+            self.mapDetail = function (a, b, c, d, e, f) {
+                //var data = { "a": a,"b": b, "c": c, "d": d, "e": e,"aa":1};
+                //var aa = (Base64encode(JSON.stringify(data)));
+                //var bb = Base64decode(aa);
+                var aa = "";
+                aa += a + "$" + b + "$" + c + "$" + d + "$" + e + "$" + f;
+                var aa = Base64encode(aa);
+                window.location.href = "/map/index?data=" + aa;
+            }
+            self.netSign = function () {
+                $.get("/Apply/CheckHasSigin", null, function (result) {
+                    if (result.IsSuccess) {
+                        var siginid = result.ResultData["Id"];
+                        window.location.href = "/Apply/SiginNotice?id=" + siginid;
+                    } else {
+                        window.location.href = "/Apply/NetSigin?id=" + id;
+
+                    }
+                });
+
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindSchool();
+
+        });
+
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+
+    </script>
+}
+@section css{
+    <style type="text/css">
+    </style>
+}
+<div class="slide" style="height:4rem;">
+    <div class="swiper-container" style="height:4rem;">
+        <div class="swiper-wrapper" data-bind="foreach:$root.School().AttachmentPicList()">
+            <div class="swiper-slide">
+                <img data-bind="attr:{src:PicName}" alt="pic" class="s_img" />
+            </div>
+        </div>
+        <div class="pagination s_buts s_right"></div>
+    </div>
+</div>
+
+<div class="DtSe_top">
+    <div class="DtSe_head">
+        <div class="DtSe_h1" data-bind="text:$root.School().Name()"></div>
+        <div class="Dto_list_sm" data-bind="foreach:$root.School().TagList()"><span data-bind="text:Value"></span></div>
+        <div class="DtSe_Price" data-bind="text:'￥'+$root.School().StudyPrice()+'起'"></div>
+        <div class="" style="text-align:center;">
+            <span style="    line-height: 0.4rem;
+    padding: 0 0.1rem;
+    right: 0.2rem;
+    color: #ff4425;
+    border: 1px solid #ff4425;
+    border-radius: 0.03rem; cursor:pointer" data-bind="click:function(){$root.netSign()}">>网签协议入口<</span>
+        </div>
+    </div>
+
+
+    <div class="DtSe_add"><a href="/map/index" data-bind="click:function(){$root.mapDetail($root.School().Name(),$root.School().ConectName(),$root.School().ConectTel(),$root.School().Lng(),$root.School().Lat(),$root.School().AddressInfo())}"><i class="iconfont icon-dingwei"></i><span data-bind="text:$root.School().AddressInfo()"></span><i class="iconfont icon-jiantou Dtse_icon"></i></a></div>
+    <div class="DtSe_tel"><i class="iconfont icon-dianhua"></i><span data-bind="text:$root.School().ConectTel()"></span><i style="float:right;margin-right:10px;margin-top:4px;" data-bind="click:function(){$root.CallTel();}">免费咨询</i><i class="iconfont icon-jiantou Dtse_icon"></i></div>
+</div>
+
+<!--最近开班-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>最近开班</h3>
+    <ul class="DtSe_ul" data-bind="foreach:$root.School().SubjectList()">
+        <li>
+            <div class="DtSe_h5" data-bind="text:SubjectName"></div>
+            <div class="DtSe_nub"><span>订金 <font data-bind="text:'￥'+MakeMoney"></font></span><span data-bind="text:'全款￥'+Price"></span></div>
+            <div class="DtSe_sm" data-bind="text:Remark"></div>
+            <a data-bind="attr:{href:'/Wx/ApplyPay?schooid='+SchoolId+'&subjectid='+SubjectId}" class="DtSe_a">上门服务报名</a>
+        </li>
+    </ul>
+</div>
+
+<!--金牌教练-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>金牌教练</h3>
+    <ul class="DtSe_coach" data-bind="foreach:$root.School().TeacherList()">
+        <li>
+            <img data-bind="attr:{src:FaceImage}" alt="face">
+            <div class="DtSe_ch_name" data-bind="text:Name"></div>
+            <div class="DtSe_ch_sm" data-bind="text:LevName"></div>
+        </li>
+    </ul>
+</div>
+
+<!--驾校简介-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>驾校简介</h3>
+    <div data-bind="attr:{style:$root.School().VideoContent()==''?'display:none':'display:block'}">
+        <video data-bind="attr:{src:$root.School().VideoContent()}" width="100%" height="340" controls="controls" preload="auto"></video>
+    </div>
+    <div class="DtSe_txt" data-bind="html:$root.School().Content()">
+    </div>
+</div>
+
+<!--报名须知-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>报名须知</h3>
+    <ul class="DtSe_Notice">
+        <li><span>1</span><div class="DtSe_Ne_div">网上报名成功后，您可携带本人身份证，前往驾校。</div></li>
+        <li><span>2</span><div class="DtSe_Ne_div">经工作人审核合格后，领取《机动车驾驶人身份证》</div></li>
+        <li><span>3</span><div class="DtSe_Ne_div">报名学员提交齐报名材料后，有本校为你安排法规培训课。</div></li>
+    </ul>
+</div>

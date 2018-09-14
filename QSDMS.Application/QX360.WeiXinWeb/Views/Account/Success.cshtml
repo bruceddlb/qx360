@@ -1,0 +1,119 @@
+﻿@{
+    ViewBag.Title = "注册成功";
+}
+@section css{
+    <style>
+        .page.icons {
+            text-align: center;
+        }
+
+            .page.icons .page__bd {
+                padding: 0 40px;
+                text-align: left;
+            }
+
+            .page.icons .icon-box {
+                margin-bottom: 25px;
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: flex;
+                -webkit-box-align: center;
+                -webkit-align-items: center;
+                align-items: center;
+            }
+
+                .page.icons .icon-box i {
+                    margin-right: 18px;
+                }
+
+            .page.icons .icon-box__ctn {
+                -webkit-flex-shrink: 100;
+                flex-shrink: 100;
+            }
+
+            .page.icons .icon-box__title {
+                font-weight: 400;
+            }
+
+            .page.icons .icon-box__desc {
+                margin-top: 6px;
+                font-size: 12px;
+                color: #888;
+            }
+
+            .page.icons .icon_sp_area {
+                margin-top: 10px;
+                text-align: left;
+            }
+
+                .page.icons .icon_sp_area i:before {
+                    margin-bottom: 5px;
+                }
+    </style>
+}
+@section scripts{
+    <script>
+        function openurl() {
+            //location.href = "http://mp.weixin.qq.com/mp/homepage?__biz=MjM5NTUxMjI5NQ==&hid=7&sn=da97f5774bce04b1d9345922cc0e3fa0#wechat_redirect";
+            location.href = "/Article/List";
+        }
+    </script>
+}
+@*@if (ViewBag.IsShow != "1")
+    {*@
+<div class="page icons">
+    <div class="page__bd page__bd_spacing ">
+        <div class="icon-box" style="padding: 10px; margin-bottom:0px;">
+            <i class="weui-icon-success weui-icon_msg" style="font-size:64px;"></i>
+            <div class="icon-box__ctn">
+                <h3 class="icon-box__title">恭喜您!</h3>
+                <p class="icon-box__desc">成功加入智慧供应链联盟</p>
+            </div>
+        </div>
+    </div>
+</div>
+@*}*@
+@*<div class="page msg_success js_show">
+        <div class="weui-msg">
+            <div class="weui-msg__icon-area"><i class="weui-icon-success weui-icon_msg"></i></div>
+            <div class="weui-msg__text-area">
+                <h2 class="weui-msg__title">恭喜您</h2>
+                <p class="weui-msg__desc">成功加入智慧供应链联盟</p>
+            </div>
+        </div>
+    </div>*@
+@*<div class="weui-grids" style="background:#f1f1f1; padding:20px 10px 10px 10px;">
+        <a href="javascript:;">
+            <div class="weui-grid__icon" style="width:160px;height:120px;">
+                <img src="/images/update_icon.png" alt="LOGO" />
+            </div>
+            <p class="weui-grid__label">平台正在更新中,请持续关注</p>
+        </a>
+    </div>*@
+<div class="weui-grids" style="padding:30px">
+    <div class="weui-grid__icon" style="width: 160px; height: 160px; ">
+        <img src="~/Images/qrcode.jpg" />
+    </div>
+    <div class="">
+        <p class="" style="text-align:center">扫码上方二维码关注我们获取更多服务</p>
+        <p class="weui-grid__label">平台正在更新中,请持续关注</p>
+    </div>
+</div>
+<div class="weui-cells" style="padding:10px;margin:0px;">
+    <div class="weui-cell">
+        <div class="weui-cell__hd"><img src="/images/pinpai-icon.png" alt="" style="width: 36px; margin-right: 5px; display: block"></div>
+        <div class="weui-cell__bd">
+            <p style="font-size:14px;">品牌宣传及推广，采购资源的整合</p>
+        </div>
+    </div>
+    <div class="weui-cell">
+        <div class="weui-cell__hd"><img src="/images/hezuo-icon.png" alt="" style="width: 36px; margin-right: 5px; display: block; "></div>
+        <div class="weui-cell__bd">
+            <p style="font-size:14px;">促进产业合作，上下游供需直连</p>
+        </div>
+    </div>
+</div>
+
+<div class="weui-btn-area">
+    <a class="weui-btn weui-btn_primary" style="color:#ffffff;" href="#" onclick="openurl()">查看项目信息和采购需求</a>
+</div>

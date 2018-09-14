@@ -1,0 +1,396 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+<script src="~/Content/scripts/plugins/ueditor/ueditor.config.js"></script>
+<script src="~/Content/scripts/plugins/ueditor/ueditor.all.js"></script>
+<script>
+
+    var editor;
+    var dtips;
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        dtips = $("#destips");
+        initRichTextEditor();
+        InitControl();
+
+    });
+
+
+    function initRichTextEditor() {
+        eidtor = UE.getEditor('Content',
+            {
+                initialFrameHeight: "300"
+            });
+        eidtor.addListener('contentChange', function () {
+            //    editor.sync();
+            dtips.hide();
+        });
+        //同步内容
+        eidtor.addListener("blur", function () {
+            eidtor.sync();
+            var content = eidtor.getContent();
+            if (content.length < 1) {
+                dtips.show();
+            } else {
+                dtips.hide();
+            }
+        })
+        eidtor.ready(function () {
+            eidtor.setHeight(320);
+        });
+
+    };
+    //初始化数据
+    function InitControl() {
+
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/ShopCar/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.ShopId) {
+                            $("#ddlshop").ComboBoxSetValue(data.ShopId);
+                        }
+                        if (data.BrandId) {
+                            $("#ddlbrand").ComboBoxSetValue(data.BrandId);
+                        }
+                        //封面
+                        if (data.FaceImage) {
+                            $("#HidFaceImage").val(data.FaceImage);
+                            var host = '@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"] == "" ? string.Format("http://{0}{1}", Request.Url.Host, Request.Url.Port == 80 ? "" : ":" + Request.Url.Port) : System.Configuration.ConfigurationManager.AppSettings["ImageHost"])';
+                            document.getElementById('uploadPreview').src = host + data.FaceImage;
+                        }
+                        //图片
+                        if (data.AttachmentPicList) {
+                            var html = "";
+                            var imgslist = data.AttachmentPicList;
+                            if (imgslist) {
+                                for (var i = 0; i < imgslist.length; i++) {
+                                    var path = imgslist[i].PicName;
+                                    var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                                    html += '<li style=" background:#ccc;position:relative;"><a class="magnifier" href="' + path + '">';
+                                    html += '<img src="' + path + '"/>';
+                                    html += '</a>';
+                                    html += '<i class="" style="position: absolute;left: 60px;bottom: 0px;background:url(/content/images/close11.png);width:32px;height:32px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+                                    html += '</li>';
+                                }
+                                $("#imgs").append(html);
+                                //绑定删除事件
+                                $("#imgs li").each(function () {
+                                    $(this).find("i").bind("click", function () {
+                                        //删除图片
+                                        $(this).parent().remove();
+                                    })
+                                })
+                                //查看图片
+                                jQuery('.magnifier').touchTouch();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        //注意 提交json 字符串，在后台反序列化对象
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["Content"] = encodeHtml(eidtor.getContent());
+        postData["ShopId"] = $("#ddlshop").attr('data-value');
+        postData["ShopName"] = $("#ddlshop").attr('data-text');
+        postData["BrandId"] = $("#ddlbrand").attr('data-value');
+        postData["BrandName"] = $("#ddlbrand").attr('data-text');
+        postData["FaceImage"] = $("#HidFaceImage").val();
+        //图片集合
+        var imageslist = [];
+        $("#imgs li:gt(0)").each(function () {
+            var $this = $(this);
+            var path = $this.find("img").attr("src");
+            imageslist.push({
+                "PicName": path
+            });
+
+        })
+        postData["AttachmentPicList"] = imageslist;
+        $.SaveForm({
+            url: "/QX360Manage/ShopCar/SaveForm?keyValue=" + keyValue,
+            param: { json: JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $("#ddlshop").ComboBox({
+            url: "/QX360Manage/Shop/GetDataListJson",
+            param: null,
+            id: "ShopId",
+            text: "Name",
+            description: "==请选择所属车店==",
+            height: "200px"
+        });
+        $("#ddlbrand").ComboBox({
+            url: "/SystemManage/DataItemDetail/GetDataItemListJson",
+            param: { EnCode: "qcpp" },
+            id: "ItemDetailId",
+            text: "ItemName",
+            description: "==请选择汽车品牌==",
+            height: "200px",
+            allowSearch: true
+        });
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+        uploadFacePic();
+
+    }
+
+    // HTML编码
+    function encodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        }
+
+        return value.replace(/&/g, "&amp;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/</g, "&lt;")
+                    .replace(/'/, "&quot;");
+    }
+
+
+    /// <summary>
+    /// HTML解码
+    /// </summary>
+    function decodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        };
+        return value.replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&amp;/g, "&")
+                    .replace(/&quot;/g, "'");
+    }
+
+    //上传产品图片
+    function uploadPic() {
+        $("#uploadFile").click();
+        //上传图标
+        $('#uploadFile').unbind("change").bind("change", function () {
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFile')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+
+            //上传应用图标
+            $.ajax({
+                url: "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]/Upload/UploadFile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data && data.IsSuccess) {
+                        var path = data.ResultData["files"];
+                        //_ImageList.push(path);
+                        //显示图片
+                        var html = "";
+                        var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                        html += '<li style=" background:#ccc;position:relative;"><a class="magnifier" href="' + path + '">';
+                        html += '<img src="' + path + '"/>';
+                        html += '</a>';
+                        html += '<i class="" style="position: absolute;right: -2px;;top: 0px;background:url(/content/images/close11.png);width:32px;height:32px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+                        html += '</li>';
+
+
+                        $("#imgs").append(html);
+                        //绑定删除事件
+                        $("#imgs li").each(function () {
+                            $(this).find("i").bind("click", function () {
+
+                                //删除图片
+                                $(this).parent().remove();
+                            })
+                        })
+                        //查看图片
+                        jQuery('.magnifier').touchTouch();
+                    }
+                    else {
+
+                    }
+                }
+            });
+        });
+    }
+    function uploadFacePic() {
+        $("#uploadPreview").unbind("click").bind("click", function () {
+            $('#uploadFaceImage').trigger("click");
+        })
+        //上传图标
+        $('#uploadFaceImage').change(function () {
+            var f = document.getElementById('uploadFaceImage').files[0];
+            var src = window.URL.createObjectURL(f);
+            document.getElementById('uploadPreview').src = src;
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFaceImage')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+
+            //上传应用图标
+            $.ajax({
+                url: "/Upload/UploadFile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data && data.IsSuccess) {
+                        $("#HidFaceImage").val(data.ResultData["files"]);
+                    }
+                    else {
+                        alert(data.Message);
+                    }
+                }
+            });
+        });
+    }
+</script>
+<style>
+    #imgs li {
+        float: left;
+        margin-right: 5px;
+    }
+
+        #imgs li img {
+            width: 100px;
+            height: 100px;
+        }
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle"> 车辆名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Name" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 车辆封面</td>
+            <td>
+                <input type="hidden" id="HidFaceImage" />
+                <div style="text-align: center;">
+                    <div class="" style="width: 100px; height: 100px;">
+                        <img id="uploadPreview" style="width: 100px; height: 100px; border-radius: 100px; border:0px" src="~/Content/images/add.png" />
+                        <input type="file" name="uploadFaceImage" id="uploadFaceImage" style="display:none">
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">所属车店<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlshop" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        @*<tr>
+            <td class="formTitle"> 参考价值</td>
+            <td class="formValue"> <input id="ConsultPrice" type="text" class="form-control input-profile" /> </td>
+        </tr>*@
+        <tr>
+            <td class="formTitle">参考价值<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div class="" style="margin-left:-14px">
+                    <div class="col-md-3">
+                        <input id="LimitPrice" type="text" class="form-control input-profile" placeholder="起始价格" isvalid="yes" checkexpession="NotNull" />
+                    </div>
+                    <div class="col-md-3">
+                        <input id="MaxPrice" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" placeholder="结束价格" />
+                    </div>
+                    <div class="col-md-1">
+                     <span>万元</span>
+                    </div>
+                </div>
+
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">车辆品牌<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlbrand" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 车辆主图</td>
+            <td>
+                <input type="file" name="uploadFile" id="uploadFile" style="display:none;">
+                <ul id="imgs">
+                    <li><img src="/content/images/add.png" onclick="uploadPic()" /></li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 车辆描述</td>
+            <td class="formValue"> <input id="SortDesc" type="text" class="form-control input-profile" /> </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 车辆介绍<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="" style="min-height: 250px" class="">
+                    <textarea id="Content" class="clearfix" rows="5" style="width:100%"></textarea>
+                    <div style="padding-top:10px;color:#999;@(string.IsNullOrWhiteSpace("") ? "" : "display:none;")" class="cor-red" id="destips">描述不能为空。</div>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">是否有效</td>
+            <td class="formValue">
+                <div class="checkbox">
+                    <label>
+                        <input id="Status" type="checkbox" checked="checked" />
+                        是
+                    </label>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 排序号</td>
+            <td class="formValue">
+                <input id="SortNum" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NumOrNull" />
+            </td>
+        </tr>
+    </table>
+</div>

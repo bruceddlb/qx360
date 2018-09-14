@@ -1,0 +1,848 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+<script src="~/Content/scripts/plugins/ueditor/ueditor.config.js"></script>
+<script src="~/Content/scripts/plugins/ueditor/ueditor.all.js?uid=@QSDMS.Util.Util.NewLowerGuid()"></script>
+<script>
+    var _ImageList = [];
+    var editor;
+    var dtips;
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        dtips = $("#destips");
+        initRichTextEditor();
+        InitControl();
+        $("#btn_addsubject").bind("click", function () {
+            AddSubject(null);
+        })
+        $("#btn_finish").bind("click", function () {
+            AcceptClick();
+        })
+
+        $("#btn_addtag").bind("click", function () {
+            var tag = $("#txt_tag").val();
+            if (!tag) {
+                dialogMsg("请输入标签", 0);
+                return;
+            }
+            AddTag(null);
+        })
+    });
+
+
+    function initRichTextEditor() {
+        eidtor = UE.getEditor('Content',
+            {
+                initialFrameHeight: "300"
+            });
+        eidtor.addListener('contentChange', function () {
+            //    editor.sync();
+            dtips.hide();
+        });
+        //同步内容
+        eidtor.addListener("blur", function () {
+            eidtor.sync();
+            var content = eidtor.getContent();
+            if (content.length < 1) {
+                dtips.show();
+            } else {
+                dtips.hide();
+            }
+        })
+        eidtor.ready(function () {
+            eidtor.setHeight(320);
+        });
+
+    };
+    //初始化数据
+    function InitControl() {
+        //省份
+        $("#ProvinceId").ComboBox({
+            url: "/SystemManage/Area/GetAreaListJson",
+            param: { parentId: "0" },
+            id: "AreaCode",
+            text: "AreaName",
+            description: "选择省",
+            height: "170px",
+            allowSearch: true
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            $("#CityId").ComboBox({
+                url: "/SystemManage/Area/GetAreaListJson",
+                param: { parentId: value },
+                id: "AreaCode",
+                text: "AreaName",
+                description: "选择市",
+                height: "170px"
+
+            });
+        });
+        //城市
+        $("#CityId").ComboBox({
+            description: "选择市",
+            height: "170px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            if (value) {
+                $("#CountyId").ComboBox({
+                    url: "/SystemManage/Area/GetAreaListJson",
+                    param: { parentId: value },
+                    id: "AreaCode",
+                    text: "AreaName",
+                    description: "选择县/区",
+                    height: "170px"
+                });
+            }
+        });
+        //县/区
+        $("#CountyId").ComboBox({
+            description: "选择县/区",
+            height: "170px"
+        });
+
+        //定义课程对象
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/ExamPlace/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.ProvinceId) {
+                            $("#ProvinceId").trigger("change");
+                        }
+                        if (data.CityId) {
+                            $("#CityId").ComboBoxSetValue(data.CityId).trigger("change");
+                        }
+                        if (data.CountyId) {
+                            $("#CountyId").ComboBoxSetValue(data.CountyId);
+                        }
+                        //封面
+                        if (data.FaceImage) {
+                            $("#HidFaceImage").val(data.FaceImage);
+                            var host = '@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"] == "" ? string.Format("http://{0}{1}", Request.Url.Host, Request.Url.Port == 80 ? "" : ":" + Request.Url.Port) : System.Configuration.ConfigurationManager.AppSettings["ImageHost"])';
+                            document.getElementById('uploadPreview').src = host + data.FaceImage;
+                        }
+                        if (data.VideoContent) {
+                            $("#VideoContent").text(data.VideoContent);
+                        }
+                        //图片
+                        if (data.AttachmentPicList) {
+                            var html = "";
+                            var imgslist = data.AttachmentPicList;
+                            if (imgslist) {
+                                for (var i = 0; i < imgslist.length; i++) {
+                                    var path = imgslist[i].PicName;
+                                    var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                                    html += '<li style=" background:#ccc;position:relative;"><a class="magnifier" href="' + path + '">';
+                                    html += '<img src="' + path + '"/>';
+                                    html += '</a>';
+                                    html += '<i class="" style="position: absolute;left: 60px;bottom: 0px;background:url(/content/images/close11.png);width:32px;height:32px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+                                    html += '</li>';
+                                }
+                                $("#imgs").append(html);
+                                //绑定删除事件
+                                $("#imgs li").each(function () {
+                                    $(this).find("i").bind("click", function () {
+                                        //删除图片
+                                        $(this).parent().remove();
+                                    })
+                                })
+                                //查看图片
+                                jQuery('.magnifier').touchTouch();
+                            }
+                        }
+                        if (data.SubjectList) {
+                            // AddSubject(data.SubjectList);
+                            subjectdata = data.SubjectList;
+                            AddSubject(subjectdata);
+                        }
+                        if (data.TagList) {
+                            AddTag(data.TagList);
+                        }
+                        if (data.Lng != null && data.Lat != null) {
+                            $("#point").val("经度：" + data.Lng + ",纬度：" + data.Lat);
+                        }
+
+                    }
+                }
+            });
+        }
+
+        //加载导向
+        $('#wizard').wizard().on('change', function (e, data) {
+            var $finish = $("#btn_finish");
+            var $next = $("#btn_next");
+            if (data.direction == "next") {
+                if (data.step == 1) {
+
+                }
+                if (data.step == 2) {
+                    var subject = [];
+                    $("#subjects li").each(function () {
+                        var $this = $(this);
+                        var id = $this.attr("id");
+                        var itemid = $("#ddl_" + id).attr('data-value');
+                        var subjectname = $("#ddl_" + id).attr('data-text');
+                        var price = $("#txtprice_" + id).val();
+
+                        subject.push({
+                            "ItemId": itemid,
+                            "SubjectName": subjectname,
+                            "Price": price
+                        });
+
+                    })
+                    if (subject.length == 0) {
+                        dialogMsg("请设置实训科目信息", 0);
+                        return false;
+                    }
+                    $finish.removeAttr('disabled');
+                    $next.attr('disabled', 'disabled');
+                }
+                if (data.step == 3) {
+
+                }
+            } else {
+
+            }
+        });
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        //注意 提交json 字符串，在后台反序列化对象
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["FaceImage"] = $("#HidFaceImage").val();
+        postData["ProvinceId"] = $("#ProvinceId").attr('data-value');
+        postData["ProvinceName"] = $("#ProvinceId").attr('data-text');
+        postData["CityId"] = $("#CityId").attr('data-value');
+        postData["CityName"] = $("#CityId").attr('data-text');
+        postData["CountyId"] = $("#CountyId").attr('data-value');
+        postData["CountyName"] = $("#CountyId").attr('data-text');
+        postData["Content"] = encodeHtml(eidtor.getContent());
+        postData["VideoContent"] = $("#VideoContent").text();
+        //处理课程
+        var subject = [];
+        $("#subjects li").each(function () {
+            var $this = $(this);
+            var id = $this.attr("id");
+            var itemid = $("#ddl_" + id).attr('data-value');
+            var subjectname = $("#ddl_" + id).attr('data-text');
+            var price = $("#txtprice_" + id).val();
+            var remark = $("#txtRemark_" + id).val();
+            subject.push({
+                "SubjectId": id,
+                "ItemId": itemid,
+                "SubjectName": subjectname,
+                "Price": price,
+                "Remark": remark
+            });
+
+        })
+        postData["SubjectList"] = subject;//[{ "Name": "C1", "Price": "1000" }, { "Name": "C2", "Price": "1000" }];
+        //图片集合
+        var imageslist = [];
+        $("#imgs li:gt(0)").each(function () {
+            var $this = $(this);
+            var path = $this.find("img").attr("src");
+            imageslist.push({
+                "PicName": path
+            });
+
+        })
+        postData["AttachmentPicList"] = imageslist;
+        var taglist = [];
+        $("#tags li").each(function () {
+            var $this = $(this);
+            var id = $this.attr("data-id");
+            var value = $this.attr("data-text");
+            taglist.push({
+                "TagId": id,
+                "Value": value,
+            });
+
+        })
+        postData["TagList"] = taglist;
+        $.SaveForm({
+            url: "/QX360Manage/ExamPlace/SaveForm?keyValue=" + keyValue,
+            param: { json: JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+        uploadFacePic();
+
+    }
+    //设置位置坐标
+    function SelectPoint() {
+        var txt = "";
+        var Province = $("#ProvinceId").attr('data-text');
+        if (Province) {
+            txt += Province;
+        }
+        var City = $("#CityId").attr('data-text');
+        if (City) {
+            txt += City;
+        }
+        var County = $("#CountyId").attr('data-text');
+        if (County) {
+            txt += County;
+        }
+        var address = $("#AddressInfo").val();
+        if (!Province) {
+            dialogMsg("请先选择区域", 0);
+            return;
+        }
+        var x = $("#Lng").val();
+        var y = $("#Lat").val();
+        dialogOpen({
+            id: "mappoint",
+            title: '标注地图位置',
+            url: '/BaiduMap/Index?x=' + x + "&y=" + y,//escape(txt + address),
+            width: "1000px",
+            height: "600px",
+            btn: null
+        });
+    }
+
+    // HTML编码
+    function encodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        }
+
+        return value.replace(/&/g, "&amp;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/</g, "&lt;")
+                    .replace(/'/, "&quot;");
+    }
+
+
+    /// <summary>
+    /// HTML解码
+    /// </summary>
+    function decodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        };
+        return value.replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&amp;/g, "&")
+                    .replace(/&quot;/g, "'");
+    }
+
+    function uploadFacePic() {
+        $("#uploadPreview").unbind("click").bind("click", function () {
+            $('#uploadFaceImage').trigger("click");
+        })
+        //上传图标
+        $('#uploadFaceImage').change(function () {
+            var f = document.getElementById('uploadFaceImage').files[0];
+            var src = window.URL.createObjectURL(f);
+            document.getElementById('uploadPreview').src = src;
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFaceImage')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+
+            //上传应用图标
+            $.ajax({
+                url: "/Upload/UploadFile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data && data.IsSuccess) {
+                        $("#HidFaceImage").val(data.ResultData["files"]);
+                    }
+                    else {
+                        alert(data.Message);
+                    }
+                }
+            });
+        });
+    }
+    //上传产品图片
+    function uploadPic() {
+        $("#uploadFile").click();
+        //上传图标
+        $('#uploadFile').unbind("change").bind("change", function () {
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFile')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+
+            //上传应用图标
+            $.ajax({
+                url: "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]/Upload/UploadFile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data && data.IsSuccess) {
+                        var path = data.ResultData["files"];
+                        //_ImageList.push(path);
+                        //显示图片
+                        var html = "";
+                        var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                        html += '<li style=" background:#ccc;position:relative;"><a class="magnifier" href="' + path + '">';
+                        html += '<img src="' + path + '"/>';
+                        html += '</a>';
+                        html += '<i class="" style="position: absolute;right: -2px;;top: 0px;background:url(/content/images/close11.png);width:32px;height:32px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+                        html += '</li>';
+
+
+                        $("#imgs").append(html);
+                        //绑定删除事件
+                        $("#imgs li").each(function () {
+                            $(this).find("i").bind("click", function () {
+                                //var src = $(this).parent().find("img").attr("src");
+                                //删除数组
+                                //_ImageList.splice($.inArray(src, _ImageList), 1);
+                                //删除图片
+                                $(this).parent().remove();
+                            })
+                        })
+                        //查看图片
+                        jQuery('.magnifier').touchTouch();
+                    }
+                    else {
+
+                    }
+                }
+            });
+        });
+    }
+
+    //添加科目
+    function AddSubject(data) {
+        var html = "";
+        if (data != null && data.length != 0) {
+            //定义变量
+            var len = data.length;
+            var i = 0;
+            //创建方法
+            var createsubjectItem = function () {
+                var html = "";
+                var item = data[i];
+                var id = item.SubjectId;
+                html += '<li id=' + id + ' style="border-bottom:1px solid #ccc;padding:30px;position:relative;">';
+                html += '<table class="form">';
+                html += ' <tr>';
+                html += '     <td class="formTitle">实训科目</td>';
+                html += '       <td class="formValue">';
+                html += '       <div id="ddl_' + id + '"  type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>';
+                html += '      </td>';
+                html += '   </tr>';
+                html += ' <tr>';
+                html += '     <td class="formTitle">费用</td>';
+                html += '       <td class="formValue">';
+                html += '          <input id="txtprice_' + id + '" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />';
+                html += '      </td>';
+                html += '   </tr>';
+                html += '   <tr>';
+                html += '     <td class="formTitle">描述</td>';
+                html += '       <td class="formValue">';
+                html += '          <textarea id="txtRemark_' + id + '" type="text" class="form-control input-profile"></textarea>';
+                html += '      </td>';
+                html += '   </tr>';
+                html += '   </table>';
+                html += '<i class="" style="position: absolute;right: -2px;;top: 0px;background:url(/content/images/close.png);width:16px;height:16px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+                html += '   </li>';
+                $("#subjects").append(html);
+                setTimeout(function () {
+                    $("#ddl_" + id).ComboBox({
+                        url: "/DataItemEnums/GetTrainingType",
+                        param: null,
+                        id: "ItemId",
+                        text: "ItemName",
+                        description: "==选择实训科目==",
+                        height: "170px",
+                        allowSearch: true
+                    });
+                    if (item) {
+                        $("#ddl_" + id).ComboBoxSetValue(item.ItemId);
+                        $("#txtprice_" + id).val(item.Price);
+                        $("#txtMakeMoney_" + id).val(item.MakeMoney);
+                        $("#txtRemark_" + id).val(item.Remark);
+
+                    }
+                }, 1);
+                i++;//更新循环变量
+                if (i < len) {
+                    createsubjectItem();
+                }
+            }
+            //第一次调用
+            createsubjectItem();
+
+            //绑定删除事件
+            $("#subjects li").each(function () {
+                $(this).find("i").bind("click", function () {
+                    var $this = $(this).parent();
+                    var id = $this.attr("id");
+                    $.RemoveForm({
+                        url: "/QX360Manage/Subject/RemoveForm",
+                        param: { keyValue: id },
+                        success: function (data) {
+                            $this.remove();
+                        }
+                    })
+
+
+                })
+            })
+        } else {
+            //add
+            var id = newGuid();
+            html += '<li id=' + id + ' style="border-bottom:1px solid #ccc;padding:30px;position:relative;">';
+            html += '<table class="form">';
+            html += ' <tr>';
+            html += '     <td class="formTitle">实训科目</td>';
+            html += '       <td class="formValue">';
+            html += '       <div id="ddl_' + id + '"  type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>';
+            html += '      </td>';
+            html += '   </tr>';
+            html += ' <tr>';
+            html += '     <td class="formTitle">费用</td>';
+            html += '       <td class="formValue">';
+            html += '          <input id="txtprice_' + id + '" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />';
+            html += '      </td>';
+            html += '   </tr>';
+            html += '   <tr>';
+            html += '     <td class="formTitle">描述</td>';
+            html += '       <td class="formValue">';
+            html += '          <textarea id="txtRemark_' + id + '" type="text" class="form-control input-profile"></textarea>';
+            html += '      </td>';
+            html += '   </tr>';
+            html += '   </table>';
+            html += '<i class="" style="position: absolute;right: -2px;;top: 0px;background:url(/content/images/close.png);width:16px;height:16px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+            html += '   </li>';
+            $("#subjects").append(html);
+            setTimeout(function () {
+                $("#ddl_" + id).ComboBox({
+                    url: "/DataItemEnums/GetTrainingType",
+                    param: null,
+                    id: "ItemId",
+                    text: "ItemName",
+                    description: "==选择实训科目==",
+                    height: "170px",
+                    allowSearch: true
+                });
+            }, 100);
+            //绑定删除事件
+            $("#subjects li").each(function () {
+                $(this).find("i").bind("click", function () {
+                    $(this).parent().remove();
+                })
+            })
+        }
+    }
+    ///标签
+    function AddTag(data) {
+        var html = "";
+        if (data != null && data.length != 0) {
+            for (var i = 0; i < data.length; i++) {
+                var item = data[i];
+                html += '<li style="position:relative;" data-id="' + item.TagId + '" data-text=' + item.Value + '><a class="btn btn-default btn-blue1">' + item.Value + '</a>';
+                html += '<i class="" style="position: absolute;right: -2px;;top: -5px;background:url(/content/images/close.png);width:16px;height:16px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+                html += '</li>';
+            }
+            $("#tags").append(html);
+            //绑定删除事件
+            $("#tags li").each(function () {
+                $(this).find("i").bind("click", function () {
+                    $(this).parent().remove();
+                })
+            })
+
+        } else {
+            var id = newGuid();
+            var tag = $("#txt_tag").val();
+            html += '<li style="position:relative;" data-id="' + id + '" data-text=' + tag + '><a class="btn btn-default btn-blue1">' + tag + '</a>';
+            html += '<i class="" style="position: absolute;right: -2px;;top: -5px;background:url(/content/images/close.png);width:16px;height:16px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+            html += '</li>';
+            $("#tags").append(html);
+            $("#txt_tag").val("");
+            //绑定删除事件
+            $("#tags li").each(function () {
+                $(this).find("i").bind("click", function () {
+                    $(this).parent().remove();
+                })
+            })
+        }
+    }
+    
+    function uploadVideo() {
+        $("#uploadVideoFile").click();
+        //上传图标
+        $('#uploadVideoFile').unbind("change").bind("change", function () {
+            var array = new Array('mp4');  //可以上传的文件类型
+            if (!$("#uploadVideoFile").val()) {
+                dialogMsg("请选择要上传的文件", 0);
+                return false;
+            }
+            else {
+                var fileContentType = $("#uploadVideoFile").val().match(/^(.*)(\.)(.{1,8})$/)[3]; //这个文件类型正则很有用：）
+                var isExists = false;
+                for (var i in array) {
+                    if (fileContentType.toLowerCase() == array[i].toLowerCase()) {
+                        isExists = true;
+                    }
+                }
+                if (isExists == false) {
+                    $("#uploadVideoFile").val("")
+                    dialogMsg("请上传.mp4格式文件!",0);
+                    return false;
+                }
+            }
+
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadVideoFile')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+            $("#iscompletedMsg").html("<span class='' style='color:#FF6600;'>正在处理...</span>");
+            $("#iscompletedMsg").fadeIn();
+            setTimeout(function () {
+                //上传应用图标
+                $.ajax({
+                    url: "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]/Upload/UploadVideoFile",
+                    type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                beforeSend: function (data) {
+
+                },
+                complete: function (data) {
+                    $("#iscompletedMsg").fadeOut();
+                },
+                success: function (data) {
+                    if (data && data.IsSuccess) {
+                        $("#VideoContent").text(data.ResultData["files"]);
+                        dialogMsg("上传成功", 1);
+                    }
+                    else {
+                        alert(data.Message);
+                    }
+                }
+            });
+        }, 200);
+    });
+    }
+</script>
+<style>
+    #imgs li {
+        float: left;
+        margin-right: 5px;
+    }
+
+    #tags li {
+        float: left;
+        margin-right: 5px;
+    }
+
+    #imgs li img {
+        width: 100px;
+        height: 100px;
+    }
+</style>
+
+<div class="widget-body">
+    <div id="wizard" class="wizard" data-target="#wizard-steps" style="border-left: none; border-top: none; border-right: none;">
+        <ul class="steps"> <li data-target="#step-1" class="active"> <span class="step"> 1</span> 基本信息<span class="chevron"> </span> </li> <li data-target="#step-2"> <span class="step"> 2</span> 实训科目<span class="chevron"> </span> </li> <li data-target="#step-3"> <span class="step"> 3</span> 详细信息<span class="chevron"> </span> </li> </ul>
+    </div>
+
+    <div class="step-content" id="wizard-steps" style="border-left: none; border-bottom: none; border-right: none; margin: 10px; min-height: 450px">
+        <div class="step-pane active" id="step-1">
+            <div id="">
+                <table class="form">
+                    <tr>
+                        <td class="formTitle"> 考场名称<font face="宋体">*</font></td>
+                        <td class="formValue">
+                            <input id="Name" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 考场封面</td>
+                        <td>
+                            <input type="hidden" id="HidFaceImage" />
+                            <div style="text-align: center;">
+                                <div class="" style="width: 100px; height: 100px;">
+                                    <img id="uploadPreview" style="width: 100px; height: 100px; border-radius: 100px; border:0px" src="~/Content/images/add.png" />
+                                    <input type="file" name="uploadFaceImage" id="uploadFaceImage" style="display:none">
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 考场地址<font face="宋体">*</font></td>
+                        <td class="formValue">
+                            <div style="float:left;" class="">
+                                <div id="ProvinceId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;" isvalid="yes" checkexpession="NotNull"></div>
+                                <div id="CityId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;"></div>
+                                <div id="CountyId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 详细地址<font face="宋体">*</font></td>
+                        <td class="formValue">
+                            <input id="AddressInfo" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 经纬度<font face="宋体">*</font></td>
+                        <td class="formValue">
+                            <input type="hidden" id="Lng" />
+                            <input type="hidden" id="Lat" />
+                            <input id="point" type="text" class="form-control input-profile" readonly onclick="SelectPoint()" /><span onclick="SelectPoint()" class="input-button" title="选取坐标">...</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 联系人<font face="宋体">*</font></td>
+                        <td class="formValue"> <input id="ConectName" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" /> </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 联系电话<font face="宋体">*</font></td>
+                        <td class="formValue"> <input id="ConectTel" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" /> </td>
+                    </tr>
+
+                    <tr>
+                        <td class="formTitle"> 考场主图</td>
+                        <td>
+                            <input type="file" name="uploadFile" id="uploadFile" style="display:none;">
+                            <ul id="imgs">
+                                <li><img src="/content/images/add.png" onclick="uploadPic()" /></li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 实训费用<font face="宋体">*</font></td>
+                        <td class="formValue"> <input id="TrainingPrice" type="text" class="form-control input-profile" isvalid="yes" checkexpession="Double" /> </td>
+                    </tr>
+                    @*<tr>
+                        <td class="formTitle">管理账号<font face="宋体">*</font></td>
+                        <td class="formValue">
+                            <input id="MasterAccount" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" value="" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle">管理密码<font face="宋体">*</font></td>
+                        <td class="formValue">
+                            <input id="Pwd" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" value="888888" />
+                        </td>
+                    </tr>*@
+                    <tr>
+                        <td class="formTitle">是否有效</td>
+                        <td class="formValue">
+                            <div class="checkbox">
+                                <label>
+                                    <input id="Status" type="checkbox" checked="checked" />
+                                    有效
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 标签</td>
+                        <td>
+                            <ul id="tags"></ul>
+                            <div>
+                                <input id="txt_tag" type="text" class="form-control input-profile" style="width: 100px; display: inline;" value="" placeholder="输入标签" />
+                                <a class="btn btn-default btn-blue1" id="btn_addtag" style="margin-top: -5px;margin-left: -3px;">+</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle"> 排序号</td>
+                        <td class="formValue">
+                            <input id="SortNum" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NumOrNull" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="step-pane" id="step-2">
+            <div id="" style="margin: 10px; min-height: 450px">
+                <ul id="subjects"></ul>
+                <div style="text-align:center;margin-top:10px;">
+                    <a class="btn btn-default btn-blue1" id="btn_addsubject"> 添加实训科目</a>
+                </div>
+            </div>
+
+        </div>
+        <div class="step-pane" id="step-3">
+            <table class="form">
+                <tr>
+                    <td class="formTitle">视频地址</td>
+                    <td class="formValue">
+                        <div style="text-align: left;">
+                            <div class="" style="">
+                                <img id="uploadPreview" onclick="uploadVideo()" style="width: 100px; height: 100px; border-radius: 100px; border:0px" src="~/Content/images/video3.png" />
+                                <input type="file" name="uploadVideoFile" id="uploadVideoFile" style="display:none">
+                                <label id="VideoContent"></label>
+                                <span id="iscompletedMsg" style="display: none;"><font color='red'>正在处理，请稍候...</font></span>
+                            </div>
+                        </div>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">描述</td>
+                    <td class="formValue">
+                        <div id="" style="margin: 10px;">
+                            <textarea id="Content" class="clear" rows="6" style="width:100%"></textarea>
+                            <div style="padding-top:10px;color:#999;@(string.IsNullOrWhiteSpace("") ? "" : "display:none;")" class="cor-red" id="destips">描述不能为空。</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>
+<div class="" id="wizard-actions" style="text-align:right;margin-bottom:0px;margin-right:10px">
+    <a id="btn_last" disabled class="btn btn-default btn-prev"> 上一步</a>
+    <a id="btn_next" class="btn btn-default btn-next"> 下一步</a>
+    <a id="btn_finish" disabled class="btn btn-success"> 完成</a>
+</div>

@@ -1,0 +1,127 @@
+﻿@{
+    ViewBag.Title = "查看明细";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<style>
+</style>
+<script>
+    var keyValue = request('keyValue');
+    var stime = request('stime');
+    var etime = request('etime');
+    $(function () {
+        InitialPage();
+        GetGrid();
+        $("#SelectedStartTime").html(stime);
+        $("#SelectedEndTime").html(etime);
+        $("#btn_setTime").bind("click", function () {
+            $("#SelectedStartTime").html($("#StartTime").val());
+            $("#SelectedEndTime").html($("#EndTime").val());
+            $("#timepanel").css({ "display": "none" });
+        })
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                //$("#gridTable").setGridHeight($(window).height() - 160);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var $gridTable = $("#gridTable");
+        var queryJson = {};
+        $("#StartTime").val(stime);
+        $("#EndTime").val(etime);
+        queryJson["StartTime"] = $("#StartTime").val();
+        queryJson["EndTime"] = $("#EndTime").val();
+        queryJson["TrainingCarId"] = keyValue;
+        $gridTable.jqGrid({
+            url: "/ReportManage/TrainingCar/GetPageDetailListJson",
+            datatype: "json",
+            postData: { queryJson: JSON.stringify(queryJson) },
+            height: $(window).height() - 170,
+            autowidth: true,
+            colModel: [
+                { label: "主键", name: "TrainingOrderId", hidden: true },
+                { label: "订单号", name: "TrainingOrderNo", index: "CarNumber", width: 200, align: "center" },
+                { label: "预约人", name: "MemberName", index: "MemberName", width: 150, align: "center" },
+                { label: "日期", name: "ServiceDate", index: "ServiceDate", width: 200, align: "center" },
+                { label: "预约时段", name: "ServiceTime", index: "ServiceTime", width: 300, align: "center" },
+
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'CreateTime',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+        });
+
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {};
+            queryJson["StartTime"] = $("#StartTime").val();
+            queryJson["EndTime"] = $("#EndTime").val();
+            queryJson["TrainingCarId"] = keyValue;
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+    }
+
+</script>
+<div class="row">
+    <div class="toolbarPanel">
+        <div class="row">
+
+            <div class="col-md-3">
+                <div class="ui-filter" style="width: 200px;">
+                    <div class="ui-filter-text">
+                        <strong id="SelectedStartTime"></strong> 至 <strong id="SelectedEndTime"></strong>
+                    </div>
+                    <div class="ui-filter-list" style="width: 350px;" id="timepanel">
+                        <table class="form" id="filter-form">
+                            <tr>
+                                <th class="formTitle">时间：</th>
+                                <td class="formValue">
+                                    <div style="float: left; width: 45%;">
+                                        <input id="StartTime" readonly type="text" value="" class="form-control input-wdatepicker" onfocus="WdatePicker()">
+                                    </div>
+                                    <div style="float: left; width: 10%; text-align: center;">至</div>
+                                    <div style="float: left; width: 45%;">
+                                        <input id="EndTime" readonly type="text" value="" class="form-control input-wdatepicker" onfocus="WdatePicker()">
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="ui-filter-list-bottom">
+                            <a id="btn_setTime" class="btn btn-primary"><i class=""></i>&nbsp;确定</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+            </div>
+
+            <div class="toolbar">
+                <div class="btn-group animated fadeInDownBig">
+                    <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+        <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+    </div>
+</div>

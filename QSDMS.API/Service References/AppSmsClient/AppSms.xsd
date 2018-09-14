@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:tns="http://tempuri.org/" elementFormDefault="qualified" targetNamespace="http://tempuri.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import schemaLocation="http://192.168.1.200/AppSms.svc?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/Common.Enum" />
+  <xs:import schemaLocation="http://192.168.1.200/AppSms.svc?xsd=xsd3" namespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+  <xs:element name="SendSmsSame">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element xmlns:q1="http://schemas.datacontract.org/2004/07/Common.Enum" minOccurs="0" name="sendType" type="q1:SmsPropertyEnum" />
+        <xs:element minOccurs="0" name="serialNumber" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="serialPwd" nillable="true" type="xs:string" />
+        <xs:element xmlns:q2="http://schemas.microsoft.com/2003/10/Serialization/Arrays" minOccurs="0" name="mobile" nillable="true" type="q2:ArrayOfstring" />
+        <xs:element minOccurs="0" name="content" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="time" type="xs:long" />
+        <xs:element minOccurs="0" name="compID" type="xs:int" />
+        <xs:element minOccurs="0" name="shopID" type="xs:int" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SendSmsSameResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="SendSmsSameResult" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="error" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SendSms">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element xmlns:q3="http://schemas.datacontract.org/2004/07/Common.Enum" minOccurs="0" name="sendType" type="q3:SmsPropertyEnum" />
+        <xs:element minOccurs="0" name="serialNumber" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="serialPwd" nillable="true" type="xs:string" />
+        <xs:element xmlns:q4="http://schemas.microsoft.com/2003/10/Serialization/Arrays" minOccurs="0" name="mc" nillable="true" type="q4:ArrayOfKeyValueOfstringstring" />
+        <xs:element minOccurs="0" name="time" type="xs:long" />
+        <xs:element minOccurs="0" name="compID" type="xs:int" />
+        <xs:element minOccurs="0" name="shopID" type="xs:int" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SendSmsResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="SendSmsResult" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="error" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetSmsInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="serialNumber" nillable="true" type="xs:string" />
+        <xs:element minOccurs="0" name="serialPwd" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetSmsInfoResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="GetSmsInfoResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetSmsInfoById">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="compid" type="xs:int" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetSmsInfoByIdResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="GetSmsInfoByIdResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetDjbSmsInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="compid" type="xs:int" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GetDjbSmsInfoResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="GetDjbSmsInfoResult" nillable="true" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

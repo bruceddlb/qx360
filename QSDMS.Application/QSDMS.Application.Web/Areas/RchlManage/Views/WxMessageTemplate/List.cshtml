@@ -1,0 +1,136 @@
+﻿@{
+    ViewBag.Title = "微信消息模板列表";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $("#gridTable").setGridHeight($(window).height() - 160);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $("#gridTable");
+        var queryJson = {};
+        $gridTable.jqGrid({
+            url: "/QX360Manage/WxMessageTemplate/GetPageListJson",
+            datatype: "json",
+            postData: { queryJson: JSON.stringify(queryJson) },
+            height: $(window).height() - 160,
+            autowidth: true,
+            colModel: [
+                { label: '主键', name: 'WxTemplateId', hidden: true },
+                { label: '标题', name: 'Title', ItemNameindex: 'Title', width: 100, align: 'center', sortable: true },
+                { label: '调用标识', name: 'Call_index', index: 'Call_index', width: 150, align: 'center', sortable: true },
+                { label: '模板编号', name: 'TemplateId', index: 'TemplateId', width: 350, align: 'center', sortable: false },
+                { label: '描述', name: 'Remark', index: 'Remark', width: 200, align: 'center', sortable: false }
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'Title',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+
+        });
+
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {};
+            queryJson["keyword"] = $("#txt_Keyword").val();
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+    }
+
+    function btn_add() {
+        dialogOpen({
+            id: "Form",
+            title: '创建',
+            url: '/QX360Manage/WxMessageTemplate/Form',
+            width: "1000px",
+            height: "630px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+
+    //修改
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue("WxTemplateId");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "Form",
+                title: '编辑',
+                url: '/QX360Manage/WxMessageTemplate/Form?keyValue=' + keyValue,
+                width: "1000px",
+                height: "630px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $("#gridTable").jqGridRowValue("WxTemplateId");
+        if (keyValue) {
+            $.RemoveForm({
+                url: "/QX360Manage/WxMessageTemplate/RemoveForm",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#gridTable").trigger("reloadGrid");
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的数据！', 0);
+        }
+    }
+</script>
+<div class="toolbarPanel">
+    <div class="row">
+
+        <div class="col-md-2">
+            <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" />
+        </div>
+        <div class="col-md-1">
+            <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+        </div>
+
+
+        <div class="toolbar">
+            <div class="btn-group animated fadeInDownBig">
+                <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                <a id="btn-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新建</a>
+                <a id="btn-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                <a id="btn-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+            </div>
+        </div>
+    </div>
+
+</div><div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+</div>

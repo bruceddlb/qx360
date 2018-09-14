@@ -1,0 +1,352 @@
+﻿@{
+    ViewBag.Title = "我的考试";
+}
+@section scripts{
+    <script>
+        function ViewModel() {
+            var self = this;
+            self.List = ko.observableArray([]);
+            self.Exam = ko.observable({
+                ClassId: ko.observable(""),
+                ClassName: ko.observable(""),
+                SubjectId: ko.observable(""),
+                SubjectName: ko.observable(""),
+                Status: ko.observable(""),
+                ExamDate: ko.observable(""),
+            });
+            //增加考试记录
+            self.AddExam = function () {
+                if (!self.Exam().ClassId()) {
+                    ShowTips("请选择学车类型");
+                    return;
+                }
+                if (!self.Exam().SubjectId()) {
+                    ShowTips("请选择考试科目");
+                    return;
+                }
+                if (!self.Exam().Status()) {
+                    ShowTips("请选择考试状态");
+                    return;
+                }
+                if (!self.Exam().ExamDate()) {
+                    ShowTips("请选择考试时间");
+                    return;
+                }
+                $.post("/Exam/CreateOrder", { "data": ko.toJSON(self.Exam()) }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, "ok");
+                        Hide();
+                        setTimeout(function () {
+                            self.LoadList();
+                        }, 200)
+
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+            //加载数据
+            self.LoadList = function () {
+                $.get("/Exam/List", null, function (result) {
+                    if (result.IsSuccess) {
+                        self.List.removeAll();
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            self.List.push(item)
+                        }
+                    }
+                });
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.LoadList();
+
+            //添加弹窗
+            $('.Mee_btn').on('click', function () {
+                Show();
+            })
+            $('.Meepopup_close').on('click', function () {
+                Hide();
+            })
+            //选择考试科目
+            var StudyType_show = $('#StudyType');
+            var classdata = GetClassList();
+            StudyType_show.bind('click', function () {
+                var bankSelect = new IosSelect(1,
+                    [classdata],
+                    {
+                        container: '.container',
+                        title: '学车类型',
+                        itemHeight: 50,
+                        itemShowCount: 3,
+                        oneLevelId: StudyType_show,
+                        callback: function (selectOneObj) {
+                            StudyType_show.val(selectOneObj.value);
+                            model.Exam().ClassId(selectOneObj.id);
+                            model.Exam().ClassName(selectOneObj.value);                       
+                        }
+                    });
+            });
+            //
+            //选择考试科目
+            var MeeType_show = $('#MeeType');           
+            MeeType_show.bind('click', function () {
+                var examdata = GetExamList(model.Exam().ClassId());
+                setTimeout(function () {
+                    var bankSelect = new IosSelect(1,
+                   [examdata],
+                   {
+                       container: '.container',
+                       title: '考试科目',
+                       itemHeight: 50,
+                       itemShowCount: 3,
+                       oneLevelId: MeeType_show,
+                       callback: function (selectOneObj) {
+                           MeeType_show.val(selectOneObj.value);
+
+                           model.Exam().SubjectId(selectOneObj.id);
+                           model.Exam().SubjectName(selectOneObj.value);
+                       }
+                   });
+                },100)
+             
+
+            });
+
+            //选择考试状态
+            var MeeState_show = $('#MeeState');
+            var examstatus = GetExamType();
+            MeeState_show.bind('click', function () {
+                var bankSelect = new IosSelect(1,
+                    [examstatus],
+                    {
+                        container: '.container',
+                        title: '考试状态',
+                        itemHeight: 50,
+                        itemShowCount: 3,
+                        oneLevelId: MeeState_show,
+                        callback: function (selectOneObj) {
+                            MeeState_show.val(selectOneObj.value);
+
+                            model.Exam().Status(selectOneObj.id);
+                        }
+                    });
+            });
+
+            //选择考试时间
+            var showDateDom = $('#MeeTime');
+            // 初始化时间
+            var now = new Date();
+            var nowYear = now.getFullYear();
+            var nowMonth = now.getMonth() + 1;
+            var nowDate = now.getDate();
+            showDateDom.attr('data-year', nowYear);
+            showDateDom.attr('data-month', nowMonth);
+            showDateDom.attr('data-date', nowDate);
+            // 数据初始化
+            function formatYear(nowYear) {
+                var arr = [];
+                for (var i = nowYear - 5; i <= nowYear + 5; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '年'
+                    });
+                }
+                return arr;
+            }
+            function formatMonth() {
+                var arr = [];
+                for (var i = 1; i <= 12; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '月'
+                    });
+                }
+                return arr;
+            }
+            function formatDate(count) {
+                var arr = [];
+                for (var i = 1; i <= count; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '日'
+                    });
+                }
+                return arr;
+            }
+            var yearData = function (callback) {
+                callback(formatYear(nowYear))
+            }
+            var monthData = function (year, callback) {
+                callback(formatMonth());
+            };
+            var dateData = function (year, month, callback) {
+                if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                    callback(formatDate(31));
+                }
+                else if (/^(4|6|9|11)$/.test(month)) {
+                    callback(formatDate(30));
+                }
+                else if (/^2$/.test(month)) {
+                    if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                        callback(formatDate(29));
+                    }
+                    else {
+                        callback(formatDate(28));
+                    }
+                }
+                else {
+                    throw new Error('month is illegal');
+                }
+            };
+            showDateDom.bind('click', function () {
+                var oneLevelId = showDateDom.attr('data-year');
+                var twoLevelId = showDateDom.attr('data-month');
+                var threeLevelId = showDateDom.attr('data-date');
+                var bankSelect = new IosSelect(3,
+                   [yearData, monthData, dateData],
+                    {
+                        container: '.container',
+                        title: '考试时间',
+                        itemHeight: 35,
+                        itemShowCount: 9,
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                            showDateDom.attr('data-year', selectOneObj.id);
+                            showDateDom.attr('data-month', selectTwoObj.id);
+                            showDateDom.attr('data-date', selectThreeObj.id);
+                            showDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value);
+
+                            var date = selectOneObj.value.replace("年", '') + "-" + selectTwoObj.value.replace("月", '') + "-" + selectThreeObj.value.replace("日", '');
+                            model.Exam().ExamDate(date);
+                        }
+                    });
+            });
+        })
+
+
+
+        function GetClassList() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Class/List",
+                //async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ClassId,
+                                "value": item.ClassName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+        //查询学校科目
+        function GetExamList(classid) {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Course/List",
+                async: true,
+                data: { classid: classid },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.CourseId,
+                                "value": item.CourseName,
+                            });
+                        }
+                    }
+                   // alert(rs.length)
+                }
+            });
+            return rs;
+        }
+        //考试状态
+        function GetExamType() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Exam/GetExamStatus",
+                //async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+        function Show() {
+            $('.Mee_back').show();
+            $('.Meepopup').show();
+        }
+        function Hide() {
+            $('.Mee_back').hide();
+            $('.Meepopup').hide();
+        }
+    </script>
+}
+<div class="Mee_back"></div>
+<div class="Meepopup">
+    <div class="Meepopup_h2">新增记录</div>
+    <div class="Meepopup_txt">
+        <input type="text" placeholder="请选择学车类型" class="Mee_text" id="StudyType" readonly>
+        <input type="text" placeholder="请选择考试科目" class="Mee_text" id="MeeType" readonly>
+        <input type="text" placeholder="请选择考试状态" class="Mee_text" id="MeeState" readonly>
+        <input type="text" placeholder="请选择考试完成时间" class="Mee_text" id="MeeTime" readonly>
+        <div class="Mee_sub"><button type="button" class="Mee_button" data-bind="click:function(){$root.AddExam();}">确定新增</button></div>
+    </div>
+    <div class="Meepopup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+
+
+<a href="https://hb.122.gov.cn/m/login" class="Mee_header" style="font-weight:bold;font-size:0.34rem">考试预约<i class="iconfont icon-jiantou"></i></a>
+
+<div class="Mee_top">
+    <img src="/content/images/mye_02.jpg">
+    <i class="iconfont icon-tixing1 Mee_top_icon"></i>
+    <div class="Mee_div">
+        <div class="Mee_top_h2">考试提醒</div>
+        <div class="Mee_top_txt">准确填写您的考试通过时间，系统将会告知您下次考试时间，并在考试前一天告知您考试相关信息 .</div>
+    </div>
+</div>
+
+<div class="Mee_hr"><i class="iconfont icon-jibenxinxi1"></i>考试记录</div>
+
+<ul class="Mee_ul" data-bind="foreach:List">
+    <li>
+        <div class="Mee_head"><img data-bind="attr:{src:Member.HeadIcon==null?'/images/face.png':Member.HeadIcon}"><em data-bind="text:MemberName"></em><span data-bind="text:'添加时间 : '+formatDate(CreateTime,'yyyy-MM-dd')"></span></div>
+        <div class="Mee_con">
+            <div>学车类型：<span data-bind="text:ClassName"></span></div>
+            <div>考试科目：<span data-bind="text:SubjectName"></span></div>
+            <div>当前状态：<span data-bind="text:StatusName"></span></div>
+            <div>完成时间：<span data-bind="text:formatDate(ExamDate,'yyyy-MM-dd')"></span></div>
+        </div>
+    </li>
+</ul>
+
+<div class="Mee_btn"><i class="iconfont icon-tianjia"></i>添加新纪录</div>

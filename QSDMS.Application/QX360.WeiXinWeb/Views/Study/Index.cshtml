@@ -1,0 +1,102 @@
+﻿@{
+    ViewBag.Title = "预约学车";
+}
+@section scripts{
+    <script type="text/javascript">
+        var studytype = request('type');
+        function ViewModel() {
+            var self = this;
+            self.Account = ko.observable({
+                MemberName: ko.observable(""),
+                MemberMobile: ko.observable(""),
+                MemberId: ko.observable(""),
+                MemberLevId: ko.observable(""),
+                SchoolId: ko.observable(""),
+            });
+            self.Study = function (type) {
+                $.get("/Apply/CheckHasApplyPay", null, function (result) {
+                    if (result.IsSuccess) {
+                        window.location.href = "/Study/Teacher?type=" + type + "&schoolid=" + self.Account().SchoolId();
+                    } else {
+                        if (result.Code == "-1") {
+                            GotoLoginPage();
+                        } else if (result.Code == "-2") {
+                            ShowTips(result.Message);
+                        }
+                    }
+                });
+
+
+                @*var levid = self.Account().MemberLevId();
+                if (type == 1 && levid == "@((int)QX360.Model.Enums.UserType.VIP会员)") {
+                    ShowTips("您是VIP学员,请进入VIP班选择课程");
+                    return;
+                }
+                if (type == 2 && levid == "@((int)QX360.Model.Enums.UserType.预约记时会员)") {
+                    ShowTips("您是普通会员,请进入普通班选择课程");
+                    return;
+                }
+                if (type == 2)//vip类型
+                {
+                    window.location.href = "/Study/Teacher?type=2&schoolid=" + self.Account().SchoolId();
+                } else {
+                    window.location.href = "/Study/Time?type=1";
+                }*@
+                ///Study/Teacher?type=1
+                ///Study/Teacher?type=2
+            }
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Account().MemberName(data.MemberName);
+                            self.Account().MemberMobile(data.Mobile);
+                            self.Account().MemberId(data.MemberId);
+                            self.Account().MemberLevId(data.LevId);
+                            self.Account().SchoolId(data.SchoolId);
+                        }
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindUser();
+        });
+
+    </script>
+}
+<div class="Bc_top">
+    <img src="/content/images/xueche_02.jpg">
+</div>
+
+<div class="BcMenu">
+
+    <a href="#" data-bind="click:function(){$root.Study(1);}">
+        <div class="BcMenu_list">
+            <i class="iconfont icon-jiantou BcMenu_icon"></i>
+            <div class="BcMl_left"><i class="iconfont icon-chenggong2"></i></div>
+            <div class="BcMl_right">
+                <div class="BcMl_h2">预约计时班</div>
+                <div class="BcMl_sm">定制化随预约随学，零等待</div>
+            </div>
+        </div>
+    </a>
+
+    <a href="#" data-bind="click:function(){$root.Study(2);}">
+        <div class="BcMenu_list BcMenu_list2">
+            <i class="iconfont icon-jiantou BcMenu_icon"></i>
+            <div class="BcMl_left"><i class="iconfont icon-chenggong2"></i></div>
+            <div class="BcMl_right">
+                <div class="BcMl_h2">VIP班</div>
+                <div class="BcMl_sm">享受至尊VIP学车体验</div>
+            </div>
+        </div>
+    </a>
+
+</div>
+
+

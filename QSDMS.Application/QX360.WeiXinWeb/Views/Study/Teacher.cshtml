@@ -1,0 +1,241 @@
+﻿@{
+    ViewBag.Title = "选择教练";
+}
+@section scripts{
+    <script type="text/javascript">
+        var studytype = request('type');
+        var schoolid = request('schoolid');
+        function ViewModel() {
+            var self = this;
+            self.Area = ko.observable({
+                Province: ko.observableArray([]),
+                City: ko.observableArray([]),
+                County: ko.observableArray([])
+            });           
+            self.StudyType = ko.observable(studytype);
+            self.PageIndex = ko.observable(1);
+            self.IsEndPage = ko.observable(false);
+            self.List = ko.observableArray([]);
+            self.ProvinceId = ko.observable("");
+            self.CityId = ko.observable("");
+            self.CountyId = ko.observable("");
+            self.SchoolId = ko.observable(schoolid);
+            self.ProvinceName = ko.observable("");
+            self.CityName = ko.observable("");
+            self.CountyName = ko.observable("区域");
+            self.toDataInfo = function (data) {
+                var obj = {};
+                for (var o in data) {
+                    obj[o] = ko.observable(data[o]);
+                }
+                return obj;
+            };
+            self.loadSchoolList = function (isAppend) {
+                var queryJson = {};
+                queryJson["provinceid"] = self.ProvinceId();
+                queryJson["cityid"] = self.CityId();
+                queryJson["countyid"] = self.CountyId();
+                queryJson["schoolid"] = self.SchoolId();
+                $.get("/School/List", { pageIndex: self.PageIndex(), queryJson: JSON.stringify(queryJson) }, function (result) {
+                    self.processSchoolList(result, isAppend);
+                });
+            }
+
+            self.loadMore = function () {
+                self.PageIndex(self.PageIndex() + 1);
+                self.loadSchoolList(true);
+            }
+
+            self.processSchoolList = function (result, isAppend) {
+                if (!isAppend) {
+                    self.List.removeAll();
+                }
+                if (result.IsSuccess) {
+                    self.IsEndPage(result.ResultData["IsEndPage"]);
+                    //self.toEntityArray(result, self.List);
+                    var data = result.ResultData["List"];
+                    for (var i in data) {
+                        var item = data[i];
+                        if (item.TeacherList) {
+                            var teacherdata = item.TeacherList;
+                            for (var j in teacherdata) {
+                                var teacher = teacherdata[j];                               
+                                self.List.push(teacher);
+                            }
+                        }
+
+                    }
+                }
+            }
+            self.CutWord = function (str) {
+                var Ilength = 35;
+                if (str) {
+                    var _exp = "...";
+                    if (str.length > Ilength) {
+                        return str.substring(0, Ilength) + _exp;
+                    }
+                    else {
+                        return str;
+                    }
+                } else {
+                    return "";
+                }
+                return str;
+            }
+            self.Seach = function () {
+                self.PageIndex(1);
+                self.loadSchoolList(false);
+            }
+           
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.loadSchoolList(false);
+        
+            model.Area().Province(GetAreaData(1));
+            model.Area().City(GetAreaData(2));
+            model.Area().County(GetAreaData(3));
+
+            FastClick.attach(document.body);
+
+            $(window).scroll(function () {
+                var scrollTop = $(this).scrollTop();
+                var scrollHeight = $(document).height();
+                var windowHeight = $(this).height();
+                if (scrollTop + windowHeight == scrollHeight && !model.IsEndPage()) {
+                    model.loadMore();
+                }
+            });
+            //默认显示区域数据 显示第一个省
+            var normalproviceid = $("#divarea .Ptl_snav_left dd:eq(0)").attr("id");
+            $("#divarea .Ptl_snav_center dd").css({ "display": "none" });
+            $("#divarea .Ptl_snav_center dd[parentid='" + normalproviceid + "']").css({ "display": "block" });
+            $("#" + normalproviceid).addClass('Ptl_snav_dd');
+            var normalcityid = $(".Ptl_snav_center dd[parentid='" + normalproviceid + "']:eq(0)").attr("id");
+            $("#divarea .Ptl_snav_right dd").css({ "display": "none" });
+            $("#divarea .Ptl_snav_right dd[parentid='" + normalcityid + "']").css({ "display": "block" });
+            $("#" + normalcityid).addClass('Pcr_snav_rtdd');
+            //筛选
+            $('.Dto_nav_left .Ptldiv').on('click', function () {
+                $('.Ptl_back').show()//背景
+                $('.Ptldiv').find('span').removeClass('Ptl_span')
+                $(this).find('span').addClass('Ptl_span')
+                $('.Ptl_snav').hide()
+                $(this).next('.Ptl_snav').show()
+            })
+            //选择区域
+            //省
+            $('#divarea .Ptl_snav_left dd').on('click', function () {
+                $('#divarea .Ptl_snav_left dd').removeClass('Ptl_snav_dd');
+                $(this).addClass('Ptl_snav_dd');
+                $("#divarea .Ptl_snav_center dd").css({ "display": "none" });
+                $("#divarea .Ptl_snav_center dd[parentid='" + $(this).attr("id") + "']").css({ "display": "block" });
+                model.ProvinceId($(this).attr("id"));
+            })
+            //市
+            $('#divarea .Ptl_snav_center dd').on('click', function () {
+                $('#divarea .Ptl_snav_center dd').removeClass('Pcr_snav_rtdd');
+                $(this).addClass('Pcr_snav_rtdd');
+                $("#divarea .Ptl_snav_right dd").css({ "display": "none" });
+                $("#divarea .Ptl_snav_right dd[parentid='" + $(this).attr("id") + "']").css({ "display": "block" });
+                model.CityId($(this).attr("id"));
+            })
+            //区
+            //选择后关闭
+            $('#divarea .Ptl_snav_right dd').on('click', function () {
+                $('#divarea .Ptldiv').find('span').removeClass('Ptl_span');
+                $('.Ptl_back').hide();
+                $('.Ptl_snav').hide();
+                model.CountyId($(this).attr("id"));
+                model.CountyName($(this).text());
+                model.Seach();
+            })
+
+        });
+
+        //获取区域信息
+        function GetAreaData(layer) {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Area/GetAreaList",
+                async: false,
+                data: { layer: layer },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.AreaId,
+                                "value": item.AreaName,
+                                "parentid": item.ParentId
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+    </script>
+}
+@section css{
+    <style type="text/css">
+        .Dtmenu li {
+            margin-bottom: 10px;
+        }
+    </style>
+}
+<script type="text/javascript">
+    $(function () {
+
+    })
+</script>
+<div class="Ptl_back"></div>
+<div class="Dcc_nav">
+    <div class="Dcc_nav_left">
+        <div class="Dto_nav_left" id="divarea">
+            <div class="Ptldiv"><span data-bind="text:$root.CountyName()">区域</span><i class="iconfont icon-chevron-tiny-down"></i></div>
+            <div class="Ptl_snav">
+                <dl class="Ptl_snav_left" data-bind="foreach: $root.Area().Province">
+                    <dd data-bind="attr:{id:id,parentid:parentid},text:value"></dd>
+                </dl>
+                <dl class="Ptl_snav_center" data-bind="foreach: $root.Area().City">
+                    <dd data-bind="attr:{id:id,parentid:parentid,title:value},text:value" style="display:none;overflow:hidden"></dd>
+
+                </dl>
+                <dl class="Ptl_snav_right" data-bind="foreach: $root.Area().County">
+                    <dd data-bind="attr:{id:id,parentid:parentid,title:value},text:value" style="display: none; overflow: hidden; "></dd>
+
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+<ul class="Dcc_dl" data-bind="foreach:List">
+    <dd>
+        <a data-bind="attr:{href:'/Study/Time?id='+TeacherId+'&type='+$root.StudyType()}" class="Dcc_po_btn">预约</a>
+        <img data-bind="attr:{src:FaceImage}" class="Dcc_dd_img">
+        <div class="Dcc_ddst">
+            <div class="Dcc_ddst_h3" data-bind="text:Name"></div>
+            <div class="Dcc_ddst_mh"><span data-bind="text:SchoolName==null?'无归属驾校':SchoolName"></span><span>|</span><span data-bind="text:LevName==null?'未设置等级':LevName"></span></div>
+        
+        </div>
+    </dd>
+</ul>
+
+<div class="page__bd" style="margin-bottom:80px;">
+    <div class="weui-loadmore">
+        <!--ko if:!IsEndPage() && List().length>0-->
+        <a href="javascript:void(0);" data-bind="click:function(){loadMore();}">查看更多</a>
+        <!--/ko-->
+        <!--ko if:IsEndPage()-->
+        <a href="javascript:void(0);" style="color:#ccc">没有更多了</a>
+        <!--/ko-->
+        <!--ko if:List().length==0-->
+        <a href="javascript:void(0);" style="color:#ccc">没有相关信息</a>
+        <!--/ko-->
+    </div>
+</div>

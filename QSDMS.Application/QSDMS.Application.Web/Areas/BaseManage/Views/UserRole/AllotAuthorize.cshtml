@@ -1,0 +1,52 @@
+﻿@{
+    ViewBag.Title = "用户角色";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+<script type="text/javascript">
+    var userid = request('userid');
+    $(function () {
+        initialPage();
+        GetRoleTree();
+    })
+    //初始化页面
+    function initialPage() {
+
+    }
+    //获取系统功能
+    function GetRoleTree() {
+        var item = {
+            height: 540,
+            showcheck: true,
+            url: "/BaseManage/UserRole/RoleTreeJson?userid=" + userid
+        };
+        $("#roleTree").treeview(item);
+    }
+    //保存表单
+    function AcceptClick() {
+        var postData = {};
+        postData["userid"] = userid;
+        postData["roles"] = String($("#roleTree").getCheckedAllNodes());
+        var rs = { id: "", text: "" };
+        var text = "";
+        for (var i = 0; i < $("#roleTree").getCheckedAllNodes().length; i++) {
+            var id = $("#roleTree").getCheckedAllNodes()[i];
+            if (id) {
+                var a = $("#roleTree").find("span[data-value='" + id + "']").text();
+                text += a + ",";
+            }
+        }
+        rs.id = String($("#roleTree").getCheckedAllNodes());
+        rs.text = text.substring(0, text.length - 1);
+        dialogClose();
+        return rs;
+    }
+</script>
+<div style="margin-left: 10px; margin-right: 10px;">
+    <div id="roleTree" style="margin: 10px; height: 300px;"></div>
+</div>
+
+
+
+
+
+

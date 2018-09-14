@@ -1,0 +1,326 @@
+﻿@{
+    ViewBag.Title = "考场管理";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                //$("#gridTable").setGridHeight($(window).height() - 160);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var $gridTable = $("#gridTable");
+        $gridTable.jqGrid({
+            url: "/QX360Manage/ExamPlace/GetPageListJson",
+            datatype: "json",
+            height: $(window).height() - 170,
+            autowidth: true,
+            colModel: [
+                { label: "主键", name: "SchoolId", hidden: true },
+                { label: "考场名称", name: "Name", index: "Name", width: 100, align: "center" },
+                { label: "地址", name: "AddressInfo", index: "AddressInfo", width: 450, align: "center" },
+                 { label: "联系人", name: "ConectName", index: "ConectName", width: 100, align: "center" },
+                { label: "联系方式", name: "ConectTel", index: "ConectTel", width: 100, align: "center" },
+                    //{ label: "陪驾费用", name: "WithDrivingPrice", index: "WithDrivingPrice", width: 80, align: "left" },
+                      { label: "实训费用", name: "TrainingPrice", index: "TrainingPrice", width: 80, align: "left" },
+                  { label: "科目", name: "SubjectName", index: "SubjectName", width: 300, align: "center" },
+                     { label: "标签", name: "TagName", index: "SubjectName", width: 100, align: "center" },
+                    {
+                        label: "实训车辆数", name: "TrainingCarCount", index: "TrainingCarCount", width: 80, align: "left",
+                        formatter: function (cellvalue, options, rowObject) {
+                            //var para=
+                            var queryJson = {};
+                            queryJson["keyword"] = rowObject["SchoolId"];
+                            queryJson["condition"] = "schoolid";
+                            var para = JSON.stringify(queryJson);
+                            return cellvalue;
+                            //return '<a href="javascript:;" onclick=OpenNav(\'@(QX360.Model.SysConst.TRAININGCAR_MEMU_ID)\',' + para + ')>' + cellvalue + '</a>';
+                        }
+                    },
+                 {
+                     label: "实训订单", name: "TrainingOrderCount", index: "TrainingOrderCount", width: 80, align: "left",
+                     formatter: function (cellvalue, options, rowObject) {
+                         //var para=
+                         var queryJson = {};
+                         queryJson["keyword"] = rowObject["SchoolId"];
+                         queryJson["condition"] = "schoolid";
+                         var para = JSON.stringify(queryJson);
+                         return cellvalue;
+                         //return '<a href="javascript:;" onclick=OpenNav(\'@(QX360.Model.SysConst.TRAININGORDER_MEMU_ID)\',' + para + ')>' + cellvalue + '</a>';
+                     }
+                 },
+                {
+                    label: "状态", name: "Status", index: "Status", width: 60, align: "center",
+                    formatter: function (cellvalue, options, rowObject) {
+                        if (cellvalue == '@((int)QX360.Model.Enums.UseStatus.启用)') {
+                            return "<span class=\"label label-success\">@(QX360.Model.Enums.UseStatus.启用)</span>";
+                        } else {
+                            return "<span class=\"label label-danger\">@(QX360.Model.Enums.UseStatus.禁用)</span>";
+                        }
+                    }
+                }, { label: "排序号", name: "SortNum", index: "SortNum", width: 50, align: "left" },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'SortNum',
+            sortorder: 'Asc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+        });
+        //查询条件设置
+        $("#queryCondition .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#queryCondition .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {};
+            queryJson["keyword"] = $("#txt_Keyword").val();
+            queryJson["condition"] = $("#queryCondition").find('.dropdown-text').attr('data-value');
+
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+    }
+    //新增
+    function btn_add() {
+        dialogOpen({
+            id: "Form",
+            title: '添加',
+            url: '/QX360Manage/ExamPlace/Form',
+            width: "1000px",
+            height: "600px",
+            btn: null
+        });
+    };
+    //编辑
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue("SchoolId");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "Form",
+                title: '编辑',
+                url: '/QX360Manage/ExamPlace/Form?keyValue=' + keyValue,
+                width: "1000px",
+                height: "600px",
+                btn: null
+            });
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $("#gridTable").jqGridRowValue("SchoolId");
+        if (keyValue) {
+            $.RemoveForm({
+                url: "/QX360Manage/ExamPlace//RemoveForm",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#gridTable").trigger("reloadGrid");
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的行！', 0);
+        }
+    }
+
+
+    function btn_disabled() {
+        var keyValue = $("#gridTable").jqGridRowValue("SchoolId");
+        if (checkedArray(keyValue)) {
+            $.ConfirmAjax({
+                msg: "注：您确定此操作吗？",
+                url: "/QX360Manage/ExamPlace/disabled",
+                param: { keyValue: keyValue },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        $("#gridTable").trigger("reloadGrid");
+                    }
+                },
+                error: function (result) {
+                    dialogMsg(result.Message, 0);
+
+                }
+            })
+        }
+    }
+
+    function btn_enabled() {
+        var keyValue = $("#gridTable").jqGridRowValue("SchoolId");
+        if (checkedArray(keyValue)) {
+            $.ConfirmAjax({
+                msg: "注：您确定此操作吗？",
+                url: "/QX360Manage/ExamPlace/enabled",
+                param: { keyValue: keyValue },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        $("#gridTable").trigger("reloadGrid");
+                    }
+                },
+                error: function (result) {
+                    dialogMsg(result.Message, 0);
+
+                }
+            })
+        }
+    }
+    //导出
+    function btn_export() {
+        var queryJson = {};
+        queryJson["keyword"] = $("#txt_Keyword").val();
+        queryJson["condition"] = $("#queryCondition").find('.dropdown-text').attr('data-value');
+
+        var actionUrl = "/QX360Manage/ExamPlace/ExportExcel";
+        var iscompletedMsg = "iscompletedMsg";
+        var para = "queryJson|" + JSON.stringify(queryJson);
+        doProgressExport(para, actionUrl, iscompletedMsg, "uploadFlag");
+    }
+
+    //打开对应功能页面
+    function OpenNav(id, para) {
+        window.parent.OpenNav(id, para);
+    }
+
+    //当前月
+    function SetWorkMonthDay(type) {
+        var keyValue = $("#gridTable").jqGridRowValue("SchoolId");
+        if (keyValue) {
+            dialogOpen({
+                id: "currentmonth",
+                title: '设置月工作时间',
+                url: '/QX360Manage/MonthWorkDay/Index?objectId=' + keyValue + "&timetype=" + type + "&objectType=4",
+                width: "1000px",
+                height: "600px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        } else {
+            dialogMsg('请选择需要设置的行！', 0);
+        }
+    }
+
+    function SetStudyWorkTime() {
+        var keyValue = $("#gridTable").jqGridRowValue("SchoolId");
+        if (keyValue) {
+            dialogOpen({
+                id: "SetStudyWorkTime",
+                title: '设置学车时段',
+                url: '/QX360Manage/StudyTimeTable/Index?objectId=' + keyValue,
+                width: "1000px",
+                height: "600px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        } else {
+            dialogMsg('请选择需要设置的行！', 0);
+        }
+    }
+    function SetTrainingWorkTime() {
+        var keyValue = $("#gridTable").jqGridRowValue("SchoolId");
+        if (keyValue) {
+            dialogOpen({
+                id: "SetTrainingWorkTime",
+                title: '设置实训时段',
+                url: '/QX360Manage/TrainingTimeTable/Index?objectId=' + keyValue,
+                width: "1000px",
+                height: "600px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        } else {
+            dialogMsg('请选择需要设置的行！', 0);
+        }
+    }
+
+    function btn_import() {
+        dialogOpen({
+            id: "import",
+            title: '批量导入',
+            url: '/QX360Manage/ExamPlace/Import',
+            width: "800px",
+            height: "550px",
+            btn: null
+        });
+    }
+</script>
+<div class="alert alert-danger" style="text-align: left; margin: 0px; border-radius: 0px; border-left: none; border-top: none; border-right: none;">
+    <i class="fa fa-question-circle" style="position: relative; top: 1px; font-size: 15px; padding-right: 5px;"></i>
+    说明：实训考场自行设置本考场一个月内工作日和非工作日，本月设置下月工作时间。实训时段设置一次即可
+</div>
+<div class="row">
+    <div class="toolbarPanel">
+        <div class="row">
+            <div class="col-md-1">
+                <div id="queryCondition" class="btn-group">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">选择条件</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a data-value="Name">名称</a></li>
+                        <li><a data-value="ConectName">联系人</a></li>
+                        <li><a data-value="ConectTel">联系方式</a></li>
+                        <li><a data-value="CountyName">地区</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="col-md-2">
+                <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" style="" />
+            </div>
+
+            <div class="col-md-1">
+                <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+            </div>
+
+            <div class="toolbar">
+                <div class="btn-group animated fadeInDownBig">
+                    <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                    <a id="btn-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                    <a id="btn-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                    <a id="btn-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                    <a id="btn-workday_current" class="btn btn-default" onclick="SetWorkMonthDay(1)"><i class="fa fa-gear"></i>&nbsp;本月工作日设置</a>
+                    <a id="btn-workday_next" class="btn btn-default" onclick="SetWorkMonthDay(2)"><i class="fa fa-gear"></i>&nbsp;下月工作日设置</a>
+                    <a id="btn-worktime" class="btn btn-default" onclick="SetTrainingWorkTime()"><i class="fa fa-gear"></i>&nbsp;实训时段设置</a>
+                    <a id="btn-more" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-reorder"></i>&nbsp;更多<span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu pull-right">
+
+                        <li id="btn-import" class=""><a onclick="btn_import()"><i class="fa fa-sign-in"></i>&nbsp;导入</a></li>
+                        <li id="btn-export" class=""><a onclick="btn_export()"><i class="fa fa-sign-out"></i>&nbsp;导出</a></li>
+
+                        <li id="btn-disabled"><a onclick="btn_enabled()"><i></i>&nbsp;禁用</a></li>
+                        <li id="btn-enabled"><a onclick="btn_disabled()"><i></i>&nbsp;启用</a></li>
+                    </ul>
+                    <span style="line-height: 26px" class='' id="uploadFlag">
+                        <span id="iscompletedMsg"
+                              style="display: none;"><font color='red'>正在处理，请稍候...</font></span>
+                    </span>
+                </div>
+            </div>
+            <script>$('.toolbar').authorizeButton()</script>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+        <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+﻿@{
+    ViewBag.Title = "提示";
+}
+<script>
+    var type = request('type');
+    $(function () {
+        $("#myorder").bind("click", function () {
+            if (type == "1") {
+                window.location.href = "/MyCenter/Audit";
+            } else {
+                window.location.href = "/MyCenter/GroupAudit";
+            }
+        })
+    })
+</script>
+<div class="Dtrn_top">
+    <img src="/content/images/return.jpg">
+    <div class="Dtrn_top_h2"><i class="iconfont icon-chenggong Dtrn_top_icon"></i><br />预约成功</div>
+    <div class="Dtrn_top_txt">预约成功后，请准时前往机构进行缴费和年检服务，以防过号。</div>
+</div>
+
+<div class="Dtrn_btn">
+    <a href="#" onclick="window.history.go(-2)">确定</a>
+    <a href="##" class="Dtrn_btn_a" id="myorder">查看我的预约订单</a>
+</div>
+

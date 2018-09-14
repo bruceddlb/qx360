@@ -1,0 +1,230 @@
+﻿@{
+    ViewBag.Title = "会员网签";
+}
+@section scripts{
+    <script src="~/Scripts/lib/esign.js?aa=11"></script>
+    <script type="text/javascript">
+        var id = request('id');
+
+        function ViewModel() {
+            var self = this;
+            self.NetSigin = ko.observable({
+                HeadIcon: ko.observable(""),
+                MemberId: ko.observable(""),
+                MemberName: ko.observable(""),
+                MemberTel: ko.observable(""),
+                SiginName: ko.observable(""),
+                SchoolId: ko.observable(id),
+                ViewFaceImage: ko.observable(""),
+            });
+            self.NetSiginPath = ko.observable("");
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+
+                            //self.NetSigin().MemberName(data.NikeName);
+                            self.NetSigin().MemberTel(data.Mobile);
+                            self.NetSigin().MemberId(data.MemberId);
+                            self.NetSigin().MemberName(data.MemberName);
+                            self.NetSigin().HeadIcon(data.HeadIcon);
+                            if (data.HeadIcon) {
+                                var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + data.HeadIcon;
+
+                                self.NetSigin().ViewFaceImage(newpath);
+                            }
+                        }
+                    }
+                });
+            }
+            self.BindSchool = function () {
+                $.get("/School/GetSchoolModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            if (data.NetSiginPath) {
+                                var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + data.NetSiginPath;
+                                self.NetSiginPath(path);
+                            }
+                        }
+
+                    }
+                });
+            }
+            self.ClearCanvs = function () {
+                var canvas = $("#canvasEdit")[0];
+                var context = canvas.getContext('2d');
+                linex = new Array();
+                liney = new Array();
+                linen = new Array();
+                context.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            self.Save = function () {
+
+                var tel = self.NetSigin().MemberTel();
+                if (!tel) {
+                    ShowTips("请输入联系电话");
+                    return;
+                }
+                //var isPhone = /^([0-9]{3,4}-)?[0-9]{7,8}$/;
+                var isMob = /^(((13[0-9]{1})|(15[0-9]{1})|(17[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+                if (isMob.test(tel)) {
+
+                } else {
+                    ShowTips("请输入正确的手机号码");
+                    return;
+                }
+                if (!self.NetSigin().HeadIcon()) {
+                    ShowTips("请上传照片");
+                    return;
+                }
+                //手动签名对象
+                var canvas = $("#canvasEdit")[0];
+                var blank = document.createElement('canvas');
+                blank.width = canvas.width;
+                blank.height = canvas.height;
+                //判断签名是否为空
+                var flag = canvas.toDataURL() == blank.toDataURL();
+                if (!self.NetSiginPath()) {
+                    ShowTips("该机构还未上传协议");
+                    return;
+                }
+                if (flag) {
+                    ShowTips("请输入您的签名");
+                    return;
+                }
+                self.NetSigin().SiginName(canvas.toDataURL("i/png"));
+                var $target = $(event.target);
+                $target.attr('disabled', 'disabled');
+
+                $.post("/Apply/SaveNetSigin", { json: ko.toJSON(self.NetSigin()) }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, 1);
+                        setTimeout(function () {
+                            $.get("/Apply/CheckHasSigin", null, function (result) {
+                                if (result.IsSuccess) {
+                                    var siginid = result.ResultData["Id"];
+                                    window.location.href = "/Apply/SiginNotice?id=" + siginid;
+                                }
+                            });
+                        }, 200);
+                    }
+                    else {
+                        ShowTips(result.Message);
+                        $target.removeAttr('disabled');
+                    }
+                })
+            }
+
+            self.OpenSigin = function (url) {
+
+                if (!self.NetSiginPath()) {
+                    ShowTips("该机构还未上传协议");
+                    return;
+                }
+
+                window.open(url);
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+            model.BindUser();
+            model.BindSchool();
+            $('#uploadFile_FaceLogo').change(function () {
+                var f = document.getElementById('uploadFile_FaceLogo').files[0];
+                var src = window.URL.createObjectURL(f);
+                //document.getElementById('uploadPreview').src = src;
+                var formData = new FormData();
+                //为FormData对象添加数据
+                $.each($('#uploadFile_FaceLogo')[0].files, function (i, file) {
+                    formData.append('file', file);
+                });
+                //上传应用图标
+                $.ajax({
+                    url: "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]/Upload/UploadCutFile",
+                    type: 'POST',
+                    data: formData,
+                    async: false,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        if (data && data.IsSuccess) {
+                            var path = data.ResultData["files"][0];
+                            var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                            model.NetSigin().HeadIcon(path);
+                            model.NetSigin().ViewFaceImage(newpath);
+                        }
+                        else {
+                            alert(data.Message);
+                        }
+                    }
+                });
+            });
+
+            $().esign("canvasEdit", "sign_show", "sign_clear", "sign_ok");
+        });
+
+    </script>
+    <style>
+        .canvasDiv {
+            height: 80px;
+            line-height: 100px;
+            width: 600px;
+            border: 1px solid black;
+        }
+    </style>
+}
+<ul class="Mcin_ul">
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">网签协议</span>
+        <font class="Mcin_list_right">
+            <i class="iconfont icon-jiantou Mcin_mm_i"></i>
+            <span class="Mcin_mm2" style="text-align:center">
+                <a href="http://localhost:1368/Resources/WordTemplate/test.doc" data-bind="click:function(){$root.OpenSigin($root.NetSiginPath()==''?'':$root.NetSiginPath())}" style="color:#0094ff;text-decoration:underline">点击下载查看协议内容</a>
+            </span>
+        </font>
+    </li>
+
+
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">手机号</span>
+        <font class="Mcin_list_right">
+            <input type="text" class="Mcin_list_input" data-bind="value:$root.NetSigin().MemberTel">
+        </font>
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left">照片</span>
+        <font class="Mcin_list_right">
+            <i class="iconfont icon-jiantou Mcin_mm_i"></i>
+            <span class="Mcin_mm2">
+                <img data-bind="attr:{src:$root.NetSigin().ViewFaceImage()==''?'/images/face.png':$root.NetSigin().ViewFaceImage}">
+                <input type="file" class="Mcin_file" name="uploadFile_FaceLogo" id="uploadFile_FaceLogo">
+            </span>
+        </font>
+    </li>
+    <li class="Mcin_list" style="height:150px">
+        <span class="Mcin_list_left">姓名(手签)</span>
+
+        <div class="" style="position:relative">
+            <div id="editing_area" style="">
+                <canvas width="600" height="150px" id="canvasEdit" style="position:absolute;background:#ccc"></canvas>
+            </div>
+        </div>
+
+
+    </li>
+    <li class="Mcin_list">
+        <span class="Mcin_list_left"></span>
+        <font class="Mcin_list_right">
+            <span style="color:#0094ff" data-bind="click:function(){$root.ClearCanvs();}">清除</span>
+        </font>
+    </li>
+</ul>
+
+<div class="Mcin_btn"><button type="button" class="Mcin_botton2" data-bind="click:function(){$root.Save();}">确定</button></div>
+

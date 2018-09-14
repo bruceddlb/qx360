@@ -1,0 +1,22 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<h2>在线预览文件</h2>
+<script src="~/Content/scripts/plugins/pdf/pdfobject.js"></script>
+<style type="text/css">
+    .pdfobject-container {
+        height: 900px;
+    }
+
+    .pdfobject {
+        border: 1px solid #666;
+    }
+</style>
+<div id="exm">
+
+</div>
+<script type="text/javascript">
+    var url = "/Resources/WordTemplate/aa.pdf";
+    PDFObject.embed(url, "#exm");
+</script>

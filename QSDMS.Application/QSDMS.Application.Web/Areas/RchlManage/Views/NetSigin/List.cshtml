@@ -1,0 +1,177 @@
+﻿@{
+    ViewBag.Title = "网签管理";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+        //请选择驾校
+        $("#ddlschool").ComboBox({
+            url: "/School/GetDataListJson",
+            param: null,
+            id: "SchoolId",
+            text: "Name",
+            description: "==请选择驾校==",
+            height: "200px"
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                //$("#gridTable").setGridHeight($(window).height() - 160);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var $gridTable = $("#gridTable");
+        $gridTable.jqGrid({
+            url: "/QX360Manage/NetSigin/GetPageListJson",
+            datatype: "json",
+            height: $(window).height() - 170,
+            autowidth: true,
+            colModel: [
+                { label: "主键", name: "NetSiginId", hidden: true },
+                { label: "用户名", name: "MemberName", index: "MemberName", width: 150, align: "center" },
+                { label: "电话", name: "MemberTel", index: "MemberTel", width: 150, align: "center" },
+                { label: "所属驾校", name: "SchoolName", index: "SchoolName", width: 200, align: "left" },
+                 {
+                     label: "签约时间", name: "CreateTime", index: "CreateTime", width: 150, align: "center",
+                     formatter: function (cellvalue, options, rowObject) {
+                         return formatDate(cellvalue, 'yyyy-MM-dd');
+                     }
+                 },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'CreateTime',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+        });
+        //查询条件设置
+        $("#queryCondition .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#queryCondition .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {};
+            queryJson["keyword"] = $("#txt_Keyword").val();
+            queryJson["condition"] = $("#queryCondition").find('.dropdown-text').attr('data-value');
+            queryJson["SchoolId"] = $("#ddlschool").attr('data-value');
+
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+    }
+    //编辑
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue("NetSiginId");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "Form",
+                title: '编辑信息',
+                url: '/QX360Manage/NetSigin/Form?keyValue=' + keyValue,
+                width: "800px",
+                height: "550px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $("#gridTable").jqGridRowValue("NetSiginId");
+        if (keyValue) {
+            $.RemoveForm({
+                url: "/QX360Manage/NetSigin/RemoveForm",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#gridTable").trigger("reloadGrid");
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的行！', 0);
+        }
+    }
+
+    //导出
+    function btn_down() {
+        var keyValue = $("#gridTable").jqGridRowValue("NetSiginId");
+        if (keyValue) {
+            var queryJson = {};
+            queryJson["Id"] = keyValue;
+            var actionUrl = "/QX360Manage/NetSigin/ExportExcel";
+            var iscompletedMsg = "iscompletedMsg";
+            var para = "queryJson|" + JSON.stringify(queryJson);
+            doProgressExport(para, actionUrl, iscompletedMsg, "uploadFlag");
+        } else {
+            dialogMsg('请选择要操作的行！', 0);
+        }
+       
+    }
+
+
+</script><div class="row">
+
+
+    <div class="toolbarPanel">
+        <div class="row">
+            <div class="col-md-1">
+                <div id="queryCondition" class="btn-group">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">选择条件</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a data-value="MemberName">用户名</a></li>
+                        <li><a data-value="MemberTel">联系方式</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="col-md-2">
+                <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" style="" />
+            </div>
+            <div class="col-md-2">
+                <div id="ddlschool" type="select" class="ui-select">
+                </div>
+            </div>
+
+
+            <div class="col-md-1">
+                <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+            </div>
+
+            <div class="toolbar">
+                <div class="btn-group animated fadeInDownBig">
+                    <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                    <a id="btn-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                    <a id="btn-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                    <a id="btn-down" class="btn btn-default" onclick="btn_down()"><i class="fa fa-arrow-down"></i>&nbsp;下载</a>
+
+                    <span style="line-height: 26px" class='' id="uploadFlag">
+                        <span id="iscompletedMsg"
+                              style="display: none;"><font color='red'>正在处理，请稍候...</font></span>
+                    </span>
+                </div>
+                @*<script>$('.toolbar').authorizeButton()</script>*@
+            </div>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+        <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+    </div>
+</div>

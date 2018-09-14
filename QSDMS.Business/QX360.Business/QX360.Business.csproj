@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{96293CB8-0691-4B56-943C-BF1CD73BF184}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QX360.Business</RootNamespace>
+    <AssemblyName>QX360.Business</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="NetSiginBLL.cs" />
+    <Compile Include="Report\AuditReportBLL.cs" />
+    <Compile Include="StudyCustomFreeTimeBLL.cs" />
+    <Compile Include="TrainingCustomFreeTimeBLL.cs" />
+    <Compile Include="SmsLogBLL.cs" />
+    <Compile Include="AuditTimeTableBLL.cs" />
+    <Compile Include="ExamPlaceMasterBLL.cs" />
+    <Compile Include="BlackListBLL.cs" />
+    <Compile Include="SendSmsMessageBLL.cs" />
+    <Compile Include="WithDringCommitteeBLL.cs" />
+    <Compile Include="AuditFreeDateBL.cs" />
+    <Compile Include="WithDrivingFreeDateBLL.cs" />
+    <Compile Include="AuditFreeTimeBLL.cs" />
+    <Compile Include="WithDrivingFreeTimeBLL.cs" />
+    <Compile Include="StudyFreeDateBLL.cs" />
+    <Compile Include="StudyFreeTimeBLL.cs" />
+    <Compile Include="TrainingFreeDateBLL.cs" />
+    <Compile Include="TrainingFreeTimeBLL.cs" />
+    <Compile Include="AuditCommitteeBLL.cs" />
+    <Compile Include="TrainingTimeTableBLL.cs" />
+    <Compile Include="StudyCommitteeBLL.cs" />
+    <Compile Include="TeacherCommitteeBLL.cs" />
+    <Compile Include="StudyOrderDetailBLL.cs" />
+    <Compile Include="TrainingOrderDetailBLL.cs" />
+    <Compile Include="ClassBLL.cs" />
+    <Compile Include="CourseBLL.cs" />
+    <Compile Include="CourseItemBLL.cs" />
+    <Compile Include="MonthWorkDayBLL.cs" />
+    <Compile Include="WorkTimeTableBLL.cs" />
+    <Compile Include="GroupAuditOrderBLL.cs" />
+    <Compile Include="WxUserInfoBLL.cs" />
+    <Compile Include="SettingsBLL.cs" />
+    <Compile Include="FinaceBLL.cs" />
+    <Compile Include="GivePointBLL.cs" />
+    <Compile Include="OwnerBLL.cs" />
+    <Compile Include="MessageBLL.cs" />
+    <Compile Include="MessageSetUpBLL.cs" />
+    <Compile Include="SendSysMessageBLL.cs" />
+    <Compile Include="TradeLogBLL.cs" />
+    <Compile Include="SendWxMessageBLL.cs" />
+    <Compile Include="WxTemplateBLL.cs" />
+    <Compile Include="BannerBLL.cs" />
+    <Compile Include="NoticeBLL.cs" />
+    <Compile Include="FreeTimeBLL.cs" />
+    <Compile Include="FreeDateBLL.cs" />
+    <Compile Include="AdviseBLL.cs" />
+    <Compile Include="TagBLL.cs" />
+    <Compile Include="PointLogBLL.cs" />
+    <Compile Include="BaseBLL.cs" />
+    <Compile Include="ApplyOrderBLL.cs" />
+    <Compile Include="ArticleBLL.cs" />
+    <Compile Include="AttachmentPicBLL.cs" />
+    <Compile Include="AuditOrderBLL.cs" />
+    <Compile Include="AuditOrganizationBLL.cs" />
+    <Compile Include="ExamOrderBLL.cs" />
+    <Compile Include="InsuranceCommpayBLL.cs" />
+    <Compile Include="InsuranceOrderBLL.cs" />
+    <Compile Include="MemberBLL.cs" />
+    <Compile Include="RuleBLL.cs" />
+    <Compile Include="SchoolBLL.cs" />
+    <Compile Include="SeeCarOrderBLL.cs" />
+    <Compile Include="ShopCarBLL.cs" />
+    <Compile Include="ShopBLL.cs" />
+    <Compile Include="StudyOrderBLL.cs" />
+    <Compile Include="SubjectBLL.cs" />
+    <Compile Include="TakeAuditOrderBLL.cs" />
+    <Compile Include="TeacherBLL.cs" />
+    <Compile Include="TrainingCarBLL.cs" />
+    <Compile Include="TrainingOrderBLL.cs" />
+    <Compile Include="WithDrivingOrderBLL.cs" />
+    <Compile Include="MyEvaluator.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\QSDMS.API\QSMS.API.csproj">
+      <Project>{0d1781c6-2172-41b2-87b8-aba2f9917f61}</Project>
+      <Name>QSMS.API</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.DataAccess\QX360.Data.IServices\QX360.Data.IServices.csproj">
+      <Project>{f334253f-f951-43c8-aa5e-e958b63d55a2}</Project>
+      <Name>QX360.Data.IServices</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\iFramework.Business\iFramework.Business.csproj">
+      <Project>{197805da-efa6-43c9-8992-59a82273c5e2}</Project>
+      <Name>iFramework.Business</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\iFramework.Factory\iFramework.Factory.csproj">
+      <Project>{176298fa-babe-442c-9d58-4f6d23c0f654}</Project>
+      <Name>iFramework.Factory</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\iFramework.Framework\iFramework.Framework.csproj">
+      <Project>{9c1b08cf-25a4-4190-95d5-d35ea5da455f}</Project>
+      <Name>iFramework.Framework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Business.Cache\QSDMS.Business.Cache.csproj">
+      <Project>{bf85365e-71d4-4a2f-823c-3516a6d08f7c}</Project>
+      <Name>QSDMS.Business.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Business\QSDMS.Business.csproj">
+      <Project>{f784fe53-4599-4ae6-9735-bf367829f27a}</Project>
+      <Name>QSDMS.Business</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Model\QSDMS.Model.csproj">
+      <Project>{525ec8f0-d6a8-4680-8dbf-94244de469f2}</Project>
+      <Name>QSDMS.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Util\QSDMS.Util.csproj">
+      <Project>{2e7b524e-e766-480f-9126-b54c0c10a0a4}</Project>
+      <Name>QSDMS.Util</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.Model\QX360.Model\QX360.Model.csproj">
+      <Project>{5cb80361-b123-4494-af2c-573cfbab79f1}</Project>
+      <Name>QX360.Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

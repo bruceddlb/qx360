@@ -1,0 +1,65 @@
+﻿@{
+    ViewBag.Title = "考场管理登录";
+}
+@section scripts{
+    <script type="text/javascript">
+        var returnUrl = "@ViewBag.ReturnUrl";
+        function ViewModel() {
+            var self = this;
+            self.UserName = ko.observable("");
+            self.Pwd = ko.observable("");
+            self.Login = function () {
+                if (!self.UserName()) {
+                    ShowTips("请输入登陆账号");
+                    return;
+                }
+                if (!self.Pwd()) {
+                    ShowTips("请输入密码");
+                    return;
+                }
+                $.post("/ExamPlace/Login", { UserName: self.UserName(), UserPwd: self.Pwd(), returnurl: returnUrl }, function (result) {
+                    if (result.IsSuccess) {
+                        var returnUrl = (result.ResultData["ReturnUrl"]);
+                        if (returnUrl) {
+                            window.location.href = returnUrl;
+                        } else {
+                            window.location.href = "/ExamPlaceCenter/Index";
+                        }
+                    }
+                    else {
+                        ShowTips(result.Message);
+                    }
+                })
+            }
+
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+        })
+
+    </script>
+}
+<div class="Mal_top" style="background:url('/Content/images/login5_02.jpg') left top no-repeat; background-size:100% 100%;">
+    <div class="Mal_top_h1">考场管理登录</div>
+</div>
+
+<div class="Mal_con">
+    <div class="Mal_row">
+        <i class="iconfont icon-zhanghao"></i>
+        <div class="Mal_input">
+            <input type="text" placeholder="请输入账号" class="Mal_input_text" data-bind="value:$root.UserName">
+        </div>
+    </div>
+    <div class="Mal_row">
+        <i class="iconfont icon-mima"></i>
+        <div class="Mal_input">
+            <input type="password" placeholder="请输入密码" class="Mal_input_text" data-bind="value:$root.Pwd">
+        </div>
+    </div>
+</div>
+
+<div class="Mal_btn">
+    <input type="submit" value="登录" class="Mal_sub" data-bind="click:function(){$root.Login();}" />
+</div>
+<div class="Mal_sm">本模块仅针对内部工作人员开放，暂不开放申请注册途径.</div>

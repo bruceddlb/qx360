@@ -1,0 +1,158 @@
+﻿@{
+    ViewBag.Title = "找回密码";
+
+}
+@section scripts{
+    <script>
+        var InterValObj; //timer变量，控制时间
+        var count = 180; //间隔函数，1秒执行
+        var curCount;//当前剩余秒数
+
+        function ViewModel() {
+            var self = this;
+            self.SendCodeText = ko.observable("获取验证码");
+            self.Account = ko.observable({
+                MemberName: ko.observable(""),
+                Mobile: ko.observable(""),
+                Pwd: ko.observable(""),
+                sms_verify_code: ko.observable("")
+
+            });
+            //保存
+            self.Save = function () {
+                if (!self.Account().Mobile()) {
+                    ShowTips("请输入手机号码");
+                    return;
+                }
+                if (!self.Account().sms_verify_code()) {
+                    ShowTips("请输入手机验证码");
+                    return;
+                }
+                if (!self.Account().Pwd()) {
+                    ShowTips("请设置新密码");
+                    return;
+                }
+                $.post("/Account/FindPwd", self.Account(), function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, 1);
+                        setTimeout(function () { window.location.href = "/Account/Login"; }, 200);
+                    }
+                    else {
+                        ShowTips(result.Message);
+                    }
+                })
+            }
+            //获取验证码
+            self.GetCode = function () {
+                if (!self.Account().Mobile()) {
+                    ShowTips("请输入手机号码");
+                    return;
+                }
+                var myreg = /^(((13[0-9]{1})|(15[0-9]{1})|(17[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+                if (!myreg.test(self.Account().Mobile())) {
+                    ShowTips("请输入正确的手机号码");
+                    return;
+                }
+                $.post("/Account/SendFindPwdVerifySms", { mobile: self.Account().Mobile }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips("验证码已发送!");
+                        curCount = count;
+                        //设置button效果，开始计时
+                        $("#btnSendCode").attr("disabled", "true");
+                        self.SendCodeText(curCount + "秒");
+                        InterValObj = window.setInterval(self.SetRemainTime, 1000); //启动计时器，1秒执行一次
+                    }
+                    else {
+                        ShowTips(result.Message);
+                    }
+                })
+            }
+
+            //定时器
+            self.SetRemainTime = function () {
+                if (curCount == 0) {
+                    window.clearInterval(InterValObj);//停止计时器
+                    $("#btnSendCode").removeAttr("disabled");//启用按钮
+                    self.SendCodeText("重新发送验证码");
+                }
+                else {
+                    curCount--;
+                    self.SendCodeText(curCount + "秒");
+                }
+            }
+
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+
+        })
+        //打开提示
+        function ShowTips(txt) {
+            var $toast = $('#toast');
+            if ($toast.css('display') != 'none') return;
+            $toast.find("p").text(txt);
+            $toast.fadeIn(100);
+            setTimeout(function () {
+                $toast.fadeOut(100);
+            }, 2000);
+        }
+
+
+    </script>
+}
+<div class="weui-grids page">
+    <a href="javascript:;" style="">
+        <div class="weui-grid__icon" style="width:130px;height:130px;padding-top:20px">
+            <img src="/images/reg-logo.png" alt="LOGO" />
+        </div>
+    </a>
+</div>
+
+
+<div class="weui-cell" style="margin-top:20px;">
+    <div class="weui-cell__hd">
+        <label class="weui-label">登陆账户</label>
+    </div>
+    <div class="weui-cell__bd">
+        <input class="weui-input" type="tel" placeholder="请输入注册手机号" data-bind="value:Account().Mobile">
+    </div>
+
+</div>
+<div class="weui-cell  weui-cell_vcode">
+    <div class="weui-cell__hd">
+        <label class="weui-label">验证码</label>
+    </div>
+    <div class="weui-cell__bd">
+        <input class="weui-input" type="tel" placeholder="请输入验证码" data-bind="value:Account().sms_verify_code">
+    </div>
+    <div class="weui-cell__ft">
+        <button class="weui-vcode-btn" data-bind="text:$root.SendCodeText,event:{click:function(){$root.GetCode();}}" id="btnSendCode"></button>
+    </div>
+</div>
+<div class="weui-cell">
+    <div class="weui-cell__hd">
+        <label class="weui-label">新密码</label>
+    </div>
+    <div class="weui-cell__bd">
+        <input class="weui-input" type="password" placeholder="请输入6位以上的密码" data-bind="value:Account().Pwd">
+    </div>
+</div>
+<div class="weui-btn-area">
+    <a class="weui-btn weui-btn_primary" href="javascript:void(0)" data-bind="click:function(){$root.Save();}">重置密码</a>
+</div>
+<div class="weui-flex weui-btn-area">
+    <div class="weui-flex__item"></div>
+    <div><span>已有账号?<a style="color: #fe9600" href="/Account/Login">请登陆</a></span></div>
+</div>
+
+<!--BEGIN toast-->
+<div id="toast" style="display: none;">
+    <div class="weui-mask_transparent"></div>
+    <div class="weui-toast">
+        <i class="weui-icon-info-circle weui-icon_toast"></i>
+        <p class="weui-toast__content">已完成</p>
+    </div>
+</div>
+<!--end toast-->

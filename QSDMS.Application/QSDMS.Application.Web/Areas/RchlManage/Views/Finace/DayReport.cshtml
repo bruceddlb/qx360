@@ -1,0 +1,92 @@
+﻿@{
+    ViewBag.Title = "日报表";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    $(function () {
+        GetGrid();
+        //查询事件
+        $("#btn_Search").click(function () {
+            GetGrid();
+        });
+    });
+    function GetGrid() {
+        var day = $("#StartTime").val();
+        $.SetForm({
+            url: "/QX360Manage/Finace/GetDayListJson",
+            param: { day: day },
+            success: function (data) {
+                var html = "";             
+                if (data != null) {
+                    var txt = "总共：" + data.count + "笔" + ",收入：" + data.inCount + "笔，支出：" + data.outCount + "笔";
+                    html += '<tr>';
+                    html += '        <td style="text-align:center">';
+                    html += '           <span id="time">' + data.time + '</span>';
+                    html += '        </td>';
+                    html += ' <td><span id="totalInCosMoney">' + data.totalInCosMoney + '</span></td>';
+                    html += '<td><span id="totalOutCosMoney">' + data.totalOutCosMoney + '</span></td>';
+                    html += '<td style="text-align:center"><a href="/QX360Manage/Finace/Detail?type=1&date=' + data.time + '">详情</a></td>';
+                    html += '</tr>';
+                    html += ' <tr>';
+                    html += ' <td style="text-align:center" colspan="4">';
+                    html += '    <span id="count">' + txt + '</span>';
+                    html += ' </td>';
+                    html += '  </tr>';
+                    $("#divdata").html(html);
+                } else {
+                    $("#divdata").html("");
+                }
+            }
+        });
+    }
+</script>
+
+<div class="" style="">
+
+    <div class="row">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>日对账单</h5>
+                @*<div class="ibox-tools">
+                        <a class="collapse-link">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+
+                    </div>*@
+            </div>
+            <div class="toolbarPanel">
+                <div class="row">
+                    <div class="col-md-2">
+                        <input id="StartTime" readonly type="text" value="@QSDMS.Util.Time.GetDate(0)" class="form-control input-wdatepicker" onfocus="WdatePicker({maxDate:'%y-%M-%d'})">
+
+                    </div>
+
+
+                    <div class="col-md-1">
+                        <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+                    </div>
+                    <div class="toolbar">
+                        <div class="btn-group animated fadeInDownBig">
+                            <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="ibox-content" style="border: 1px solid #F3F3F4">
+                <table class="table table-hover no-margins">
+                    <thead>
+                        <tr>
+                            <th>结算日期</th>
+                            <th>收入(元)</th>
+                            <th>支出(元)</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="divdata"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

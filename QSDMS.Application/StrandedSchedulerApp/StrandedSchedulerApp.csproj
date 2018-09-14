@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1EC6BF7E-FD7F-4A78-9C97-6BDACDA5382D}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>StrandedSchedulerApp</RootNamespace>
+    <AssemblyName>StrandedSchedulerApp</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="C5">
+      <HintPath>lib\C5.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging">
+      <HintPath>lib\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Log4Net, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\Common.Logging.Log4Net.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Quartz">
+      <HintPath>lib\Quartz.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="StrandedJob.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UpdateFinishStatusJob.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <Content Include="Resources\Config\Develop\appSettings.config" />
+    <Content Include="Resources\Config\Develop\connectionStrings.config" />
+    <Content Include="Resources\Config\Localhost\appSettings.config" />
+    <Content Include="Resources\Config\Localhost\connectionStrings.config" />
+    <Content Include="Resources\Config\log4net.config" />
+    <Content Include="Resources\Config\redis.config" />
+    <Content Include="Resources\Config\Release\appSettings.config" />
+    <Content Include="Resources\Config\Release\connectionStrings.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Config\DataAdapterConfig\DataAdapterConfig.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\Upload\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\QSDMS.API\QSMS.API.csproj">
+      <Project>{0d1781c6-2172-41b2-87b8-aba2f9917f61}</Project>
+      <Name>QSMS.API</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.Business\QX360.Business.Cache\QX360.Business.Cache.csproj">
+      <Project>{15869a6d-5645-47bd-a206-25386e2037b0}</Project>
+      <Name>QX360.Business.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.Business\QX360.Business\QX360.Business.csproj">
+      <Project>{96293cb8-0691-4b56-943c-bf1cd73bf184}</Project>
+      <Name>QX360.Business</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.DataAccess\QX360.Data.IServices\QX360.Data.IServices.csproj">
+      <Project>{f334253f-f951-43c8-aa5e-e958b63d55a2}</Project>
+      <Name>QX360.Data.IServices</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.DataAccess\QX360.Data.SqlServer\QX360.Data.SqlServer.csproj">
+      <Project>{f1a78900-fff2-4ac9-9a74-84972831f4d7}</Project>
+      <Name>QX360.Data.SqlServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\iFramework.Business\iFramework.Business.csproj">
+      <Project>{197805da-efa6-43c9-8992-59a82273c5e2}</Project>
+      <Name>iFramework.Business</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\iFramework.Factory\iFramework.Factory.csproj">
+      <Project>{176298fa-babe-442c-9d58-4f6d23c0f654}</Project>
+      <Name>iFramework.Factory</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\iFramework.Framework\iFramework.Framework.csproj">
+      <Project>{9c1b08cf-25a4-4190-95d5-d35ea5da455f}</Project>
+      <Name>iFramework.Framework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Business.Cache\QSDMS.Business.Cache.csproj">
+      <Project>{bf85365e-71d4-4a2f-823c-3516a6d08f7c}</Project>
+      <Name>QSDMS.Business.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Business\QSDMS.Business.csproj">
+      <Project>{f784fe53-4599-4ae6-9735-bf367829f27a}</Project>
+      <Name>QSDMS.Business</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Cache.Factory\QSDMS.Cache.Factory.csproj">
+      <Project>{05e4a0f4-a478-406d-af6c-e59e2ed88418}</Project>
+      <Name>QSDMS.Cache.Factory</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Cache.Redis\QSDMS.Cache.Redis.csproj">
+      <Project>{078bc972-7ce9-454c-9898-49e3225782c4}</Project>
+      <Name>QSDMS.Cache.Redis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Cache\QSDMS.Cache.csproj">
+      <Project>{01dc088c-172b-4b3c-ac36-33ea88c0bbdc}</Project>
+      <Name>QSDMS.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Data.IService\QSDMS.Data.IService.csproj">
+      <Project>{0bac71e3-d1ec-47ca-a470-91398f43645b}</Project>
+      <Name>QSDMS.Data.IService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Data.Service.MySqlServer\QSDMS.Data.Service.MySqlServer.csproj">
+      <Project>{de4cba96-7291-4c0a-86e0-a7523f05ca1d}</Project>
+      <Name>QSDMS.Data.Service.MySqlServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Data.Service.SqlServer\QSDMS.Data.Service.SqlServer.csproj">
+      <Project>{3f15f70b-98f6-4d11-8664-b9c97a024cea}</Project>
+      <Name>QSDMS.Data.Service.SqlServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Model\QSDMS.Model.csproj">
+      <Project>{525ec8f0-d6a8-4680-8dbf-94244de469f2}</Project>
+      <Name>QSDMS.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.iFrameWork\QSDMS.Util\QSDMS.Util.csproj">
+      <Project>{2e7b524e-e766-480f-9126-b54c0c10a0a4}</Project>
+      <Name>QSDMS.Util</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\QSDMS.Model\QX360.Model\QX360.Model.csproj">
+      <Project>{5cb80361-b123-4494-af2c-573cfbab79f1}</Project>
+      <Name>QX360.Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

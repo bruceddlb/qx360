@@ -1,0 +1,255 @@
+﻿@{
+    ViewBag.Title = "确认订单";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        function ViewModel() {
+            var self = this;
+            self.CurrentWeekList = ko.observableArray([]);
+            self.WithDrivingOrder = ko.observable({
+                TeacherId: ko.observable(""),
+                TeacherName: ko.observable(""),
+                FaceImage: ko.observable(""),
+                LevName: ko.observable(""),
+                Price: ko.observable(""),
+                SchoolName: ko.observable(""),
+                SchoolId: ko.observable(""),
+                MemberName: ko.observable(""),
+                MemberMobile: ko.observable(""),
+                MemberId: ko.observable(""),
+                IsBandCar: ko.observable(""),
+                ServiceDate: ko.observable(""),
+                ServiceTime: ko.observable(""),
+            });
+            self.BindTeacher = function () {
+                $.get("/Teacher/GetTeacherModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.WithDrivingOrder().TeacherId(data.TeacherId);
+                            self.WithDrivingOrder().TeacherName(data.Name);
+                            self.WithDrivingOrder().FaceImage(data.FaceImage);
+                            self.WithDrivingOrder().LevName(data.LevName);
+                            if (data.School) {
+                                self.WithDrivingOrder().Price(data.School.WithDrivingPrice);
+                                self.WithDrivingOrder().SchoolName(data.School.Name);
+                                self.WithDrivingOrder().SchoolId(data.School.SchoolId);
+                            }
+                        }
+                    }
+                });
+            }
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.WithDrivingOrder().MemberName(data.MemberName);//可以修改
+                            self.WithDrivingOrder().MemberMobile(data.Mobile);//可以修改
+                            self.WithDrivingOrder().MemberId(data.MemberId);//取注册用户的
+                        }
+                    } else {
+                        GotoLoginPage();
+                    }
+                });
+            }
+            self.BindTime = function () {
+                $.get("/FreeTime/GetWeekDateJson", { objectid: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        if (data) {
+                            var now = new Date();
+                            var date = formatDate(now, 'yyyy-MM-dd');
+                            for (var i = 0; i < data.length; i++) {
+                                var item = data[i];
+                                if (date > formatDate(item.FreeDate, 'yyyy-MM-dd')) {
+                                    item.IsOver = 1;
+                                } else {
+                                    item.IsOver = 0;
+                                }
+                                self.CurrentWeekList.push(item);
+                            }
+                        }
+
+                        $('.Dtlt_list_right span').on('click', function () {
+                            var Selected = $('.Dtlt_Selected').length;
+                            var DtltClass = $(this).attr('class');
+                            if (DtltClass == 'Dtlt_free' && !Selected) {
+                                $(this).attr('class', 'Dtlt_Selected');
+                            } else if (DtltClass == 'Dtlt_Selected') {
+                                $(this).attr('class', 'Dtlt_free')
+                            }
+                            //Selected = $('.Dtlt_Selected').length;
+                            //if (Selected) {
+                            //    $('#DtBtn').attr('class', 'Dtle_btn2')
+                            //} else {
+                            //    $('#DtBtn').attr('class', 'Dtle_btn')
+                            //}
+                        });
+                    }
+                });
+            }
+            self.CreateOrder = function () {
+                //判断按钮为有效状态
+                var disabled = $('#DtBtn').attr('class');
+                if (disabled == "Dtle_btn") {
+                    return;
+                }
+                var Selected = $('.Dtlt_Selected').length;
+                if (!Selected) {
+                    ShowTips("请选择预约时间!");
+                    return;
+                }               
+                var freetimeid = $(".Dtlt_Selected").attr("freetimeid");
+                var freetime = $(".Dtlt_Selected").attr("freetime");
+                var freedate = $(".Dtlt_Selected").parent().attr("freedate");
+                self.WithDrivingOrder().ServiceDate(freedate);
+                self.WithDrivingOrder().ServiceTime(freetime);
+                self.WithDrivingOrder().IsBandCar($("#IsBandCar").is(":checked") == true ? "1" : "0");
+                $.post("/WithDriving/CreateOrder", { "data": ko.toJSON(self.WithDrivingOrder()), freetimeid: freetimeid }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, "ok");
+                        setTimeout(function () {
+                            location.href = "/WithDriving/Return";
+                        }, 200)
+
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindTeacher();
+            model.BindUser();
+            model.BindTime();
+
+            //陪驾须知弹窗
+            $('.DcS_Notice span').on('click', function () {
+                $('.DcS_back').show();
+                $('.popup').show();
+            })
+            //关闭陪驾须知弹窗
+            $('.popup_close i').on('click', function () {
+                $('.DcS_back').hide();
+                $('.popup').hide();
+            })
+            //选中陪驾须知
+            $('.DcS_Notice font').on('click', function () {
+                if ($(this).attr('class') == 'DcS_Ne_font') {
+                    $(this).attr('class', '');
+
+                    $('#DtBtn').attr('class', 'Dtle_btn');
+                } else {
+                    $(this).addClass('DcS_Ne_font');
+                    $('#DtBtn').attr('class', 'Dtle_btn2');
+
+                }
+
+            })
+        });
+
+    </script>
+}
+@section css{
+    <style type="text/css">
+        .Dtlt_list {
+            overflow: hidden;
+            border-top: 1px solid #eee;
+            display: block;
+            clear: both;
+        }
+
+        .Dtlt_con {
+            margin-bottom: 0rem;
+        }
+
+        .Dtlt_sub {
+            border: 1px solid #ff6a00;
+            background: #ff6a00;
+            color: #fff;
+        }
+    </style>
+}
+<div class="DcS_back"></div>
+<div class="popup">
+    <div class="popup_h2">陪驾须知</div>
+    <div class="popup_txt" style="height:230px;overflow:auto" id="widtdrivingNotice">
+        @(ViewBag.Notice)
+    </div>
+    <div class="popup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+<ul class="Dccde_dl">
+    <dd>
+        <img data-bind="attr:{src:$root.WithDrivingOrder().FaceImage}" class="Dccde_dd_img">
+        <div class="Dccde_ddst">
+            <div class="Dccde_ddst_h3" data-bind="text:$root.WithDrivingOrder().TeacherName"></div>
+            <div class="Dccde_ddst_mh"><span data-bind="text:$root.WithDrivingOrder().SchoolName()"></span><span>|</span><span data-bind="text:$root.WithDrivingOrder().LevName()"></span></div>
+            <div class="Dccde_ddst_mh2" data-bind="text:'￥'+$root.WithDrivingOrder().Price()"></div>
+        </div>
+    </dd>
+</ul>
+
+<div class="" style=" background: #fff;overflow: hidden;font-size: 0.24rem;margin-top: 0.15rem;">
+    <div class="Dtlt_h2">
+        <div class="Dtlt_title">选择陪驾时间</div>
+        <div class="Dtlt_sm">
+            <span><font></font>忙碌</span>
+            <span><font class="Dtltfont"></font>空闲</span>
+            <span><font class="Dtltfont2"></font>当前选择</span>
+        </div>
+    </div>
+    <div data-bind="foreach:$root.CurrentWeekList()">
+        <div class="Dtlt_list" style=" border-top: 1px solid #eee;">
+            <div class="Dtlt_list_left">
+                <span data-bind="text:formatDate(FreeDate,'yyyy-MM-dd')"></span><span data-bind="text:WeekName"></span>
+            </div>
+            <!--ko if:IsOver=="1"-->
+            <div class="Dtlt_list_right" data-bind="foreach:FreeTimeList,attr:{FreeDate:formatDate(FreeDate,'yyyy-MM-dd')}">
+                <span class="Dtlt_over" data-bind="attr:{FreeTimeId:FreeTimeId},text:StartTime+'-'+EndTime"></span>
+            </div>
+            <!--/ko-->
+            <!--ko if:IsOver!="1"-->
+            <div class="Dtlt_list_right" data-bind="foreach:FreeTimeList,attr:{FreeDate:formatDate(FreeDate,'yyyy-MM-dd')}">
+                <!--ko if:FreeStatus!="1"-->
+                <span class="Dtlt_over" data-bind="attr:{FreeTimeId:FreeTimeId},text:StartTime+'-'+EndTime"></span>
+                <!--/ko-->
+                <!--ko if:FreeStatus=="1"-->
+                <span class="Dtlt_free" data-bind="attr:{FreeTime:StartTime+'-'+EndTime,FreeTimeId:FreeTimeId},text:StartTime+'-'+EndTime"></span>
+                <!--/ko-->
+            </div>
+            <!--/ko-->
+
+        </div>
+    </div>
+</div>
+<ul class="DcS_ul">
+    <li class="Dcs_li_hr">您的信息</li>
+    <li>
+        <div class="DcS_left">姓名</div>
+        <div class="DcS_right DcS_right2"><input type="text" placeholder="请输入姓名" data-bind="value:$root.WithDrivingOrder().MemberName()"></div>
+    </li>
+    <li>
+        <div class="DcS_left">联系手机</div>
+        <div class="DcS_right DcS_right2"><input type="text" placeholder="请输入联系方式" class="DtIn_text" data-bind="value:$root.WithDrivingOrder().MemberMobile()"></div>
+    </li>
+</ul>
+
+<ul class="DcS_ul">
+    <li>
+        <div class="DcS_left">是否带车</div>
+        <div class="DcS_right DcS_right2" style="margin-top:0.1rem;"><input id="IsBandCar" class="mui-switch mui-switch-animbg" type="checkbox" checked></div>
+    </li>
+</ul>
+
+<div class="DcS_Notice"><font><i class="iconfont icon-xuanzhong"></i>了解并同意</font><span>《陪驾须知》</span></div>
+
+<div style="margin-top:90px"></div>
+<div class="DtIn_bottom" style="">
+    <div class="DtIn_bm_left"><span data-bind="text:'￥'+$root.WithDrivingOrder().Price()"></span></div>
+    <div class="DtIn_bm_right"><button type="button" class="Dtle_btn" id="DtBtn" data-bind="click:function(){$root.CreateOrder();}">确认订单</button></div>
+</div>

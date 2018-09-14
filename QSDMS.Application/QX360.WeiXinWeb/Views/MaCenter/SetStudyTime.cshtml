@@ -1,0 +1,151 @@
+﻿@{
+    ViewBag.Title = "设置空闲时间";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.CurrentWeekList = ko.observableArray([]);
+            self.CurrentFreeTimeList = ko.observableArray([]);
+            self.CurrentDate = ko.observable("");
+            self.IsOver = ko.observable("0");
+            self.BindWeek = function () {
+                $.get("/StudyFreeTime/GetWeekDateJson", { objectid: "@ViewBag.ObjectId" }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        if (data) {
+                            for (var i = 0; i < data.length; i++) {
+                                var item = data[i];
+                                self.CurrentWeekList.push(item);
+                                if (item.IsCurrentDay) {
+                                    self.CurrentDate();
+                                    self.GetFreeTime(item.StudyFreeDateId);
+                                }
+                            }
+                        }
+                        $('.Mast_dl dd').on('click', function () {
+                            $('.Mast_dl dd').find('span').removeClass('Mast_date_span')
+                            $(this).find('span').addClass('Mast_date_span')
+                        })
+                    }
+                });
+            }
+            self.GetFreeTime = function (freedateid) {
+                $.get("/StudyFreeTime/GetFreeTimeList", { freedateid: freedateid }, function (result) {
+                    if (result.IsSuccess) {
+                        var freedate = self.CurrentWeekList();
+                        if (freedate) {
+                            var now = new Date();
+                            var date = formatDate(now, 'yyyy-MM-dd');
+                            for (var i = 0; i < freedate.length; i++) {
+                                var item = freedate[i];
+                                if (item.StudyFreeDateId == freedateid) {
+                                    self.CurrentDate(formatDate(item.FreeDate, 'yyyy-MM-dd'));
+                                    self.CurrentFreeTimeList.removeAll();
+                                    var freelist = result.ResultData["List"];
+                                    var IsOver = 0;
+                                    for (var j = 0; j < freelist.length; j++) {
+                                        var freetime = freelist[j];
+                                        var time = freetime.TimeSection;//formatDate()
+                                        if (time) {
+                                            time = time.split('-')[0];
+                                        }
+                                        if (date > formatDate(item.FreeDate, 'yyyy-MM-dd')) {
+                                            IsOver = 1;
+                                        } else {
+                                            var freeDate = (formatDate(item.FreeDate, 'yyyy-MM-dd'))
+                                            if (formatDate(now, 'yyyy-MM-dd hh:mm:ss') > formatDate(freeDate + " " + time, 'yyyy-MM-dd hh:mm:ss')) {
+                                                IsOver = 1;
+                                            } else {
+                                                IsOver = 0;
+                                            }
+                                        }
+                                        freetime.IsOver = IsOver;
+                                        self.CurrentFreeTimeList.push(freetime);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                    }
+                });
+            }
+            self.BtnNext = function () {
+                var eq = 0;
+                $("#divFreeDate dd").each(function (i) {
+                    var $this = $(this);
+                    var activityclass = $this.find("span").attr("class");
+                    if (activityclass == "Mast_date_span") {
+                        //alert(i)
+                        eq = parseInt(i + 1);
+                    }
+                })
+                if (eq > 0 && eq < 7) {
+                    $("#divFreeDate dd:eq('" + parseInt(eq - 1) + "')").find('span').removeClass('Mast_date_span')
+                    $("#divFreeDate dd:eq('" + eq + "')").find("span").attr("class", "Mast_date_span");
+                    var freedateid = $("#divFreeDate dd:eq('" + eq + "')").attr("freedateid");
+                    self.GetFreeTime(freedateid);
+                }
+            }
+            self.SetFreeTime = function (freetimeid, freedateid) {
+                var DtltClass = $("#divFreeTime").find("span[freetimeid='" + freetimeid + "']").attr('class');
+                if (DtltClass == 'Mast_free') {
+                    var calback = function () {
+                        $.post("/StudyFreeTime/SetFreeTime", { freetimeid: freetimeid }, function (result) {
+                            if (result.IsSuccess) {
+                                self.GetFreeTime(freedateid);
+                            } else {
+                                ShowTips(result.Message);
+                            }
+                        });
+                    }
+                    ConfirmDialog(calback, "设置此时间不能被预约,确定此操作吗?");
+
+                }
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindWeek();
+        })
+    </script>
+}
+
+<div class="Mast_hr">备注：设置近一周周服务时间. 时间设置不可修改，请谨慎设置</div>
+<div class="Mast_top">
+    <div class="Mast_h1">设置可预约时间</div>
+    <ul class="Mast_ul" data-bind="foreach:$root.CurrentWeekList()">
+        <li data-bind="text:WeekName"></li>
+
+    </ul>
+    <dl class="Mast_dl" data-bind="foreach:$root.CurrentWeekList()" id="divFreeDate">
+        <!--ko if:!IsCurrentDay-->
+        <dd data-bind="attr:{freedateid:StudyFreeDateId}"><span data-bind="click:function(){$root.GetFreeTime(StudyFreeDateId)},text:formatDate(FreeDate,'MM-dd')"></span></dd>
+        <!--/ko-->
+        <!--ko if:IsCurrentDay-->
+        <dd data-bind="attr:{freedateid:StudyFreeDateId}"><span class="Mast_date_span" data-bind="click:function(){$root.GetFreeTime(StudyFreeDateId)}">今日</span></dd>
+        <!--/ko-->
+    </dl>
+</div>
+
+<div class="Mast_set">
+    <div class="Mast_h1">设置可预约时间</div>
+    <div class="Mast_set_time" data-bind="foreach:$root.CurrentFreeTimeList" id="divFreeTime">
+        <!--ko if:IsOver=="1"-->
+        <span class="Mast_set_over" data-bind="text:TimeSection,attr:{freetimeid:StudyFreeTimeId}"></span>
+        <!--/ko-->
+        <!--ko if:IsOver!="1"-->
+        <!--ko if:FreeStatus==1-->
+        <span class="Mast_free" data-bind="text:TimeSection,click:function(){$root.SetFreeTime(StudyFreeTimeId,StudyFreeDateId)},attr:{freetimeid:StudyFreeTimeId}"></span>
+        <!--/ko-->
+        <!--ko if:FreeStatus!=1-->
+        <span class="Mast_set_Selected" data-bind="text:TimeSection,attr:{freetimeid:StudyFreeTimeId}"></span>
+        <!--/ko-->
+        <!--/ko-->
+
+
+    </div>
+</div>
+<div class="Mast_btn"><button type="button" class="Mast_botton2" id="MastBtn" data-bind="click:function(){$root.BtnNext();}">下一天</button></div>

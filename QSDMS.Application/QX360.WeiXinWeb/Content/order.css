@@ -1,0 +1,47 @@
+﻿/*订单*/
+.orderlist {}
+.orderlist li {padding:0 1rem 0; background-color:#fff; margin-top:10px; border-top:1px solid #ddd;border-bottom:1px solid #ddd;}
+.title { padding:1rem 0 1.1rem 3rem; background:url(../images/menber/gwc.png) no-repeat 0 50%; background-size:auto 50%; -webkit-background-size:auto 50%; border-bottom:1px solid #ddd; font-size:14px;}
+.sh {padding:1rem 0 1.1rem 3rem; background:url(../images/menber/sh.png) no-repeat 5px 50%; background-size:auto 50%; -webkit-background-size:auto 50%; border-bottom:1px solid #ddd; font-size:14px;}
+.mainpic {border-bottom:1px solid #ddd;position:relative; min-height:102px;}
+.mainpic img { height:8rem; width:8rem; position:absolute; top:0.25rem;}
+.mainpic div { margin-left:9rem; font-size:12px; padding:1rem 0;}
+.mainpic div h5 {font-size:12px; font-weight:normal; line-height:1.5; height:1.6rem; overflow:hidden;}
+.mainpic div p { margin-top:.3rem; line-height:1.5;}
+.spprice {text-align:right; padding:1rem 0; font-size:12px;}
+.order_attr { font-size:14px; border-bottom:#f0f0f0 solid 1px; line-height:24px; padding:1rem 0;}
+.orderlist li .order_attr:last-child { border-bottom:0 none;}
+.orderlist a:last-child .mainpic,.orderlist .mainpic:last-child { border-bottom:0 none;}
+
+.shdz {font-size:12px; line-height:1.5; color:#8c8889; padding-right:30px; position:relative;}
+.wlgz {position:absolute; right:0; top:28px; font-size:14px; background:url(../images/menber/arrow.png) no-repeat 100% 50%; height:40px; line-height:40px; background-size:16px auto; -webkit-background-size:16px auto; padding-right:18px;}
+.pink,a.pink,a.pink:hover {color:#c66d88;}
+
+.shdz p:first-child {color:#333;}
+.shdz p:first-child,.shdz p:last-child { font-size:14px; padding:5px 0;}
+.arrowRight {background:url(../images/menber/arrow.png) no-repeat 100% 50%; display:block; background-size:16px auto; -webkit-background-size:16px auto;}
+.status { font-size:12px; line-height:2rem; color:#fff;padding:1.5rem 1.5rem 1.5rem 3.5rem; background:#c66d88 url(../images/menber/order.png) no-repeat 1.2rem 1.8rem; background-size:1.5rem auto; -webkit-background-size:1.5rem auto;}
+.status h5 {font-size:14px; font-weight:normal; margin-bottom:5px;}
+.section86 {padding-bottom:86px;}
+.form_fk {background-color:#fff; padding:0 1rem; border-top:1px solid #ddd;}
+.form_fk.form_fk_fix { padding:0; position:fixed; width:100%; bottom:0; max-width:640px;}
+.form_fk.form_fk_fix p{margin: 0 1rem; }
+.form_fk.form_fk_fix .btnorderbox {margin:0 1rem;}
+.form_fk p { font-size:12px; padding:1rem 0; text-align:right; border-bottom:1px solid #ddd;}
+.btnorderbox {text-align:right; padding:1rem 0;}
+.btnorderbox input { min-width:72px;}
+.fapiao {font-size:14px; margin: 1.5rem; line-height:25px;}
+.fapiao span:last-child { height:25px; border:1px solid #ddd; width:60px; background-color:#fff; border-radius:12.5px; -webkit-border-radius:12.5px; position:relative;transition:all ease .5s; -webkit-transition:all ease .5s; -o-transition:all ease .5s; -moz-transition:all ease .5s;}
+.fapiao span em { position:absolute; left:0; top:0px; width:22px; height:22px; border-radius:11px; -webkit-border-radius:11px; background-color:#fff; box-shadow:1px 1px 5px rgba(0,0,0,.5); -webkit-box-shadow:1px 1px 5px rgba(0,0,0,.5); transition:all ease .5s; -webkit-transition:all ease .5s; -o-transition:all ease .5s; -moz-transition:all ease .5s;}
+.fp_check {display:none;}
+.fapiao span.current {background-color:#50c964;}
+.fapiao span.current em {left:36px; background-color:#50c964;}
+
+.gdg {font-size:14px; line-height:2;} 
+.bank { border-bottom:1px solid #f0f0f0; padding:1rem 0;}
+
+.dfk {font-size:14px; position:absolute; right:0; bottom:1rem; font-style:normal;}
+
+.navorder {height:44px; background-color:#fff;}
+.navorder a {line-height:43px; height:44px; border-bottom:1px solid #ddd; float:left; width:20%; text-align:center; font-size:14px;}
+.navorder a.current,.navorder a:active { border-color:#c66d88;}

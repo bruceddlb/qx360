@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:tns="http://tempuri.org/" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsx="http://schemas.xmlsoap.org/ws/2004/09/mex" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="AppSms" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://tempuri.org/Imports">
+      <xsd:import schemaLocation="http://192.168.1.200/AppSms.svc?xsd=xsd0" namespace="http://tempuri.org/" />
+      <xsd:import schemaLocation="http://192.168.1.200/AppSms.svc?xsd=xsd1" namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
+      <xsd:import schemaLocation="http://192.168.1.200/AppSms.svc?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/Common.Enum" />
+      <xsd:import schemaLocation="http://192.168.1.200/AppSms.svc?xsd=xsd3" namespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="IAppSms_SendSmsSame_InputMessage">
+    <wsdl:part name="parameters" element="tns:SendSmsSame" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_SendSmsSame_OutputMessage">
+    <wsdl:part name="parameters" element="tns:SendSmsSameResponse" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_SendSms_InputMessage">
+    <wsdl:part name="parameters" element="tns:SendSms" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_SendSms_OutputMessage">
+    <wsdl:part name="parameters" element="tns:SendSmsResponse" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_GetSmsInfo_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetSmsInfo" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_GetSmsInfo_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetSmsInfoResponse" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_GetSmsInfoById_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetSmsInfoById" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_GetSmsInfoById_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetSmsInfoByIdResponse" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_GetDjbSmsInfo_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetDjbSmsInfo" />
+  </wsdl:message>
+  <wsdl:message name="IAppSms_GetDjbSmsInfo_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetDjbSmsInfoResponse" />
+  </wsdl:message>
+  <wsdl:portType name="IAppSms">
+    <wsdl:operation name="SendSmsSame">
+      <wsdl:input wsaw:Action="http://tempuri.org/IAppSms/SendSmsSame" message="tns:IAppSms_SendSmsSame_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IAppSms/SendSmsSameResponse" message="tns:IAppSms_SendSmsSame_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="SendSms">
+      <wsdl:input wsaw:Action="http://tempuri.org/IAppSms/SendSms" message="tns:IAppSms_SendSms_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IAppSms/SendSmsResponse" message="tns:IAppSms_SendSms_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetSmsInfo">
+      <wsdl:input wsaw:Action="http://tempuri.org/IAppSms/GetSmsInfo" message="tns:IAppSms_GetSmsInfo_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IAppSms/GetSmsInfoResponse" message="tns:IAppSms_GetSmsInfo_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetSmsInfoById">
+      <wsdl:input wsaw:Action="http://tempuri.org/IAppSms/GetSmsInfoById" message="tns:IAppSms_GetSmsInfoById_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IAppSms/GetSmsInfoByIdResponse" message="tns:IAppSms_GetSmsInfoById_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetDjbSmsInfo">
+      <wsdl:input wsaw:Action="http://tempuri.org/IAppSms/GetDjbSmsInfo" message="tns:IAppSms_GetDjbSmsInfo_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IAppSms/GetDjbSmsInfoResponse" message="tns:IAppSms_GetDjbSmsInfo_OutputMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="BasicHttpBinding_IAppSms" type="tns:IAppSms">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="SendSmsSame">
+      <soap:operation soapAction="http://tempuri.org/IAppSms/SendSmsSame" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SendSms">
+      <soap:operation soapAction="http://tempuri.org/IAppSms/SendSms" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetSmsInfo">
+      <soap:operation soapAction="http://tempuri.org/IAppSms/GetSmsInfo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetSmsInfoById">
+      <soap:operation soapAction="http://tempuri.org/IAppSms/GetSmsInfoById" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetDjbSmsInfo">
+      <soap:operation soapAction="http://tempuri.org/IAppSms/GetDjbSmsInfo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="AppSms">
+    <wsdl:port name="BasicHttpBinding_IAppSms" binding="tns:BasicHttpBinding_IAppSms">
+      <soap:address location="http://192.168.1.200/AppSms.svc" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

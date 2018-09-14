@@ -1,0 +1,477 @@
+﻿@{
+    ViewBag.Title = "代审订单提交";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        function ViewModel() {
+            var self = this;
+            self.Audit = ko.observable({
+                Name: ko.observable(""),
+
+            });
+            self.TakeAuditOrder = ko.observable({
+                MemberId: ko.observable(""),
+                MemberName: ko.observable(""),
+                CarNum: ko.observable(""),
+                Mobile: ko.observable(""),
+                ServiceDate: ko.observable(""),
+                ServiceTime: ko.observable(""),
+                OrganizationId: ko.observable(""),
+                OrganizationName: ko.observable(""),
+                Price: ko.observable(""),
+                CarFrameNum: ko.observable(""),
+                CarType: ko.observable(""),
+                CarTypeName: ko.observable(""),
+                ProvinceId: ko.observable(""),
+                ProvinceName: ko.observable(""),
+                CityName: ko.observable(""),
+                CityId: ko.observable(""),
+                CountyName: ko.observable(""),
+                CountyId: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                AreaInfo: ko.observable(""),
+            });
+            self.BindAudit = function () {
+                $.get("/TakeAudit/GetAuditModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Audit().Name(data.Name);
+                            //
+                            self.TakeAuditOrder().OrganizationId(data.OrganizationId);
+                            self.TakeAuditOrder().OrganizationName(data.Name);
+                            //self.TakeAuditOrder().Price(data.MakeMoney);
+
+                        }
+
+                    }
+                });
+            }
+            self.CreateOrder = function () {
+                if (!self.TakeAuditOrder().ServiceDate()) {
+                    ShowTips("请选择预约时间!");
+                    return;
+                }
+                if (!self.TakeAuditOrder().CarNum()) {
+                    ShowTips("请输入车牌号码!");
+                    return;
+                }
+                if (!self.TakeAuditOrder().CarTypeName()) {
+                    ShowTips("请选择车辆类型!");
+                    return;
+                }
+                if (!self.TakeAuditOrder().MemberName()) {
+                    ShowTips("请输入联系人!");
+                    return;
+                }
+                var tel = self.TakeAuditOrder().Mobile();
+                if (!tel) {
+                    ShowTips("请输入联系电话");
+                    return;
+                }
+                var isPhone = /^([0-9]{3,4}-)?[0-9]{7,8}$/;
+                var isMob = /^(((13[0-9]{1})|(15[0-9]{1})|(17[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+                if (isMob.test(tel) || isPhone.test(tel)) {
+
+                } else {
+                    ShowTips("请输入正确的手机号码");
+                    return;
+                }
+                if (!self.TakeAuditOrder().AreaInfo()) {
+                    ShowTips("请选择地区");
+                    return;
+                }
+                if (!self.TakeAuditOrder().AddressInfo()) {
+                    ShowTips("请填写上门地址");
+                    return;
+                }
+                self.TakeAuditOrder().CarNum($("#ddlCarArea").val() + self.TakeAuditOrder().CarNum());
+                $.post("/TakeAudit/CreateOrder", { "data": ko.toJSON(self.TakeAuditOrder()) }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, "ok");
+                        setTimeout(function () {
+                            location.href = "/TakeAudit/Return";
+                        }, 200)
+
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            if (data.Owner) {
+                                var cararea = data.Owner.CarNumber.substring(0, 1);
+                                $("#ddlCarArea").val(cararea);
+                                var carnum = data.Owner.CarNumber.substring(1, data.Owner.CarNumber.length);
+                                self.TakeAuditOrder().CarNum(carnum);
+                                self.TakeAuditOrder().MemberName(data.Owner.MemberName);
+                                self.TakeAuditOrder().Mobile(data.Owner.MemberMobile);
+                                self.TakeAuditOrder().CarType(data.Owner.CarType);
+                                self.TakeAuditOrder().CarTypeName(data.Owner.CarTypeName);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindAudit();
+            model.BindUser();
+            //选择时间
+            var selectDateDom = $("#AsTime");
+            function getDate() {
+                var arr = [];
+                $.ajax({
+                    type: "GET",
+                    url: "/AuditFreeTime/GetWeekDateJson",
+                    async: false,
+                    data: { objectid: id },
+                    success: function (result) {
+                        if (result.IsSuccess) {
+                            var data = result.ResultData["List"];
+                            if (data.length > 0) {
+                                for (var i in data) {
+                                    var item = data[i];
+                                    arr.push({
+                                        id: item.AuditFreeDateId,
+                                        value: formatDate(item.FreeDate, "yyyy-MM-dd") + "(" + item.WeekName + ")",
+                                        text: formatDate(item.FreeDate, "yyyy-MM-dd"),
+                                        type: item.DateType
+                                    });
+
+                                }
+                            } else {
+                                ShowTips("未设置工作时间");
+                                return;
+                            }
+                        } else {
+                            ShowTips(result.Message);
+                            return;
+                        }
+                    }
+                });
+                return arr;
+            }
+            //获取工作时间段
+            function getWorkTime(auditid, timesection) {
+                var arr = {};
+                $.ajax({
+                    type: "Post",
+                    url: "/AuditFreeTime/GetAuditTimeTable",
+                    async: false,
+                    data: { auditId: auditid, timeSection: timesection },
+                    success: function (result) {
+                        if (result.IsSuccess) {
+                            arr = result.ResultData["Data"];
+                        } else {
+                            ShowTips(result.Message);
+                            return;
+                        }
+                    }
+                });
+                return arr;
+            }
+            if (getDate().length == 0) {
+                return;
+            }
+            var yearData = function (callback) {
+                callback(getDate());
+            }
+            function getTimeSpace() {
+                var arr = [];
+                arr.push({ id: "@((int)QX360.Model.Enums.TimeSpaceType.上午)", value: "@(QX360.Model.Enums.TimeSpaceType.上午.ToString())" });
+                arr.push({ id: "@((int)QX360.Model.Enums.TimeSpaceType.下午)", value: "@(QX360.Model.Enums.TimeSpaceType.下午.ToString())" });
+                return arr;
+            }
+            var timeData = function (day, callback) {
+                callback(getTimeSpace());
+            }
+            var clearData = function () {
+                model.TakeAuditOrder().ServiceDate("");
+                model.TakeAuditOrder().ServiceTime("");
+                selectDateDom.val("");
+            }
+            selectDateDom.bind('click', function () {
+                var oneLevelId = selectDateDom.attr('data-year');
+                var twoLevelId = selectDateDom.attr('data-month');
+                var iosSelect = new IosSelect(2,
+                [yearData, timeData],
+                {
+                    title: '选择预约时间',
+                    itemHeight: 35,
+                    itemShowCount: 9,
+                    oneLevelId: oneLevelId,
+                    twoLevelId: twoLevelId,
+                    callback: function (selectOneObj, selectTwoObj) {
+                        if (selectOneObj.type == "0") {
+                            ShowTips("此时间为非工作日，不能选择");
+                            clearData();
+                            return;
+                        }
+                        var servicedate = formatDate(selectOneObj.text, 'yyyy-MM-dd');
+                        var time = selectTwoObj.value;
+                        var now = new Date();
+                        var nowdate = formatDate(now, 'yyyy-MM-dd');
+                        if (nowdate > servicedate) {
+                            ShowTips("此日期已过期，不能选择");
+                            clearData();
+                            return;
+                        }
+
+                        if (time) {
+                            if (time == "上午") {
+                                time = "@(QX360.Business.SettingsBLL.Instance.GetValue("swsj"))";
+                            }
+                            if (time == "下午") {
+                                time = "@(QX360.Business.SettingsBLL.Instance.GetValue("xwsj"))";
+                            }
+                            if (formatDate(now, 'yyyy-MM-dd hh:mm:ss') > formatDate(servicedate + " " + time, 'yyyy-MM-dd hh:mm:ss')) {
+                                ShowTips("此时间已过期，不能选择");
+                                clearData();
+                                return;
+                            }
+                        }
+                        selectDateDom.attr('data-year', selectOneObj.id);
+                        selectDateDom.attr('data-month', selectTwoObj.id);
+                        selectDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value);
+                        //判断工作时间
+                        var timeobj = getWorkTime(selectOneObj.id, selectTwoObj.value);
+                        if (timeobj) {
+                            if (timeobj.FreeStatus == "3") {
+                                ShowTips("此时间为非工作时间，不能选择");
+                                clearData();
+                                return;
+                            }
+                            if (selectOneObj.value) {
+                                var date = selectOneObj.text;
+                                model.TakeAuditOrder().ServiceDate(date);
+                            }
+                            if (selectTwoObj.value) {
+                                var time = selectTwoObj.value;
+                                model.TakeAuditOrder().ServiceTime(time);
+                            }
+                        }
+                    }
+                });
+            });
+            var carType_show = $('#cartype');
+            var cartypedata = GetCarTypeList();
+            carType_show.bind('click', function () {
+                var bankSelect = new IosSelect(1,
+                    [cartypedata],
+                    {
+                        container: '.container',
+                        title: '选择车辆类型',
+                        itemHeight: 50,
+                        itemShowCount: 3,
+                        oneLevelId: model.TakeAuditOrder().CarType(),
+                        callback: function (selectOneObj) {
+                            carType_show.val(selectOneObj.value);
+                            model.TakeAuditOrder().CarType(selectOneObj.id);
+                            model.TakeAuditOrder().CarTypeName(selectOneObj.value);
+                        }
+                    });
+            });
+            //选择区域
+            var iosProvinces = GetAreaData(1);
+            var iosCitys = GetAreaData(2);
+            var iosCountys = GetAreaData(3);
+            var selectContactDom = $('#select_area');
+            var showContactDom = $('#select_area');
+            selectContactDom.bind('click', function () {
+                var oneLevelId = showContactDom.attr('data-province-code');
+                if (!oneLevelId) {
+                    oneLevelId = model.TakeAuditOrder().ProvinceId();
+                }
+                var twoLevelId = showContactDom.attr('data-city-code');
+                if (!twoLevelId) {
+                    twoLevelId = model.TakeAuditOrder().CityId();
+                }
+                var threeLevelId = showContactDom.attr('data-district-code');
+
+                if (!threeLevelId) {
+                    threeLevelId = model.TakeAuditOrder().CountyId();
+                }
+                var iosSelect = new IosSelect(3,
+                    [iosProvinces, iosCitys, iosCountys],
+                    {
+                        title: '选择省市',
+                        itemHeight: 35,
+                        relation: [1, 1],
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                            showContactDom.attr('data-province-code', selectOneObj.id);
+                            showContactDom.attr('data-city-code', selectTwoObj.id);
+                            showContactDom.attr('data-district-code', selectThreeObj.id);
+                            var area = selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value;
+                            selectContactDom.val(area);
+                            if (selectOneObj.id) {
+                                model.TakeAuditOrder().ProvinceId(selectOneObj.id);
+                                model.TakeAuditOrder().ProvinceName(selectOneObj.value);
+                            }
+                            if (selectTwoObj.id) {
+                                model.TakeAuditOrder().CityId(selectTwoObj.id);
+                                model.TakeAuditOrder().CityName(selectTwoObj.value);
+                            }
+                            if (selectThreeObj.id) {
+                                model.TakeAuditOrder().CountyId(selectThreeObj.id);
+                                model.TakeAuditOrder().CountyName(selectThreeObj.value);
+                            }
+                            model.TakeAuditOrder().AreaInfo(area);
+                        }
+                    });
+            });
+
+            //选择车牌所属区域
+            var areadata = GetCarArea();
+            if (areadata) {
+                var $ddlCarArea = $("#ddlCarArea");
+                for (var i = 0; i < areadata.length; i++) {
+                    $ddlCarArea.append("<option value='" + areadata[i].value + "'>" + areadata[i].value + "</option>")
+                }
+            }
+        });
+
+        function GetCarTypeList() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetCarType",
+                //async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+
+        //获取区域信息
+        function GetAreaData(layer) {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Area/GetAreaList",
+                async: false,
+                data: { layer: layer },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.AreaId,
+                                "value": item.AreaName,
+                                "parentId": item.ParentId
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+
+        function GetCarArea() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetDataItem",
+                async: false,
+                data: { EnCode: "cararea" },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+    </script>
+}
+<div class="DcS_back"></div>
+
+<div class="Os_h1">
+    <div class="Os_h1_name" data-bind="text:$root.Audit().Name"></div>
+    <div class="Os_h1_sm">上门代检(由专业代驾公司提供上门服务)</div>
+</div>
+
+<div class="Os_ul">
+    <div class="Os_li">
+        <div class="Os_li_name"><i class="iconfont icon-riqi"></i>预约代检时间</div>
+        <div class="Os_li_input"><input type="text" placeholder="请选择预约代检时间" class="Os_li_text2" id="AsTime" readonly></div>
+    </div>
+</div>
+
+<div class="Os_ul">
+    <div class="Os_li">
+        <div class="Os_li_name"><i class="iconfont icon-che"></i>车牌号码</div>
+        <div class="Os_li_input"><span class="Os_ll_span" style=""><select style="font-weight:bold" id="ddlCarArea" class=""></select></span><input type="text" placeholder="请输入车牌号码" style="padding-left:1.0rem" class="Os_li_text " data-bind="value: $root.TakeAuditOrder().CarNum"></div>
+    </div>
+    <div class="Os_li">
+        <div class="Os_li_name"><i class="iconfont icon-che"></i>车辆类型</div>
+        <div class="Os_li_input"><input type="text" placeholder="请选择车辆类型" class="Os_li_text2" data-bind="value: $root.TakeAuditOrder().CarTypeName" id="cartype" readonly></div>
+    </div>
+</div>
+
+<div class="Os_ul">
+    <div class="Os_li">
+        <div class="Os_li_name"><i class="iconfont icon-addressbook"></i>联系人</div>
+        <div class="Os_li_input"><input type="text" placeholder="请输入联系人姓名" class="Os_li_text" data-bind="value: $root.TakeAuditOrder().MemberName"></div>
+    </div>
+    <div class="Os_li">
+        <div class="Os_li_name"><i class="iconfont icon-shoujihaoma"></i>联系方式</div>
+        <div class="Os_li_input"><input type="text" placeholder="请输入您得手机号码" class="Os_li_text2" data-bind="value: $root.TakeAuditOrder().Mobile"></div>
+    </div>
+    <div class="Os_li">
+        <div class="Os_li_name"><i class="iconfont icon-dingwei"></i>上门地址</div>
+        <div class="Os_li_input"><input type="text" placeholder="请选择区域" class="Os_li_text2 " data-bind="value: $root.TakeAuditOrder().AreaInfo" id="select_area" readonly></div>
+    </div>
+    <div class="Os_li">
+        <div class="Os_li_tea"><textarea class="Os_li_textarea" placeholder="请输入详细地址" data-bind="value: $root.TakeAuditOrder().AddressInfo"></textarea></div>
+    </div>
+</div>
+
+<div class="Os_txt">
+    <h4 class="Os_txt_h4"><span></span>下单后请备齐以下资料,由专业代驾公司上门服务</h4>
+    <p>① 故障警示架</p>
+    <p>② 行驶证（原件）</p>
+    <p>③ 车主或代理人的身份证（原件）或驾驶证（原件）</p>
+    <p>④ 有效期内（有效期至少7天）的交强险保单</p>
+    <p>⑤ 单位车辆需在机动车申请表上加盖公章或组织机构代码证复印件，加盖公章。</p>
+    <p>⑥ 省外车辆需提供车辆归属地车管部门出具的委托书</p>
+    <p>⑦ 逾期年检须提供车管所开具的逾期未年检罚单</p>
+    <p>⑧ 处理完车辆的所有违章</p>
+    <p class="Os_txt_red">代驾费用说明:</p>
+    <p class="Os_txt_red2">代驾费用不足45公里按实际里程收费，宜昌主城区180元/台次(超过45公里，按180元封顶)。</p>
+</div>
+
+
+<div class="Os_bottom">
+    <div class="Os_bm_left">检测费由代驾收取，代驾费代审完成后收取</div>
+    <div class="Os_bm_right"><a href="#"><button type="button" class="Os_bm_btn" data-bind="click:function(){$root.CreateOrder();}">确认下单</button></a></div>
+</div>

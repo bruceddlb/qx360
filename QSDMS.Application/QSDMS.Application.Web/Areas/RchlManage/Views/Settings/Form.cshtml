@@ -1,0 +1,128 @@
+﻿@{
+    ViewBag.Title = "系统设置编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+
+<script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+<script src="~/Content/scripts/plugins/ueditor/ueditor.config.js"></script>
+<script src="~/Content/scripts/plugins/ueditor/ueditor.all.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    var editor;
+    var dtips;
+    $(function () {        
+        initRichTextEditor();
+        initControl();
+    })
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $("#Name").attr("readonly", "readonly");
+            $.SetForm({
+                url: "/QX360Manage/Settings/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+
+                }
+            });
+        } else {
+
+        }
+    }
+    function initRichTextEditor() {
+        eidtor = UE.getEditor('Remark',
+            {
+                initialFrameHeight: "300"
+            });
+        eidtor.addListener('contentChange', function () {
+            //    editor.sync();
+         
+        });
+        //同步内容
+        eidtor.addListener("blur", function () {
+            eidtor.sync();
+            var content = eidtor.getContent();
+            if (content.length < 1) {
+             
+            } else {
+              
+            }
+        })
+        eidtor.ready(function () {
+            eidtor.setHeight(320);
+        });
+
+    };
+    // HTML编码
+    function encodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        }
+
+        return value.replace(/&/g, "&amp;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/</g, "&lt;")
+                    .replace(/'/, "&quot;");
+    }
+
+
+    /// <summary>
+    /// HTML解码
+    /// </summary>
+    function decodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        };
+        return value.replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&amp;/g, "&")
+                    .replace(/&quot;/g, "'");
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["Remark"] = encodeHtml(eidtor.getContent());
+        $.SaveForm({
+            url: "/QX360Manage/Settings/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input type="hidden" id="AccountId" />
+                <input id="Name" type="text" class="form-control" placeholder="请输入名称" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">值<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Value" type="text" class="form-control" placeholder="请输入值" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">备注</td>
+            <td class="formValue">
+                <div id="" style="min-height:250px;" class="">
+                    <textarea id="Remark" class="clearfix" rows="5" style="width:100%"></textarea>                   
+                </div>
+            </td>
+        </tr>
+
+    </table>
+</div>
+

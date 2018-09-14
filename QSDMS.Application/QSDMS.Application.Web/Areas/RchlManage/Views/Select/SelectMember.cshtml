@@ -1,0 +1,129 @@
+﻿@{
+    ViewBag.Title = "选择信息";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+        //会员等级
+        $("#ddlMemberLevel").ComboBox({
+            url: "/DataItemEnums/GetUserType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择会员类型==",
+            height: "200px"
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));               
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var $gridTable = $("#gridTable");
+        $gridTable.jqGrid({
+            url: "/QX360Manage/Member/GetPageListJson",
+            datatype: "json",
+            height: "300px",
+            autowidth: true,
+            colModel: [
+                { label: "主键", name: "MemberId", hidden: true },
+                { label: "驾校id", name: "SchoolId", hidden: true },
+                { label: "驾校名称", name: "SchoolName", hidden: true },
+                { label: "用户姓名", name: "MemberName", index: "MemberName", width: 150, align: "center" },
+                { label: "昵称", name: "NikeName", index: "NikeName", width: 150, align: "center" },
+                { label: "联系方式", name: "Mobile", index: "Mobile", width: 150, align: "center" },
+                 { label: "账户积分", name: "Point", index: "Point", width: 100, align: "left" },
+                  {
+                      label: "剩余学时", name: "HaveStudyHours", index: "HaveStudyHours", width: 150, align: "center",
+                      formatter: function (cellvalue, options, rowObject) {
+                          return cellvalue;
+                      }
+                  },
+                  { label: "会员等级", name: "LevName", index: "LevName", width: 150, align: "center" },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'CreateTime',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+        });
+        //查询条件设置
+        $("#queryCondition .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#queryCondition .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {};
+            queryJson["keyword"] = $("#txt_Keyword").val();
+            queryJson["condition"] = $("#queryCondition").find('.dropdown-text').attr('data-value');
+            queryJson["lev"] = $("#ddlMemberLevel").attr('data-value');
+            queryJson["simplespelling"] = $("#txt_Pinyin").val()
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+    }
+    function btn_Ok() {
+        var memberId = "", memberName = "", mobile = "", schoolId = "", schoolName = "";
+        memberId = $("#gridTable").jqGridRowValue("MemberId");
+        memberName = $("#gridTable").jqGridRowValue("MemberName");
+        mobile = $("#gridTable").jqGridRowValue("Mobile");
+        schoolId = $("#gridTable").jqGridRowValue("SchoolId");
+        schoolName = $("#gridTable").jqGridRowValue("SchoolName");
+
+
+        if (checkedRow(memberId)) {
+            parent.MemberCallBack({ "memberId": memberId, "memberName": memberName, "mobile": mobile, "schoolId": schoolId, "schoolName": schoolName });
+        }
+    }
+</script><div class="row">
+
+
+    <div class="toolbarPanel">
+        <div class="row" id="divmember">
+            <table>
+                <tr>
+                    <td>
+                        <div id="queryCondition" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">选择条件</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu">                              
+                                <li><a data-value="MemberName">姓名</a></li>
+                                <li><a data-value="Mobile">联系方式</a></li>
+                                <li><a data-value="SchoolName">报名驾校</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td><input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" style="" /></td>
+                    <td>
+                        <div id="ddlMemberLevel" type="select" class="ui-select" style="width:150px">
+                        </div>
+                    </td>
+                    <td><input id="txt_Pinyin" type="text" class="form-control" placeholder="请输入拼音简码" style="" /></td>
+                    <td><a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a></td>
+                    <td>&nbsp;<a id="btn_Ok" class="btn btn-success" onclick="btn_Ok()"><i class="fa fa-check-square"></i>&nbsp;确定</a></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel" id="gridmember">
+        <table id="gridTable" style="width:100%"></table>
+        <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+    </div>
+
+</div>

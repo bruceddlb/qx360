@@ -1,0 +1,46 @@
+*{padding:0px;margin:0px;font-size:9pt}
+ul,li,h1,h2,h3,h4,h5,h6,dl,dt,dd{padding:0;margin:0}
+ul{list-style:none}
+img{border:none}
+body{margin:0px;padding:0px;font-family:Î¢ÈíÑÅºÚ,ËÎÌå,Arial,Helvetica,Verdana,sans-serif;color:#000000;}
+::-webkit-scrollbar-track{border-radius: 10px;-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0);}
+::-webkit-scrollbar-thumb{background-color: rgba(0,0,0,0.05);border-radius: 10px;-webkit-box-shadow: inset 1px 1px 0 rgba(0,0,0,.1);}
+::-webkit-scrollbar-thumb{background-color: rgba(0,0,0,0.2);border-radius: 10px;-webkit-box-shadow: inset 1px 1px 0 rgba(0,0,0,.1);}
+::-webkit-scrollbar{width: 16px;height: 16px;}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb{border-radius: 999px;border: 5px solid transparent;}
+::-webkit-scrollbar-track{box-shadow: 1px 1px 5px rgba(0,0,0,.2) inset;}
+::-webkit-scrollbar-thumb{min-height: 20px;background-clip: content-box;box-shadow: 0 0 0 5px rgba(0,0,0,.2) inset;}
+::-webkit-scrollbar-corner{background: transparent;}
+
+.contextmenu{position:fixed;top:-9999px;left:-9999px;z-index:4000;display:none;}
+.contextmenu ul{-moz-user-select: none;-webkit-user-select: none;-ms-user-select: none;-khtml-user-select: none;user-select: none;float:left;background:url(../images/line.png) 26px 0 repeat-y #f1f1f1;padding: 5px 0;border:1px solid #BEBEBE;box-shadow: 0 6px 12px rgba(0,0,0,.175);background-color: #fff;border-radius: 4px;}
+.contextmenu ul li{cursor:pointer;clear:both;line-height:22px;white-space:nowrap;padding:3px 33px;}
+.contextmenu ul .disabled{cursor:not-allowed;color:#ccc;}
+.contextmenu ul li.sub{background-repeat:no-repeat;background-position:right 11px;background-image:url(../images/arrow1.png);}
+.contextmenu ul li.active{background-color:#F5F5F5;color:#000000;}
+.contextmenu ul ul{display:none;position:absolute;color:#000000;}
+.contextmenu .m-split{height:2px;background:url(../Images/splitLine_bg.gif) center repeat-x;margin:0 2px;margin-top:1px;margin-bottom:1px;margin-left:26px;}
+.contextmenu li img{position:absolute;border:0px;left:6px;margin-top:4px;width:16px;height:16px;}
+
+.tab{float:left;width:5000px;position:relative;left:0px;-moz-user-select: none;-webkit-user-select: none;-ms-user-select: none;-khtml-user-select: none;user-select: none;}
+.tab ul{list-style:none;position:absolute;top:0px;left:0px;padding-left:0px;}
+.tab li{list-style:none;padding:0;float:left;height:40px;line-height:40px;margin:0px;cursor:pointer;padding-left: 10px;padding-right: 10px;color:#737373}
+.tab li.on{margin-left:0px;display:block;color:#000000;text-align:center;background: #2f4050;color: #a7b1c2;line-height:40px;height:40.5px;border-left:1px solid #ddd;border-right:1px solid #ddd;}
+.tab li.on:first-child{border-left:1px solid #f5f5f5;}
+.tab li.off{margin-left:0px;display:block;text-align:center;}
+.tab li.off:hover{background:#F2F2F2;}
+.tab li i{font-size: 13px;}
+.tab table.inner{padding-left:13px;padding-right:15px}
+.tab table.inner .tab_close{float:right;width:12px;height:13px;margin-right:-5px;display:block;background: url(img/tab_close.png) no-repeat;}
+.tab table.inner .tab_close:hover{background-position:0 -12px}
+.tab li.on .tab_close{background-position:0 -12px}
+.tab-div{padding-left:0px;background-color:#fff;border-bottom:1px solid #ddd;}
+.tab-div .scroll-left{float:left;position:relative;width:17px;height:40px;cursor:pointer;z-index:5;left:-20px;top:0px;border:1px solid #f3f3f3; background:#ffffff}
+.tab-div .scroll-left i{border-style:solid;border-width:5px;font-size:0;height:0;margin:10px 0 0 0;display:block;width:0;height:0;overflow:hidden;border-color:#FFF #555 #FFF #FFF}
+.tab-div .scroll-right{float:right;position:relative;width:17px;height:40px;cursor:pointer;z-index:5;top:0px;border:1px solid #f3f3f3;background:#ffffff}
+.tab-div .scroll-right i{border-color:#FFF #FFF #FFF #555;border-style:solid;border-width:5px;font-size:0;height:0;margin:10px 0 0 7px;display:block;width:0;height:0;overflow:hidden}
+.tab-div-content{float:left;margin: 0 auto;padding: 0;width: 100%;min-height:800px;}
+.nav-header { padding: 33px 25px; background: url(img/header-profile.png) no-repeat;}
+.nav-header a {   color: #DFE4ED;}
+.nav-header .text-muted {    color: #8095a8;}

@@ -1,0 +1,48 @@
+﻿@{
+    ViewBag.Title = "预约实训";
+}
+@section scripts{
+    <script type="text/javascript">
+        var type = request('type');
+        function ViewModel() {
+            var self = this;
+            self.Training = function (trainingtype) {
+                window.location.href = "/Training/List?trainingtype=" + trainingtype + "&type=" + type;
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+        });
+
+    </script>
+}
+<div class="BcMenu">
+
+    <a href="#" data-bind="click:function(){$root.Training(1);}">
+        <div class="BcMenu_list">
+            <i class="iconfont icon-jiantou BcMenu_icon"></i>
+            <div class="BcMl_left"><i class="iconfont icon-chenggong2"></i></div>
+            <div class="BcMl_right">
+                <div class="BcMl_h2">科目二</div>
+                <div class="BcMl_sm">预约科目二实训</div>
+            </div>
+        </div>
+    </a>
+
+    <a href="#" data-bind="click:function(){$root.Training(2);}">
+        <div class="BcMenu_list BcMenu_list2">
+            <i class="iconfont icon-jiantou BcMenu_icon"></i>
+            <div class="BcMl_left"><i class="iconfont icon-chenggong2"></i></div>
+            <div class="BcMl_right">
+                <div class="BcMl_h2">
+                    <div class="BcMl_h2">科目三</div>
+                    <div class="BcMl_sm">预约科目三实训</div>
+                </div>
+            </div>
+        </div>
+    </a>
+</div>
+
+

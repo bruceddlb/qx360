@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>个性化皮肤设置</title>
+    <!--框架必需start-->
+    <script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>
+    <script src="~/Content/scripts/plugins/cookie/jquery.cookie.js"></script>
+    <!--框架必需end-->
+    <script>
+        $(function () {
+
+            $('.skinSelect').click(function () {
+                var color = $(this).attr('background');
+                top.$("body").removeClass();
+                top.$("body").addClass("hold-transition sidebar-mini " + color);
+                window.setTimeout(function () {
+                    $.post("/Home/SwitchTheme", { UItheme: color }, function (data) {
+
+                    });
+                }, 200);
+            });
+        });
+    </script>
+</head>
+<body style="margin: 1px;">
+
+    <div style="border-top: none;">
+        <div title="间海蓝" class="skinSelect" background="skin-seablue" style="background: #4A5B79"></div>
+        <div title="亚光黑" class="skinSelect" background="skin-black" style="background: #2c3b41"></div>
+        <div title="亮天蓝" class="skinSelect" background="skin-skyblue" style="background: #1e71b1"></div>
+        <div title="玫瑰红" class="skinSelect" background="skin-rosered" style="background: #B1181B"></div>
+        <div title="暗灰蓝" class="skinSelect" background="skin-grayblue" style="background: #34495e"></div>
+        <div title="宝石绿" class="skinSelect" background="skin-stonegreen" style="background: #28b779"></div>
+        <div title="柠檬黄" class="skinSelect" background="skin-yellow" style="background: #efce2e"></div>
+        <div title="玫瑰紫" class="skinSelect" background="skin-rosepurple" style="background: #852b99"></div>
+        <div title="古董褐" class="skinSelect" background="skin-brown" style="background: #623f18"></div>
+        <div title="皇家黑" class="skinSelect" background="skin-realblack" style="background: #333438"></div>
+        <div title="苹果绿" class="skinSelect" background="skin-applegreen" style="background: #9BBD33"></div>
+        <div title="淡紫红" class="skinSelect" background="skin-purplered" style="background: #C6487E"></div>
+        <div title="间春绿" class="skinSelect" background="skin-spinggreen" style="background: #62b600"></div>
+        <div title="暗桔黄" class="skinSelect" background="skin-orange" style="background: #DC6601"></div>
+        <div title="间暗蓝" class="skinSelect" background="skin-lightblue" style="background: #5D83A3"></div>
+        <div title="咖啡黄" class="skinSelect" background="skin-coffee" style="background: #B99A56"></div>
+        <div title="海军蓝" class="skinSelect" background="skin-blue" style="background: #4C88C0"></div>
+        <div title="热粉红" class="skinSelect" background="skin-pink" style="background: #F2664A"></div>
+        <div title="太阳金" class="skinSelect" background="skin-gold" style="background: #e2a22e"></div>
+        <div title="赛道红" class="skinSelect" background="skin-racered" style="background:#DB4F17"></div>
+    </div>
+</body>
+</html>
+<style>
+    .skinSelect {
+        float: left;
+        width: 55px;
+        height: 46px;
+        margin-left: 20px;
+        margin-right: 20px;
+        margin-top: 20px;
+        display: block;
+        position: relative;
+        cursor: pointer;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+        box-shadow: 0 0 15px #ccc;
+    }
+</style>

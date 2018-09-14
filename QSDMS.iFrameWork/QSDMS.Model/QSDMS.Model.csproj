@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{525EC8F0-D6A8-4680-8DBF-94244DE469F2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QSDMS.Model</RootNamespace>
+    <AssemblyName>QSDMS.Model</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AccountEntity.cs" />
+    <Compile Include="AuthorizeDataModel.cs" />
+    <Compile Include="AuthorizeExtensions.cs" />
+    <Compile Include="AuthorizeManage\AuthorizeDataEntity.cs" />
+    <Compile Include="AuthorizeManage\AuthorizeEntity.cs" />
+    <Compile Include="AuthorizeManage\FilterIPEntity.cs" />
+    <Compile Include="AuthorizeManage\FilterTimeEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleButtonEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleColumnEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleFormEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleFormInstanceEntity.cs" />
+    <Compile Include="AuthorizeManage\ViewModel\AuthorizeUrlModel.cs" />
+    <Compile Include="AuthorizeTypeEnum.cs" />
+    <Compile Include="BaseEntity.cs" />
+    <Compile Include="BaseManage\DepartmentEntity.cs" />
+    <Compile Include="BaseManage\OrganizeEntity.cs" />
+    <Compile Include="BaseManage\RoleEntity.cs" />
+    <Compile Include="BaseManage\UserAuthorizeEntity.cs" />
+    <Compile Include="BaseManage\UserEntity.cs" />
+    <Compile Include="BaseManage\UserRelationEntity.cs" />
+    <Compile Include="BaseManage\UserRoleEntity.cs" />
+    <Compile Include="CodeRuleEnum.cs" />
+    <Compile Include="Enums\Enums.cs" />
+    <Compile Include="Generated\ModelTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ModelTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Include="LoginMode.cs" />
+    <Compile Include="OperationType.cs" />
+    <Compile Include="Operator\Operator.cs" />
+    <Compile Include="Operator\OperatorIProvider.cs" />
+    <Compile Include="Operator\OperatorProvider.cs" />
+    <Compile Include="PermissionMode.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PublicInfoManage\EmailAddresseeEntity.cs" />
+    <Compile Include="PublicInfoManage\EmailCategoryEntity.cs" />
+    <Compile Include="PublicInfoManage\EmailContentEntity.cs" />
+    <Compile Include="PublicInfoManage\FileFolderEntity.cs" />
+    <Compile Include="PublicInfoManage\FileInfoEntity.cs" />
+    <Compile Include="PublicInfoManage\NewsEntity.cs" />
+    <Compile Include="PublicInfoManage\ScheduleEntity.cs" />
+    <Compile Include="SystemInfo.cs" />
+    <Compile Include="SystemManage\AreaEntity.cs" />
+    <Compile Include="SystemManage\CodeRuleEntity.cs" />
+    <Compile Include="SystemManage\CodeRuleFormatEntity.cs" />
+    <Compile Include="SystemManage\CodeRuleSeedEntity.cs" />
+    <Compile Include="SystemManage\DatabaseBackupEntity.cs" />
+    <Compile Include="SystemManage\DatabaseLinkEntity.cs" />
+    <Compile Include="SystemManage\DataBaseTableFieldEntity.cs" />
+    <Compile Include="SystemManage\DataItemDetailEntity.cs" />
+    <Compile Include="SystemManage\DataItemEntity.cs" />
+    <Compile Include="SystemManage\LogEntity.cs" />
+    <Compile Include="SystemManage\ViewModel\DataItemModel.cs" />
+    <Compile Include="TestEntity.cs" />
+    <Compile Include="UserInfoModel.cs" />
+    <Compile Include="VerifyCode.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QSDMS.Cache.Factory\QSDMS.Cache.Factory.csproj">
+      <Project>{05e4a0f4-a478-406d-af6c-e59e2ed88418}</Project>
+      <Name>QSDMS.Cache.Factory</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\QSDMS.Cache\QSDMS.Cache.csproj">
+      <Project>{01dc088c-172b-4b3c-ac36-33ea88c0bbdc}</Project>
+      <Name>QSDMS.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\iFramework.Framework\iFramework.Framework.csproj">
+      <Project>{9c1b08cf-25a4-4190-95d5-d35ea5da455f}</Project>
+      <Name>iFramework.Framework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\QSDMS.Util\QSDMS.Util.csproj">
+      <Project>{2e7b524e-e766-480f-9126-b54c0c10a0a4}</Project>
+      <Name>QSDMS.Util</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Generated\DBHelper.ttinclude" />
+    <None Include="Generated\ModelAuto.ttinclude" />
+    <None Include="Generated\ModelTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ModelTemplate.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Generated\OutputCode\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

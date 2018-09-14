@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/Common.Enum" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/Common.Enum" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="SmsPropertyEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SmsEvent" />
+      <xs:enumeration value="SmsAD" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="SmsPropertyEnum" nillable="true" type="tns:SmsPropertyEnum" />
+</xs:schema>

@@ -1,0 +1,266 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+<script src="~/Content/scripts/plugins/ueditor/ueditor.config.js"></script>
+<script src="~/Content/scripts/plugins/ueditor/ueditor.all.js"></script>
+<script>
+
+    var editor;
+    var dtips;
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        dtips = $("#destips");
+        initRichTextEditor();
+        InitControl();
+
+    });
+
+
+    function initRichTextEditor() {
+        eidtor = UE.getEditor('Content',
+            {
+                initialFrameHeight: "300"
+            });
+        eidtor.addListener('contentChange', function () {
+            //    editor.sync();
+            dtips.hide();
+        });
+        //同步内容
+        eidtor.addListener("blur", function () {
+            eidtor.sync();
+            var content = eidtor.getContent();
+            if (content.length < 1) {
+                dtips.show();
+            } else {
+                dtips.hide();
+            }
+        })
+        eidtor.ready(function () {
+            eidtor.setHeight(320);
+        });
+
+    };
+    //初始化数据
+    function InitControl() {
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/Article/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.ToGroupName) {
+                            $("#txttogroup").val(data.ToGroupName);
+                        }
+                    }
+                }
+            });
+        }
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        //注意 提交json 字符串，在后台反序列化对象
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["Content"] = encodeHtml(eidtor.getContent());
+        postData["ToGroup"] = $("#hidtogroup").val();
+        postData["ToGroupName"] = $("#txttogroup").val();
+        $.SaveForm({
+            url: "/QX360Manage/Article/SaveForm?keyValue=" + keyValue,
+            param: { json: JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        GetToGroup();
+
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+    }
+
+    // HTML编码
+    function encodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        }
+
+        return value.replace(/&/g, "&amp;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/</g, "&lt;")
+                    .replace(/'/, "&quot;");
+    }
+
+
+    /// <summary>
+    /// HTML解码
+    /// </summary>
+    function decodeHtml(value) {
+        if (!value || value.length == 0) {
+            return "";
+        };
+        return value.replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&amp;/g, "&")
+                    .replace(/&quot;/g, "'");
+    }
+    function GetToGroup() {
+        var item = {
+            height: 220,
+            showcheck: true,
+            url: "/QX360Manage/Article/ToGroupTreeJson?articleid=" + keyValue
+        };
+        $("#togroupTree").treeview(item);
+    }
+    //用户角色授权
+    function SelectGroup() {
+        var showGroupList = function () {
+            var $subnePanel = $("#togroupPanel");
+            var control = $("#txttogroup");
+            var divpa = document.getElementById("togroupPanel");
+            var offset = control.offset();
+            divpa.style.top = (offset.top + control.height() - 6) + "px";
+            divpa.style.left = (offset.left) + "px";
+            $subnePanel.removeClass("hide");
+            $subnePanel.width(control.width() + 25);
+
+            $subnePanel.css("position", "absolute");
+            $subnePanel.css("z-index", "1000");
+            $subnePanel.unbind("mouseout").bind('mouseout', function () {
+                var $this = $(this);
+                if ($this.length != 0) {
+                    var width = $this.width();
+                    var offset = $this.offset();
+                    var w = $(document).width();
+                    var top = offset.top + $this.height();
+                    var left = 0;
+                    if (offset.left + width + 9 > w) {
+                        left = offset.left + $this.width() - width + 4;
+                    }
+                    else {
+                        left = offset.left;
+                    }
+                    var ev = window.event;
+                    var x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    var y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                    if (!(x >= left && x <= left + width - 2 &&
+                        y >= offset.top && y <= top - 2)) {
+
+                        $subnePanel.addClass("hide");
+                    }
+                }
+            });
+
+            $subnePanel.find(".clostc").click(function () {
+                $subnePanel.addClass("hide");
+            });
+
+            //确定事件
+            $("#btn_togroup").bind("click", function () {
+                var text = "";
+                var ids = "";
+                for (var i = 0; i < $("#togroupTree").getCheckedAllNodes().length; i++) {
+                    var id = $("#togroupTree").getCheckedAllNodes()[i];
+                    if (id) {
+                        var a = $("#togroupTree").find("span[data-value='" + id + "']").text();
+                        ids += id + ",";
+                        text += a + ",";
+                    }
+                }
+                if (ids) {
+                    $("#hidtogroup").val(ids.substring(0, ids.length - 1));
+                    control.val(text.substring(0, text.length - 1));
+                }
+                //rs.id = String($("#roleTree").getCheckedAllNodes());
+
+                $subnePanel.addClass("hide");
+            })
+        }
+        showGroupList();
+    }
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle"> 标题<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Title" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+
+
+        <tr>
+            <td class="formTitle"> 简介<font face="宋体">*</font></td>
+            <td class="formValue"> <input id="SortDesc" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" /> </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle"> 连接</td>
+            <td class="formValue"> <input id="Link" type="text" class="form-control input-profile" /> </td>
+        </tr>
+        <tr>
+            <td class="formTitle">人群<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input type="hidden" id="hidtogroup" />
+                <input id="txttogroup" type="text" class="form-control input-profile" readonly onclick="SelectGroup()" isvalid="yes" checkexpession="NotNull" /> <span class="input-button" title="选择适用人群">...</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 内容<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="" style="min-height:250px;" class="">
+                    <textarea id="Content" class="clearfix" rows="5" style="width:100%"></textarea>
+                    <div style="padding-top:10px;color:#999;@(string.IsNullOrWhiteSpace("") ? "" : "display:none;")" class="cor-red" id="destips">内容不能为空。</div>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">是否发送</td>
+            <td class="formValue">
+                <div class="checkbox">
+                    <label>
+                        <input id="Status" type="checkbox" checked="checked" />
+                        是
+                    </label>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div>
+        <div id="togroupPanel" class="hide" style="border: 1px solid #ccc; width: 300px; background: #fff; height: 280px; overflow: auto; ">
+            <div id="togroupTree" style="margin: 10px; height: 100px;"></div>
+            <div style="text-align:right;margin-right:10px">
+                <a id="btn_togroup" class="btn btn-success"> 确定</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+

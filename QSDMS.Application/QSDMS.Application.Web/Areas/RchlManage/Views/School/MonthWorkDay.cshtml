@@ -1,0 +1,105 @@
+﻿@{
+    ViewBag.Title = "时段过滤";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+<script>
+    var objectId = request('objectId');
+    var objectType = request('objectType');
+    var timetype = request('timetype');
+    $(function () {
+        initControl();
+    })
+    //初始化控件
+    function initControl() {
+        BindMonthDate();
+        $(".tab-content li").click(function () {
+            if (!!$(this).hasClass("active")) {
+                $(this).removeClass("active");
+            } else {
+                $(this).addClass("active").siblings("li");
+            }
+        });
+
+        $("#ObjectId").val(objectId);
+        $("#ObjectType").val(objectType);
+    }
+
+
+    //获取一个月的时间
+    function BindMonthDate() {
+        $.SetForm({
+            url: "/QX360Manage/MonthWorkDay/GetMonthDateJson",
+            param: { objectid: objectId, type: timetype },
+            success: function (data) {              
+                if (data != null) {
+                    $("#thismonth").html(formatDate(data.title, "yyyy年MM月"));
+                    $("#thismonth").attr("data-value", data.title);
+                    var li = "";                 
+                    for (var i = 0; i < data.data.length; i++) {
+                        var item = data.data[i];
+                        var css = "";
+                        if (item.DateType == 1) {
+                            css = "active";
+                        }
+                        li += '<li class=\"' + css + '\" data-id="' + item.MonthWorkDayId + '" data-week="' + item.Week + '" data-date="' + formatDate(item.WorkDay, "yyyy-MM-dd") + '"><a>' + formatDate(item.WorkDay, "dd") + '&nbsp;<span>' + item.WeekName + '</span></a></li>';
+
+                    }
+                    $("#mothdaypanel").empty().append(li);
+
+                }
+            }
+        });
+    }
+    //保存表单
+    function AcceptClick() {
+        var postData = {};
+        var datelist = [];
+        var yearmonth = $("#thismonth").attr("data-value");//当前年月
+        $("#mothdaypanel li").each(function () {
+            var $this = $(this);
+            var id = $this.attr("data-id");
+            var date = $this.attr("data-date");
+            var week = $this.attr("data-week");
+            var datetype = 0;
+            if ($this.hasClass("active")) {
+                datetype = 1;
+            }           
+            datelist.push({
+                "MonthWorkDayId": id,
+                "SchoolId": objectId,
+                "YearMonth": yearmonth,
+                "WorkDay": date,
+                "Week": week,
+                "WeekName": "",
+                "DateType": datetype
+            });
+
+        })
+        // postData["TagList"] = datelist;
+
+        $.SaveForm({
+            url: "/QX360Manage/MonthWorkDay/SaveForm?keyValue=" + objectId + "&yearMonth=" + yearmonth,
+            param: { json: JSON.stringify(datelist) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div class="alert alert-danger" style="text-align: left; margin: 0px; border-radius: 0px; border-left: none; border-top: none; border-right: none;">
+    <i class="fa fa-question-circle" style="position: relative; top: 1px; font-size: 15px; padding-right: 5px;"></i>
+    声明：已勾选的日期为工作日,没勾选的为非工作日
+</div>
+<div style="margin-left: 10px; margin-right: 10px;">
+    <input id="ObjectId" type="hidden" />
+    <input id="ObjectType" type="hidden" />
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#WeekDay1" data-toggle="tab" id="thismonth">2018年01月</a></li>
+    </ul>
+    <div class="tab-content">
+        <div id="WeekDay1" class="tab-pane active" style="margin-left: 15px; margin-top: 15px;">
+            <ul class="sys_spec_text" id="mothdaypanel"></ul>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,24 @@
+﻿@{
+    ViewBag.Title = "选择角色";
+}
+<div class="weui-flex" style="background:#ccc;padding:10px;">
+    <i class="weui-icon-info-circle"></i><div class="weui-flex__item"><div class="placeholder">请选择所属行业类型</div></div>
+</div>
+<div class="weui-grids" style="padding:30px 0px">
+    <a href="/Account/Register?type=1&openid=@(ViewBag.Openid)">
+        <div class="weui-grid__icon" style="width:200px;height:130px;">
+            <img src="/images/Engineering.png" alt="Engineering" width="100%" />
+        </div>
+        <p class="weui-grid__label">工程公司</p>
+    </a>
+</div>
+<div class="weui-grids" style="padding:10px 0px">
+    <a href="/Account/Register?type=2&openid=@(ViewBag.Openid)">
+        <div class="weui-grid__icon" style="width:200px;height:130px;">
+            <img src="/images/Supplier.png" alt="Supplier" />
+        </div>
+        <p class="weui-grid__label">
+            供应商
+        </p>
+    </a>
+</div>

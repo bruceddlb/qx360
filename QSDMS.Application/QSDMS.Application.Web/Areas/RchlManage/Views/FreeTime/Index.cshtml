@@ -1,0 +1,239 @@
+﻿@{
+    ViewBag.Title = "空闲时间管理";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+@section Head{
+    <script src="~/Content/scripts/plugins/tab/jquery.idTabs.min.js"></script>
+    <script>
+        var objectid = request('objectid');//对象id
+        var type = request('type');//类型标识 1 实训车辆 2 教练
+        $(function () {
+            BindDataByObjectId(objectid);
+        });
+
+        function BindDataByObjectId(objectid) {
+            $.SetForm({
+                url: "/QX360Manage/FreeTime/GetWeekDateJson",
+                param: { objectid: objectid },
+                success: function (data) {                 
+                    if (data && data.length > 0) {
+                        AddWeek(data);
+                    } else {
+                        //初始化当前星期的日期列表
+                        BindCurrentWeekDate();
+                    }
+                }
+            });
+        }
+
+        //获取当前一个星期的日期
+        function BindCurrentWeekDate() {
+            $("#tabsbox").empty();
+            $("#tabContent").empty();
+            $.SetForm({
+                url: "/QX360Manage/FreeTime/GetCurrentWeekList",
+                param: null,
+                success: function (data) {
+                    if (data != null) {
+                        var li = "";
+                        var content = "";
+                        var currentday;
+                        for (var i = 0; i < data.length; i++) {
+                            var item = data[i];
+                            if (item.IsCurrentDay) {
+                                currentday = item.FreeDateId;
+                            }
+                            li += '<li data-id="' + item.FreeDateId + '" data-week="' + item.Week + '" data-date="' + formatDate(item.FreeDate, "yyyy-MM-dd") + '"><a href="#' + item.FreeDateId + '">' + formatDate(item.FreeDate, "yyyy-MM-dd") + '&nbsp;<span>' + item.WeekName + '</span></a></li>';
+                            content += '  <div id="' + item.FreeDateId + '">';
+                            content += '<div id="time_' + item.FreeDateId + '" class="timepanel"></div>';
+                            content += '<div style="padding:10px;">';
+                            content += ' <a class="btn btn-default" rel="add" onclick=AddTime("' + item.FreeDateId + '") title="添加时间段">+添加</a>';
+                            content += '</div>';
+                            content += '</div>';
+                        }
+                        $("#tabsbox").append(li);
+                        $("#tabContent").append(content);
+                        $("#tabs ul").idTabs(currentday);
+                    }
+                }
+            });
+        }
+
+        function AddWeek(data) {
+            var currentday;
+            //定义变量
+            var len = data.length;
+            var i = 0;
+            $("#tabsbox").empty();
+            $("#tabContent").empty();
+            //创建方法
+            var createWeekItem = function () {
+                var content = "";
+                var li = "";
+                var item = data[i];
+                if (item.IsCurrentDay) {
+                    currentday = item.FreeDateId;
+                }
+                li += '<li data-id="' + item.FreeDateId + '" data-week="' + item.Week + '" data-date="' + formatDate(item.FreeDate, "yyyy-MM-dd") + '"><a href="#' + item.FreeDateId + '">' + formatDate(item.FreeDate, "yyyy-MM-dd") + '&nbsp;<span>' + item.WeekName + '</span></a></li>';
+                content += '  <div id="' + item.FreeDateId + '">';
+                content += '<div id="time_' + item.FreeDateId + '" class="timepanel"></div>';
+                content += '<div style="padding:10px;">';
+                content += ' <a class="btn btn-default" rel="add" onclick=AddTime("' + item.FreeDateId + '") title="添加时间段">+添加</a>';
+                content += '</div>';
+                content += '</div>';
+                $("#tabsbox").append(li);
+                $("#tabContent").append(content);
+
+                if (item.FreeTimeList) {
+                    for (var j = 0; j < item.FreeTimeList.length; j++) {
+                        var freetime = item.FreeTimeList[j];
+                        CallBack(freetime.FreeDateId, freetime.StartTime, freetime.EndTime, freetime.FreeStatus);
+                    }
+                }
+                i++;//更新循环变量
+                if (i < len) {
+                    createWeekItem();
+                }
+            }
+            //第一次调用
+            createWeekItem();
+            $("#tabs ul").idTabs(currentday);
+        }
+        //添加时间
+        function AddTime(id) {
+            var now = new Date();
+            var date = formatDate(now, 'yyyy-MM-dd');
+            var currentdate = $("#tabsbox li[data-id='" + id + "']").attr("data-date");           
+            if (date > currentdate)
+            {
+                dialogMsg("不能设置当前时间段信息", 0);
+                return false;
+            }
+            dialogOpen({
+                id: "addtime",
+                title: '新增空闲时间',
+                url: '/QX360Manage/FreeTime/AddTime?id=' + id,
+               width: "800px",height: "600px",
+               
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+
+        function CallBack(id, time1, time2, status) {
+            var text = "";
+            if (status == "@((int)QX360.Model.Enums.FreeTimeStatus.空闲)") {
+                var a = '<a class="btn btn-blue" style="position:relative" data-status="' + status + '" data-start="' + time1 + '" data-end="' + time2 + '">' + time1 + "-" + time2;
+                a += '<i class="" style="position: absolute;right: -2px;;top: -5px;background:url(/content/images/close.png);width:16px;height:16px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+                a += '</a>';
+                $("#time_" + id).append(a);
+                //绑定删除事件
+                $("#time_" + id + " a").each(function () {
+                    $(this).find("i").bind("click", function () {
+                        $(this).parent().remove();
+                    })
+                })
+            } else {
+                var a = '<a class="btn btn-yellow" style="position:relative" data-status="' + status + '" data-start="' + time1 + '" data-end="' + time2 + '">' + time1 + "-" + time2;
+                a += '</a>';
+                $("#time_" + id).append(a);
+            }
+        }
+
+        //保存
+        function AcceptClick() {
+            var postData = [];
+            $("#tabsbox li").each(function () {
+                var $date = $(this);
+                var freedate = {};
+                freedate["FreeDateId"] = $date.attr("data-id");
+                freedate["ObjectType"] = type;
+                freedate["ObjectId"] = objectid;
+                freedate["FreeDate"] = $date.attr("data-date");
+                freedate["Week"] = $date.attr("data-week");
+                var freetimes = [];
+                $("#time_" + $date.attr("data-id") + " a").each(function () {
+                    var $time = $(this);
+                    var freetime = {};
+                    freetime["FreeDateId"] = $date.attr("data-id");
+                    freetime["StartTime"] = $time.attr("data-start");
+                    freetime["EndTime"] = $time.attr("data-end");
+                    freetime["FreeStatus"] = $time.attr("data-status");
+                    freetimes.push(freetime);
+                });
+                freedate["FreeTimeList"] = freetimes;
+                postData.push(freedate);
+            });
+            $.SaveForm({
+                url: "/QX360Manage/FreeTime/SaveForm?keyValue=" + objectid,
+                param: { json: JSON.stringify(postData) },
+                loading: "正在保存数据...",
+                success: function () {
+                    $.currentIframe().$("#gridTable").trigger("reloadGrid");
+                }
+            })
+        }
+    </script>
+}
+<style>
+    .tabsbox {
+        border-bottom: 1px solid #dce6e7;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+        .tabsbox li {
+            background: #fff;
+            display: inline-block;
+            border: 1px solid #dce6e7;
+            border-bottom: none;
+            line-height: 35px;
+            text-align: center;
+            margin-right: 2px;
+        }
+
+            .tabsbox li a {
+                padding: 0px 10px;
+            }
+
+                .tabsbox li a.selected {
+                    background-color: #fff;
+                    border-top: 5px solid #2F4050;
+                    display: block;
+                    margin: 0px;
+                    font-weight: bold;
+                }
+
+        .tabsbox ul li a {
+            text-decoration: none;
+        }
+
+    .tabscont {
+        padding: 10px;
+        margin-top: -1px;
+        background: #fff;
+        width: 100%;
+        height: 500px;
+    }
+
+    .timepanel {
+        padding: 10px;
+    }
+
+        .timepanel a {
+            padding: 10px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+</style>
+<div class="row">
+    <div class="alert alert-warning">(蓝色区域为空闲状态，橙色为被预约，灰色为不可预约时间，已被预约时间段不可取消可预约状态)</div>
+    <div id="tabs">
+        <ul class="tabsbox" id="tabsbox"></ul>
+        <div class="tabscont" id="tabContent">
+
+        </div>
+    </div>
+</div>

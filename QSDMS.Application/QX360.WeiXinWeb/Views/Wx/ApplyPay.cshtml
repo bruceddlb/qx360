@@ -1,0 +1,582 @@
+﻿@{
+    ViewBag.Title = "报名";
+}
+@section scripts{
+    <script type="text/javascript">
+        var schooid = request('schooid');
+        var subjectid = request('subjectid');
+        var $target;
+        function ViewModel() {
+            var self = this;
+            self.Applay = ko.observable({
+                ProvinceId: ko.observable(""),
+                ProvinceName: ko.observable(""),
+                CityName: ko.observable(""),
+                CityId: ko.observable(""),
+                CountyName: ko.observable(""),
+                CountyId: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                MemberId: ko.observable(""),
+                MemberName: ko.observable(""),
+                MemberMobile: ko.observable(""),
+                ServiceDate: ko.observable(""),
+                ServiceTime: ko.observable(""),
+                PayMoney: ko.observable(""),
+                TotalMoney: ko.observable(""),
+                SchoolId: ko.observable(""),
+                SchoolName: ko.observable(""),
+                SubjectId: ko.observable(""),
+                SubjectName: ko.observable(""),
+                AreaInfo: ko.observable(""),
+            });
+            //初始化数据
+            self.InitData = function () {
+                //会员基本信息
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        self.Applay().MemberName(data.MemberName);//可以修改
+                        self.Applay().MemberMobile(data.Mobile);//可以修改
+                        self.Applay().MemberId(data.MemberId);//取注册用户的
+                        self.Applay().ProvinceId(data.ProvinceId);
+                        self.Applay().ProvinceName(data.ProvinceName);
+                        self.Applay().CityId(data.CityId);
+                        self.Applay().CityName(data.CityName);
+                        self.Applay().CountyId(data.CountyId);
+                        self.Applay().CountyName(data.CountyName);
+                        self.Applay().AddressInfo(data.AddressInfo);
+                        var area = "";
+                        if (data.ProvinceName) {
+                            area += data.ProvinceName + " ";
+                        }
+                        if (data.CityName) {
+                            area += data.CityName + " ";
+                        }
+                        if (data.CountyName) {
+                            area += data.CountyName + " ";
+                        }
+                        if (area) {
+                            self.Applay().AreaInfo(area);
+                        }
+                    } else {
+                        GotoLoginPage();
+                    }
+                });
+                //科目信息
+                $.post("/Subject/GetSubject", { subjectid: subjectid }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        self.Applay().SubjectId(data.SubjectId);
+                        self.Applay().SubjectName(data.SubjectName);
+                        self.Applay().PayMoney(data.MakeMoney);
+                        self.Applay().TotalMoney(data.Price);
+                        self.Applay().SchoolId(data.SchoolId);
+                        self.Applay().SchoolName(data.SchoolName);
+                    }
+                });
+
+            }
+
+            //订单确认-支付
+            self.Pay = function () {
+                if (!self.Applay().ServiceDate()) {
+                    ShowTips("请选择服务时间");
+                    return;
+                }
+                if (!self.Applay().AreaInfo()) {
+                    ShowTips("请选择地区");
+                    return;
+                }
+                if (!self.Applay().AddressInfo()) {
+                    ShowTips("请填写地址");
+                    return;
+                }
+                if (!self.Applay().MemberName()) {
+                    ShowTips("请填写联系人");
+                    return;
+                }
+                var tel = self.Applay().MemberMobile();
+                if (!tel) {
+                    ShowTips("请输入联系电话");
+                    return;
+                }
+                var isPhone = /^([0-9]{3,4}-)?[0-9]{7,8}$/;
+                var isMob = /^(((13[0-9]{1})|(15[0-9]{1})|(17[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+                if (isMob.test(tel) || isPhone.test(tel)) {
+
+                } else {
+                    ShowTips("请输入正确的手机号码");
+                    return;
+                }
+                //微信支付先注释 直接创建订单
+                $target = $(event.target);
+                $target.attr('disabled', 'disabled');
+                //判断会员是否报名
+                $.get("/Apply/CheckHasApplay", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data == "1") {
+                            self.WxPay();
+                        } else {
+                            ShowTips("您已经报名过了,不能重复报名");
+                            return false;
+                        }
+                    }
+                });
+
+                //self.CreateOrder();
+            }
+
+            //创建支付
+            self.CreatePay = function () {
+                $.ajax({
+                    url: "/Purse/WxPay",
+                    type: "post",
+                    data: { money: self.Applay().PayMoney(), tradetitle: "报名定金支付" },
+                    success: function (result) {
+                        if (result.IsSuccess) {
+                            var data = result.ResultData["data"];
+                            self.apiCallback(data.tradeNo, JSON.parse(data.param));
+                        }
+                        else {
+                            alert(result.Message);
+                            $target.removeAttr('disabled');
+                        }
+                    }
+                });
+            }
+            //微信支付
+            self.WxPay = function () {
+                if (typeof WeixinJSBridge == "undefined") {
+                    if (document.addEventListener) {
+                        document.addEventListener('WeixinJSBridgeReady', self.apiCallback, false);
+                    }
+                    else if (document.attachEvent) {
+                        document.attachEvent('WeixinJSBridgeReady', self.apiCallback);
+                        document.attachEvent('onWeixinJSBridgeReady', self.apiCallback);
+                    }
+                }
+                else {
+                    self.CreatePay();
+                }
+
+            }
+            self.apiCallback = function (tradeNo, param) {
+                WeixinJSBridge.invoke(
+                'getBrandWCPayRequest',
+                param,
+                function (res) {
+                    if (res.err_msg == "get_brand_wcpay_request:ok") {
+                        //支付成功创建报名订单
+                        self.CreateOrder();
+                        //写日志
+                        @*$.ajax({
+                            url: "/Purse/WritePayLog",
+                            type: "post",
+                            data: { money: self.Applay().PayMoney(), orderno: self.Order().OrderNo(), type: "@((int)(Logistics.Data.Enums.PayWay.微信支付))" },
+                            success: function (result) {
+                                if (result.IsSuccess) {
+                                    ShowTips(result.Message, "ok");
+                                    setTimeout(function () {
+                                        location.href = "/Apply/Return";
+                                    }, 200)
+                                }
+                                else { alert(result.Message); }
+                            }
+                        });*@
+
+                    }
+                    else {
+                        //alert(res.err_code + res.err_desc + res.err_msg);
+                        alert("支付失败,请重新支付!");
+                        $target.removeAttr('disabled');
+                    }
+                });
+            }
+            //创建订单
+            self.CreateOrder = function () {
+                $.post("/Apply/CreateOrder", { "data": ko.toJSON(self.Applay()) }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, "ok");
+                        setTimeout(function () {
+                            location.href = "/Apply/Return";
+                        }, 200)
+
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.InitData();
+            //FastClick.attach(document.body);
+            //stopDefault(this);
+            //课程类型
+            var data = GetSubjectList(schooid);
+            var vblx_show = $('#vblx');//获取时长dom
+            vblx_show.bind('click', function () {
+                var oneLevelId = vblx_show.attr('data-subject-code');
+                if (!oneLevelId) {
+                    oneLevelId = model.Applay().SubjectId();
+                }
+
+                var bankSelect = new IosSelect(1,
+                    [data],
+                    {
+                        container: '.container',
+                        title: '选择课程',
+                        itemHeight: 50,
+                        itemShowCount: 3,
+                        oneLevelId: oneLevelId,
+                        callback: function (selectOneObj) {
+
+                            vblx_show.val(selectOneObj.value);
+                            vblx_show.attr("data-subject-code", selectOneObj.id);
+                            //赋值
+                            model.Applay().SubjectId(selectOneObj.id);
+                            model.Applay().SubjectName(selectOneObj.value);
+                            model.Applay().PayMoney(selectOneObj.makemoney);
+                            model.Applay().TotalMoney(selectOneObj.price);
+                            model.Applay().SchoolId(selectOneObj.schoolid);
+                            model.Applay().SchoolName(selectOneObj.schoolname);
+                        }
+                    });
+            });
+
+            //选择时间
+            var selectDateDom = $('#vbtime2');
+            var showDateDom = $('#vbtime2');
+            // 初始化时间
+            var now = new Date();
+            var nowYear = now.getFullYear();
+            var nowMonth = now.getMonth() + 1;
+            var nowDate = now.getDate();
+            showDateDom.attr('data-year', nowYear);
+            showDateDom.attr('data-month', nowMonth);
+            showDateDom.attr('data-date', nowDate);
+            // 数据初始化
+            function formatYear(nowYear) {
+                var arr = [];
+                for (var i = nowYear - 5; i <= nowYear + 5; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '年'
+                    });
+                }
+                return arr;
+            }
+            function formatMonth() {
+                var arr = [];
+                for (var i = 1; i <= 12; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '月'
+                    });
+                }
+                return arr;
+            }
+            function formatDate(count) {
+                var arr = [];
+                for (var i = 1; i <= count; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '日'
+                    });
+                }
+                return arr;
+            }
+            var yearData = function (callback) {
+                callback(formatYear(nowYear))
+            }
+            var monthData = function (year, callback) {
+                callback(formatMonth());
+            };
+            var dateData = function (year, month, callback) {
+                if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                    callback(formatDate(31));
+                }
+                else if (/^(4|6|9|11)$/.test(month)) {
+                    callback(formatDate(30));
+                }
+                else if (/^2$/.test(month)) {
+                    if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                        callback(formatDate(29));
+                    }
+                    else {
+                        callback(formatDate(28));
+                    }
+                }
+                else {
+                    throw new Error('month is illegal');
+                }
+            };
+            var hourData = function (one, two, three, callback) {
+                var hours = [];
+                for (var i = 0, len = 24; i < len; i++) {
+                    hours.push({
+                        id: i,
+                        value: i + '时'
+                    });
+                }
+                callback(hours);
+            };
+            var minuteData = function (one, two, three, four, callback) {
+                var minutes = [];
+                for (var i = 0, len = 60; i < len; i++) {
+                    minutes.push({
+                        id: i,
+                        value: i + '分'
+                    });
+                }
+                callback(minutes);
+            };
+            selectDateDom.bind('click', function () {
+                var oneLevelId = showDateDom.attr('data-year');
+                var twoLevelId = showDateDom.attr('data-month');
+                var threeLevelId = showDateDom.attr('data-date');
+                var fourLevelId = showDateDom.attr('data-hour');
+                var fiveLevelId = showDateDom.attr('data-minute');
+                var iosSelect = new IosSelect(5,
+                    [yearData, monthData, dateData, hourData, minuteData],
+                    {
+                        title: '选择上门服务时间',
+                        itemHeight: 35,
+                        itemShowCount: 9,
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        fourLevelId: fourLevelId,
+                        fiveLevelId: fiveLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj, selectFourObj, selectFiveObj) {
+                            showDateDom.attr('data-year', selectOneObj.id);
+                            showDateDom.attr('data-month', selectTwoObj.id);
+                            showDateDom.attr('data-date', selectThreeObj.id);
+                            showDateDom.attr('data-hour', selectFourObj.id);
+                            showDateDom.attr('data-minute', selectFiveObj.id);
+                            selectDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value + ' ' + selectFourObj.value + ' ' + selectFiveObj.value);
+                            if (selectOneObj.value && selectTwoObj.value && selectThreeObj.value) {
+                                var date = selectOneObj.value.replace("年", '') + "-" + selectTwoObj.value.replace("月", '') + "-" + selectThreeObj.value.replace("日", '');
+                                model.Applay().ServiceDate(date);
+                            }
+                            if (selectFourObj.value && selectFiveObj.value) {
+                                var time = selectFourObj.value.replace("时", '') + ":" + selectFiveObj.value.replace("分", '');
+                                model.Applay().ServiceTime(time);
+                            }
+                        }
+                    });
+            });
+
+            //选择区域
+            var iosProvinces = GetAreaData(1);
+            var iosCitys = GetAreaData(2);
+            var iosCountys = GetAreaData(3);
+            var selectContactDom = $('#select_area');
+            var showContactDom = $('#select_area');
+            var contactProvinceCodeDom = $('#contact_province_code');
+            var contactCityCodeDom = $('#contact_city_code');
+            selectContactDom.bind('click', function () {
+                var oneLevelId = showContactDom.attr('data-province-code');
+                if (!oneLevelId) {
+                    oneLevelId = model.Applay().ProvinceId();
+                }
+                var twoLevelId = showContactDom.attr('data-city-code');
+                if (!twoLevelId) {
+                    twoLevelId = model.Applay().CityId();
+                }
+                var threeLevelId = showContactDom.attr('data-district-code');
+
+                if (!threeLevelId) {
+                    threeLevelId = model.Applay().CountyId();
+                }
+                var iosSelect = new IosSelect(3,
+                    [iosProvinces, iosCitys, iosCountys],
+                    {
+                        title: '选择省市',
+                        itemHeight: 35,
+                        relation: [1, 1],
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+                            showContactDom.attr('data-province-code', selectOneObj.id);
+                            showContactDom.attr('data-city-code', selectTwoObj.id);
+                            showContactDom.attr('data-district-code', selectThreeObj.id);
+                            var area = selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value;
+                            selectContactDom.val(area);
+                            if (selectOneObj.id) {
+                                model.Applay().ProvinceId(selectOneObj.id);
+                                model.Applay().ProvinceName(selectOneObj.value);
+                            }
+                            if (selectTwoObj.id) {
+                                model.Applay().CityId(selectTwoObj.id);
+                                model.Applay().CityName(selectTwoObj.value);
+                            }
+                            if (selectThreeObj.id) {
+                                model.Applay().CountyId(selectThreeObj.id);
+                                model.Applay().CountyName(selectThreeObj.value);
+                            }
+                            model.Applay().AreaInfo(area);
+                        }
+                    });
+            });
+            $('#DtBtn').on('click', function () {
+                //判断按钮为有效状态
+                var disabled = $('#DtBtn').attr('class');
+                if (disabled == "Dtle_btn") {
+                    return;
+                }
+                //支付
+                model.Pay();
+
+            })
+            //须知
+            $('.DcS_Notice span').on('click', function () {
+                $('.DcS_back').show();
+                $('.popup').show();
+            })
+            //关闭陪驾须知弹窗
+            $('.popup_close i').on('click', function () {
+                $('.DcS_back').hide();
+                $('.popup').hide();
+            })
+            //选中陪驾须知
+            $('.DcS_Notice font').on('click', function () {
+                if ($(this).attr('class') == 'DcS_Ne_font') {
+                    $(this).attr('class', '');
+
+                    $('#DtBtn').attr('class', 'Dtle_btn');
+                } else {
+                    $(this).addClass('DcS_Ne_font');
+                    $('#DtBtn').attr('class', 'Dtle_btn2');
+
+                }
+
+            })
+
+        });
+
+        //获取区域信息
+        function GetAreaData(layer) {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Area/GetAreaList",
+                async: false,
+                data: { layer: layer },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.AreaId,
+                                "value": item.AreaName,
+                                "parentId": item.ParentId
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+
+        //查询学校科目
+        function GetSubjectList(schoolid) {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Subject/GetSubjectList",
+                async: false,
+                data: { schoolid: schoolid },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.SubjectId,
+                                "value": item.SubjectName,
+                                "makemoney": item.MakeMoney,
+                                "price": item.Price,
+                                "schoolid": item.SchoolId,
+                                "schoolname": item.SchoolName
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+        function stopDefault(e) {
+            if (e && e.preventDefault) {
+                e.preventDefault();
+            } else {
+                window.event.returnValue = false;
+            }
+
+            return false;
+        }
+    </script>
+}
+@section css{
+    <style type="text/css">
+    </style>
+}
+
+
+<div class="DcS_back"></div>
+<div class="popup">
+    <div class="popup_h2">驾驶员培训协议</div>
+    <div class="popup_txt" style="height:230px;overflow:auto" id="applyNotice">
+        @Html.Raw(ViewBag.Notice)
+    </div>
+    <div class="popup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+<ul class="DtIn_ul">
+    <li>
+        <div class="DtIn_left"><i class="iconfont icon-shijian1"></i>上门服务时间</div>
+        <div class="DtIn_right">
+            <input type="text" placeholder="请选择上门服务时间" class="DtIn_text" id="vbtime2" readonly />
+            <i class="iconfont icon-jiantou DtIn_rt_icon"></i>
+        </div>
+    </li>
+</ul>
+
+<ul class="DtIn_ul">
+    <li>
+        <div class="DtIn_left"><i class="iconfont icon-faxian"></i>姓名</div>
+        <div class="DtIn_right"><input type="text" placeholder="请输入姓名" class="DtIn_text" data-bind="value: $root.Applay().MemberName"></div>
+    </li>
+    <li>
+        <div class="DtIn_left"><i class="iconfont icon-dianhua"></i>联系方式</div>
+        <div class="DtIn_right"><input type="text" placeholder="请输入联系方式" class="DtIn_text" data-bind="value: $root.Applay().MemberMobile"></div>
+    </li>
+    <li>
+        <div class="DtIn_left"><i class="iconfont icon-dizhi"></i>省市</div>
+        <div class="DtIn_right"><input type="text" placeholder="请选择省市区" class="DtIn_text" id="select_area" data-bind="value: $root.Applay().AreaInfo" readonly /><i class="iconfont icon-jiantou DtIn_rt_icon"></i></div>
+
+    </li>
+    <li>
+
+        <div class="DtIn_left"><i class="iconfont icon-dizhi"></i>上门地址</div>
+        <div class="DtIn_right"><input type="text" placeholder="请输入上门地址" class="DtIn_text" data-bind="value: $root.Applay().AddressInfo"></div>
+    </li>
+    <li>
+        <div class="DtIn_left"><i class="iconfont icon-xiugai3"></i>课程类型</div>
+        <div class="DtIn_right">
+            <input type="text" placeholder="请选择课程类型" class="DtIn_text" id="vblx" data-bind="value: $root.Applay().SubjectName" readonly />
+            <i class="iconfont icon-jiantou DtIn_rt_icon"></i>
+        </div>
+    </li>
+</ul>
+
+<div class="DcS_Notice"><font><i class="iconfont icon-xuanzhong"></i>了解并同意</font><span>《驾驶员培训协议》</span></div>
+<div style="height:80px;"></div>
+<div class="DtIn_bottom">
+    <div class="DtIn_bm_left">定金：<span data-bind="text:'￥'+$root.Applay().PayMoney()"></span></div>
+    <div class="DtIn_bm_right"><button id="DtBtn" type="button" class="Dtle_btn">确认订单</button></div>
+</div>

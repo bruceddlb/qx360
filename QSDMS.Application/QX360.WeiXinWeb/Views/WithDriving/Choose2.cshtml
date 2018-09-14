@@ -1,0 +1,93 @@
+﻿@{
+    ViewBag.Title = "选择教练";
+}
+@section scripts{
+    <script type="text/javascript">
+        var provinceId = request('ProvinceId');
+        var cityId = request('CityId');
+        var countyId = request('CountyId');
+        var isTakeCar = request('isTakeCar');
+        var freedate = request('freedate');
+        var timesection = request('timesection');
+        function ViewModel() {
+            var self = this;           
+            self.List = ko.observableArray([]);
+            self.FreeTimeList = ko.observableArray([]);
+            self.ProvinceId = ko.observable(provinceId);
+            self.CityId = ko.observable(cityId);
+            self.CountyId = ko.observable(countyId);
+            self.IsTakeCar = ko.observable(isTakeCar);
+            self.Timesection = ko.observable(timesection);
+            self.Freedate = ko.observable(freedate);
+            self.toDataInfo = function (data) {
+                var obj = {};
+                for (var o in data) {
+                    obj[o] = ko.observable(data[o]);
+                }
+                return obj;
+            };
+            self.loadTeacherList = function (isAppend) {
+                var queryJson = {};
+                queryJson["provinceid"] = self.ProvinceId();
+                queryJson["cityid"] = self.CityId();
+                queryJson["countyid"] = self.CountyId();
+                queryJson["isTakeCar"] = self.IsTakeCar();
+                queryJson["timesection"] = self.Timesection();
+                queryJson["freedate"] = self.Freedate();
+                $.get("/Teacher/List2", { queryJson: JSON.stringify(queryJson) }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        var freetimeList = result.ResultData["FreeTimeList"];
+                        self.FreeTimeList(freetimeList);
+                        for (var i in data) {
+                            var item = data[i];
+                            item.WithDrivingPrice = item.WithDrivingPrice_SW + "(上午)," + item.WithDrivingPrice_XW + "(下午)," + item.WithDrivingPrice_WS + "(晚上)";
+                            self.List.push(item);
+                        }
+                    }
+                });
+            }
+            self.SetSubscribe = function (teacherid) {
+                var freetimeid = "";
+                var freetimelist = self.FreeTimeList();
+                for (var i = 0; i < freetimelist.length; i++) {
+                    var item = freetimelist[i];
+                    if (item.ObjectId == teacherid) {
+                        freetimeid = item.FreetimeId;
+                    }
+                }
+                var url = "/Wx/WithDrivingPay?teacherid=" + teacherid + "&freetimeid=" + freetimeid + "&freedate=" + freedate + "&timesection=" + (timesection) + "&istakecar=" + isTakeCar;//escape
+                window.location.href = encodeURI(encodeURI(url));
+            }
+
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.loadTeacherList();
+
+        })
+
+
+    </script>
+}
+<ul class="Dcc_dl" style="display:block;" data-bind="foreach:List">
+    <dd>
+        <a data-bind="click:function(){$root.SetSubscribe(TeacherId)}" class="Dcc_po_btn">预约</a>
+        <img data-bind="attr:{src:FaceImage}" class="Dcc_dd_img">
+        <div class="Dcc_ddst">
+            <div class="Dcc_ddst_h3" data-bind="text:Name+' '+(TakeCarType==null?'':'('+TakeCarType+')')"></div>
+            <div class="Dcc_ddst_mh"><span data-bind="text:SchoolName==null?'无归属驾校':SchoolName"></span><span>|</span><span data-bind="text:LevName==null?'未设置等级':LevName"></span></div>
+            <div class="Dcc_ddst_mh2" data-bind="text:'￥'+WithDrivingPrice"></div>
+        </div>
+    </dd>
+</ul>
+
+<div class="page__bd" style="margin-bottom:80px;">
+    <div class="weui-loadmore">     
+        <!--ko if:List().length==0-->
+        <a href="javascript:void(0);" style="color:#ccc">没有相关信息</a>
+        <!--/ko-->
+    </div>
+</div>

@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0BAC71E3-D1EC-47CA-A470-91398F43645B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QSDMS.Data.IService</RootNamespace>
+    <AssemblyName>QSDMS.Data.IService</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AuthorizeManage\IAuthorizeService.cs" />
+    <Compile Include="AuthorizeManage\IAuthorizeService.T.cs" />
+    <Compile Include="AuthorizeManage\IFilterIPService.cs" />
+    <Compile Include="AuthorizeManage\IFilterTimeService.cs" />
+    <Compile Include="AuthorizeManage\IModuleButtonService.cs" />
+    <Compile Include="AuthorizeManage\IModuleColumnService.cs" />
+    <Compile Include="AuthorizeManage\IModuleFormInstanceService.cs" />
+    <Compile Include="AuthorizeManage\IModuleFormService.cs" />
+    <Compile Include="AuthorizeManage\IModuleService.cs" />
+    <Compile Include="AuthorizeManage\IPermissionService.cs" />
+    <Compile Include="BaseManage\IDepartmentService.cs" />
+    <Compile Include="BaseManage\IJobService.cs" />
+    <Compile Include="BaseManage\IOrganizeService.cs" />
+    <Compile Include="BaseManage\IPostService.cs" />
+    <Compile Include="BaseManage\IRoleService.cs" />
+    <Compile Include="BaseManage\IUserAuthorizeService.cs" />
+    <Compile Include="BaseManage\IUserGroupService.cs" />
+    <Compile Include="BaseManage\IUserRoleService.cs" />
+    <Compile Include="BaseManage\IUserService.cs" />
+    <Compile Include="IAccountService.cs" />
+    <Compile Include="ITestService.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PublicInfoManage\IEmailCategoryService.cs" />
+    <Compile Include="PublicInfoManage\IEmailContentService.cs" />
+    <Compile Include="PublicInfoManage\IFileFolderService.cs" />
+    <Compile Include="PublicInfoManage\IFileInfoService.cs" />
+    <Compile Include="PublicInfoManage\INewsService.cs" />
+    <Compile Include="PublicInfoManage\INoticeService.cs" />
+    <Compile Include="PublicInfoManage\IScheduleService.cs" />
+    <Compile Include="SystemManage\IAreaService.cs" />
+    <Compile Include="SystemManage\ICodeRuleService.cs" />
+    <Compile Include="SystemManage\IDataBaseBackupService.cs" />
+    <Compile Include="SystemManage\IDatabaseLinkService.cs" />
+    <Compile Include="SystemManage\IDataBaseTableService.cs" />
+    <Compile Include="SystemManage\IDataItemDetailService.cs" />
+    <Compile Include="SystemManage\IDataItemService.cs" />
+    <Compile Include="SystemManage\ILogService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QSDMS.Cache.Factory\QSDMS.Cache.Factory.csproj">
+      <Project>{05e4a0f4-a478-406d-af6c-e59e2ed88418}</Project>
+      <Name>QSDMS.Cache.Factory</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\QSDMS.Cache\QSDMS.Cache.csproj">
+      <Project>{01dc088c-172b-4b3c-ac36-33ea88c0bbdc}</Project>
+      <Name>QSDMS.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\iFramework.Framework\iFramework.Framework.csproj">
+      <Project>{9c1b08cf-25a4-4190-95d5-d35ea5da455f}</Project>
+      <Name>iFramework.Framework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\QSDMS.Model\QSDMS.Model.csproj">
+      <Project>{525ec8f0-d6a8-4680-8dbf-94244de469f2}</Project>
+      <Name>QSDMS.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\QSDMS.Util\QSDMS.Util.csproj">
+      <Project>{2e7b524e-e766-480f-9126-b54c0c10a0a4}</Project>
+      <Name>QSDMS.Util</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

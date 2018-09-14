@@ -1,0 +1,141 @@
+﻿@{
+    ViewBag.Title = "投诉建议";
+}
+
+<script type="text/javascript">
+    function ViewModel() {
+        var self = this;
+        self.AdviseContent = ko.observable("");
+        self.ConnectTel = ko.observable("");
+        self.Send = function () {
+            if (!self.AdviseContent()) {
+                ShowTips("请填写内容");
+                return;
+            }
+            var tel = self.ConnectTel();
+            if (!tel) {
+                ShowTips("请填写联系方式");
+                return;
+            }
+            var isPhone = /^([0-9]{3,4}-)?[0-9]{7,8}$/;
+            var isMob = /^(((13[0-9]{1})|(15[0-9]{1})|(17[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+            if (isMob.test(tel) || isPhone.test(tel)) {
+
+            } else {
+                ShowTips("请输入正确的手机号码或座机号码");
+                return;
+            }
+
+            var postData = {};
+            var imageslist = [];
+            $("#imgs li").each(function () {
+                var $this = $(this);
+                var path = $this.attr("data-path");
+                imageslist.push({
+                    "PicName": path
+                });
+
+            })
+            postData["ConnectTel"] = self.ConnectTel();
+            postData["AdviseContent"] = self.AdviseContent();
+            postData["AttachmentPicList"] = imageslist;
+            $.post("/Complaint/Send", { json: JSON.stringify(postData) }, function (result) {
+                if (result.IsSuccess) {
+                    ShowTips(result.Message, "ok");
+                    setTimeout(function () {
+                        window.history.go(-1);
+                    }, 200);
+
+                } else {
+                    ShowTips(result.Message);
+                }
+            });
+        }
+    }
+    $(function () {
+        var model = new ViewModel();
+        ko.applyBindings(model);
+        //上传图标
+        $('#uploadFile').unbind("change").bind("change", function () {
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFile')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+            //上传应用图标
+            $.ajax({
+                url: "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]/Upload/UploadFile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data && data.IsSuccess) {
+                        var path = data.ResultData["files"];
+                        //_ImageList.push(path);
+                        //显示图片
+                        var html = "";
+                        var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                        html += '<li style=" background:#ccc;position:relative;" data-path="' + path + '">';
+                        html += '<img src="' + newpath + '"/>';
+                        html += '<i class="" style="position: absolute;right: -2px;;top: 0px;background:url(/images/close11.png);width:32px;height:32px;">&nbsp;&nbsp;&nbsp;&nbsp;</i>';
+                        html += '</li>';
+
+                        $("#imgs").append(html);
+                        //绑定删除事件
+                        $("#imgs li").each(function () {
+                            $(this).find("i").bind("click", function () {
+                                //删除图片
+                                $(this).parent().remove();
+                            })
+                        })
+                    }
+                    else {
+
+                    }
+                }
+            });
+        });
+    })
+</script>
+
+<style>
+    #imgs li {
+        float: left;
+        margin-right: 5px;
+    }
+
+    #tags li {
+        float: left;
+        margin-right: 5px;
+    }
+
+    #imgs li img {
+        width: 100px;
+        height: 100px;
+    }
+</style>
+<div class="McCt">投诉建议</div>
+
+<div class="McCt_div">
+    <div class="McCt_text"><textarea placeholder="您的意见就是我们前进的动力" data-bind="value:$root.AdviseContent"></textarea></div>
+    <div class="McCt_img">
+        <ul id="imgs"></ul>
+        <div class="McCt_input"><i class="iconfont icon-plus-with-border"></i><input type="file" class="McCt_file" id="uploadFile" name="uploadFile"></div>
+    </div>
+</div>
+
+<div class="McCt_row">
+    <input type="tel" class="McCt_tel" placeholder="请输入您的联系方式" data-bind="value:$root.ConnectTel">
+</div>
+
+<div class="Mcin_btn"><button type="button" class="Mcin_botton2" data-bind="click:function(){$root.Send()}">提交</button></div>
+
+<div class="McCt_Prompt">
+    <h6>温馨提示：</h6>
+    <div>1.您的建议提交后，工作人员将在24小时内为您核实，并尽快给与您电话回访，请注意接听电话。</div>
+    <div>2.您的所有信息本平台将会严密保密。</div>
+</div>
+

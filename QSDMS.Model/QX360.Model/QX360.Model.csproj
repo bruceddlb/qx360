@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5CB80361-B123-4494-AF2C-573CFBAB79F1}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QX360.Model</RootNamespace>
+    <AssemblyName>QX360.Model</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AdviseEntity.cs" />
+    <Compile Include="ApplyOrderEntity.cs" />
+    <Compile Include="ArticleEntity.cs" />
+    <Compile Include="AttachmentPicEntity.cs" />
+    <Compile Include="AuditCommitteeEntity.cs" />
+    <Compile Include="AuditFreeDateEntity.cs" />
+    <Compile Include="AuditFreeTimeEntity.cs" />
+    <Compile Include="AuditOrderEntity.cs" />
+    <Compile Include="AuditOrganizationEntity.cs" />
+    <Compile Include="AuditTimeTableEntity.cs" />
+    <Compile Include="BannerEntity.cs" />
+    <Compile Include="BlackListEntity.cs" />
+    <Compile Include="ClassEntity.cs" />
+    <Compile Include="CourseEntity.cs" />
+    <Compile Include="CourseItemEntity.cs" />
+    <Compile Include="ExamPlaceMasterEntity.cs" />
+    <Compile Include="Ext\AdviseEntity.cs" />
+    <Compile Include="Ext\ApplyOrderEntity.cs" />
+    <Compile Include="Ext\GroupAuditOrderEntity.cs" />
+    <Compile Include="Ext\AuditOrderEntity.cs" />
+    <Compile Include="Ext\AuditOrganizationEntity.cs" />
+    <Compile Include="BaseModel.cs" />
+    <Compile Include="Enum\Enums.cs" />
+    <Compile Include="ExamOrderEntity.cs" />
+    <Compile Include="Ext\CourseEntity.cs" />
+    <Compile Include="Ext\CourseItemEntity.cs" />
+    <Compile Include="Ext\ExamOrderEntity.cs" />
+    <Compile Include="Ext\FinaceEntity.cs" />
+    <Compile Include="Ext\AuditFreeDateEntity.cs" />
+    <Compile Include="Ext\NetSiginEntity.cs" />
+    <Compile Include="Ext\StudyOrderDetailEntity.cs" />
+    <Compile Include="Ext\TeacherCommitteeEntity.cs" />
+    <Compile Include="Ext\TrainingFreeDateEntity.cs" />
+    <Compile Include="Ext\StudyFreeDateEntity.cs" />
+    <Compile Include="Ext\FreeDateEntity.cs" />
+    <Compile Include="Ext\InsuranceCommpayEntity.cs" />
+    <Compile Include="Ext\InsuranceOrderEntity.cs" />
+    <Compile Include="Ext\NoticeEntity.cs" />
+    <Compile Include="Ext\SeeCarOrderEntity.cs" />
+    <Compile Include="Ext\ShopEntity.cs" />
+    <Compile Include="Ext\StudyOrderEntity.cs" />
+    <Compile Include="Ext\TakeAuditOrderEntity.cs" />
+    <Compile Include="Ext\TeacherEntity.cs" />
+    <Compile Include="Ext\TrainingCarEntity.cs" />
+    <Compile Include="Ext\TrainingOrderDetailEntity.cs" />
+    <Compile Include="Ext\TrainingOrderEntity.cs" />
+    <Compile Include="Ext\WithDrivingFreeDateEntity.cs" />
+    <Compile Include="Ext\WithDrivingOrderEntity.cs" />
+    <Compile Include="FinaceEntity.cs" />
+    <Compile Include="FreeDateEntity.cs" />
+    <Compile Include="FreeTimeEntity.cs" />
+    <Compile Include="Generated\ModelTemplate2.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ModelTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Include="GroupAuditOrderEntity.cs" />
+    <Compile Include="InsuranceCommpayEntity.cs" />
+    <Compile Include="InsuranceOrderEntity.cs" />
+    <Compile Include="Ext\MemberEntity.cs" />
+    <Compile Include="MemberEntity.cs" />
+    <Compile Include="MessageEntity.cs" />
+    <Compile Include="MessageSetUpEntity.cs" />
+    <Compile Include="MonthWorkDayEntity.cs" />
+    <Compile Include="NetSiginEntity.cs" />
+    <Compile Include="NoticeEntity.cs" />
+    <Compile Include="OwnerEntity.cs" />
+    <Compile Include="PointLogEntity.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Report\AuditCollectEntity.cs" />
+    <Compile Include="RuleEntity.cs" />
+    <Compile Include="Ext\RuleEntity.cs" />
+    <Compile Include="SchoolEntity.cs" />
+    <Compile Include="Ext\SchoolEntity.cs" />
+    <Compile Include="SeeCarOrderEntity.cs" />
+    <Compile Include="SettingsEntity.cs" />
+    <Compile Include="ShopCarEntity.cs" />
+    <Compile Include="Ext\ShopCarEntity.cs" />
+    <Compile Include="ShopEntity.cs" />
+    <Compile Include="SmsLogEntity.cs" />
+    <Compile Include="StudyCommitteeEntity.cs" />
+    <Compile Include="StudyCustomFreeTimeEntity.cs" />
+    <Compile Include="StudyFreeDateEntity.cs" />
+    <Compile Include="StudyFreeTimeEntity.cs" />
+    <Compile Include="StudyOrderDetailEntity.cs" />
+    <Compile Include="StudyOrderEntity.cs" />
+    <Compile Include="SubjectEntity.cs" />
+    <Compile Include="SysConst.cs" />
+    <Compile Include="TagEntity.cs" />
+    <Compile Include="TakeAuditOrderEntity.cs" />
+    <Compile Include="TeacherCommitteeEntity.cs" />
+    <Compile Include="TeacherEntity.cs" />
+    <Compile Include="TradelogEntity.cs" />
+    <Compile Include="TrainingCarEntity.cs" />
+    <Compile Include="TrainingCustomFreeTimeEntity.cs" />
+    <Compile Include="TrainingFreeDateEntity.cs" />
+    <Compile Include="TrainingFreeTimeEntity.cs" />
+    <Compile Include="TrainingOrderDetailEntity.cs" />
+    <Compile Include="TrainingOrderEntity.cs" />
+    <Compile Include="TrainingTimeTableEntity.cs" />
+    <Compile Include="WithDringCommitteeEntity.cs" />
+    <Compile Include="WithDrivingFreeDateEntity.cs" />
+    <Compile Include="WithDrivingFreeTimeEntity.cs" />
+    <Compile Include="WithDrivingOrderEntity.cs" />
+    <Compile Include="WorkTimeTableEntity.cs" />
+    <Compile Include="WxTemplateEntity.cs" />
+    <Compile Include="WxUserInfoEntity.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Generated\DBHelper.ttinclude" />
+    <None Include="Generated\ModelAuto.ttinclude" />
+    <None Include="Generated\ModelTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ModelTemplate2.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Generated\OutputCode\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

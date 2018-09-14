@@ -1,0 +1,602 @@
+﻿@{
+    ViewBag.Title = "保险机构机构详情";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        function ViewModel() {
+            var self = this;
+            self.IsOwner = ko.observable("0");
+            self.CommitteeList = ko.observableArray([]);
+            self.Insurance = ko.observable({
+                Name: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                ConectTel: ko.observable(""),
+                AttachmentPicList: ko.observableArray([]),
+                Content: ko.observable(""),
+                Price: ko.observable(""),
+                VideoContent: ko.observable("")
+            });
+            self.InsuranceOrder = ko.observable({
+                MemberId: ko.observable(""),
+                MemberName: ko.observable(""),
+                CarNum: ko.observable(""),
+                Mobile: ko.observable(""),
+                ServiceDate: ko.observable(""),
+                ServiceTime: ko.observable(""),
+                InsuranceName: ko.observable(""),
+                InsuranceId: ko.observable(""),
+                CarFrameNum: ko.observable(""),
+
+            });
+
+            self.Owner = ko.observable({
+                OwnerId: ko.observable(""),
+                CarNumber: ko.observable(""),
+                CarColor: ko.observable(""),
+                CarNumber: ko.observable(""),
+                MemberId: ko.observable(""),
+                MemberName: ko.observable(""),
+                MemberMobile: ko.observable(""),
+                CarFrameNum: ko.observable(""),
+                RegisterTime: ko.observable(""),
+                UseType: ko.observable(""),
+                UseTypeName: ko.observable(""),
+                CarType: ko.observable(""),
+                CarTypeName: ko.observable(""),
+                PeopleCount: ko.observable(""),
+            });
+            self.BindInsurance = function () {
+                $.get("/VsInsurance/GetInsuranceModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Insurance().Name(data.Name);
+                            self.Insurance().AddressInfo(data.AddressInfo);
+                            self.Insurance().ConectTel(data.ConectTel);
+                            self.Insurance().AttachmentPicList(data.AttachmentPic);
+                            self.Insurance().Content(decodeHtml(data.Content));
+                            self.Insurance().VideoContent(decodeHtml(data.VideoContent));
+                            //
+                            self.InsuranceOrder().InsuranceName(data.Name);
+                            self.InsuranceOrder().InsuranceId(data.InsuranceCommpayId);
+
+                        }
+                        var mySwiper = new Swiper('.swiper-container', {
+                            pagination: '.pagination',
+                            slidesPerView: 1,
+                            loop: true,
+                            autoplay: 3000,
+                            autoplayDisableOnInteraction: false,
+                            speed: 500
+                        });
+                    }
+                });
+            }
+            self.CallTel = function () {
+                window.location.href = 'tel:' + self.Insurance().ConectTel();
+            }
+
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.InsuranceOrder().MemberName(data.MemberName);
+                            self.InsuranceOrder().Mobile(data.Mobile);
+                            self.InsuranceOrder().MemberId(data.MemberId);
+
+                            if (data.Owner) {
+                                self.IsOwner("1");
+                                self.Owner().CarNumber(data.Owner.CarNumber);
+                                self.Owner().MemberId(data.Owner.MemberId);
+                                self.Owner().MemberName(data.Owner.MemberName);
+                                self.Owner().CarColor(data.Owner.CarColor);
+                                self.Owner().CarFrameNum(data.Owner.CarFrameNum);
+                                self.Owner().MemberMobile(data.Owner.MemberMobile);
+
+                                self.Owner().UseType(data.Owner.UseType);
+                                self.Owner().UseTypeName(data.Owner.UseTypeName);
+                                self.Owner().CarType(data.Owner.CarType);
+                                self.Owner().CarTypeName(data.Owner.CarTypeName);
+                                self.Owner().PeopleCount(data.Owner.PeopleCount);
+                                if (data.Owner.RegisterTime) {
+                                    self.Owner().RegisterTime(formatDate(data.Owner.RegisterTime, "yyyy-MM"));
+                                }
+
+                                self.InsuranceOrder().Mobile(self.Owner().MemberMobile());
+                                self.InsuranceOrder().MemberName(self.Owner().MemberName());
+                                self.InsuranceOrder().CarNum(self.Owner().CarNumber());
+                                self.InsuranceOrder().CarFrameNum(self.Owner().CarFrameNum());
+                            } else {
+                                self.IsOwner("0");
+                                self.Owner().MemberId(data.MemberId);
+                                self.Owner().MemberName(data.MemberName);
+                                self.Owner().MemberMobile(data.Mobile);
+                            }
+                        }
+                    }
+                });
+            }
+
+            self.CreateOrder = function () {
+                if (!self.InsuranceOrder().ServiceDate()) {
+                    ShowTips("请选择预约时间!");
+                    return;
+                }
+                var now = new Date();
+                var date = formatDate(now, 'yyyy-MM-dd');
+                var servicedate = formatDate(self.InsuranceOrder().ServiceDate(), 'yyyy-MM-dd');
+                if (date > servicedate) {
+                    ShowTips("此日期已过期，不能选择");
+                    return;
+                }
+                var time = self.InsuranceOrder().ServiceTime();
+                if (time) {
+                    if (time == "上午") {
+                        time = "@(QX360.Business.SettingsBLL.Instance.GetValue("swsj"))";
+                    }
+                    if (time == "下午") {
+                        time = "@(QX360.Business.SettingsBLL.Instance.GetValue("xwsj"))";
+                    }
+                    if (formatDate(now, 'yyyy-MM-dd hh:mm:ss') > formatDate(servicedate + " " + time, 'yyyy-MM-dd hh:mm:ss')) {
+                        ShowTips("此时间已过期，不能选择");
+                        return;
+                    }
+                }
+
+                $.post("/VsInsurance/CreateOrder", { "data": ko.toJSON(self.InsuranceOrder()) }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, "ok");
+                        setTimeout(function () {
+                            location.href = "/VsInsurance/Return";
+                        }, 200)
+
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+            self.SetOwner = function () {
+                if (!self.Owner().UseType()) {
+                    ShowTips("请选择车辆使用性质!");
+                    return;
+                }
+                if (!self.Owner().CarType()) {
+                    ShowTips("请选择车辆类型!");
+                    return;
+                }
+                if (!self.Owner().CarFrameNum()) {
+                    ShowTips("请填写车架号后四位!");
+                    return;
+                }
+                if (!self.Owner().CarNumber()) {
+                    ShowTips("请填写车牌号!");
+                    return;
+                }
+                if (!self.Owner().MemberMobile()) {
+                    ShowTips("请填写联系方式!");
+                    return;
+                }
+                if (!self.Owner().RegisterTime()) {
+                    ShowTips("请选择车辆注册日期!");
+                    return;
+                }
+                $.post("/Owner/CreateOwner", { "data": ko.toJSON(self.Owner()) }, function (result) {
+                    if (result.IsSuccess) {
+                        self.IsOwner("1");
+                        $(".Vslpopup_close").trigger("click");
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+            self.ShowOwner = function () {
+                $('.Vsl_back').show();
+                $('.Vslpopup').show();
+
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindInsurance();
+            model.BindUser();
+            var Owner = function () {
+                //选择时间
+                var selectDateDom = $('#RgTime');
+                var showDateDom = $('#RgTime');
+                // 初始化时间
+                var now = new Date();
+                var nowYear = now.getFullYear();
+                var nowMonth = now.getMonth() + 1;
+                var nowDate = now.getDate();
+                showDateDom.attr('data-year', nowYear);
+                showDateDom.attr('data-month', nowMonth);
+                showDateDom.attr('data-date', nowDate);
+                // 数据初始化
+                function formatYear(nowYear) {
+                    var arr = [];
+                    for (var i = nowYear - 20; i <= nowYear + 20; i++) {
+                        arr.push({
+                            id: i + '',
+                            value: i + '年'
+                        });
+                    }
+                    return arr;
+                }
+                function formatMonth() {
+                    var arr = [];
+                    for (var i = 1; i <= 12; i++) {
+                        arr.push({
+                            id: i + '',
+                            value: i + '月'
+                        });
+                    }
+                    return arr;
+                }
+                function formatDate(count) {
+                    var arr = [];
+                    for (var i = 1; i <= count; i++) {
+                        arr.push({
+                            id: i + '',
+                            value: i + '日'
+                        });
+                    }
+                    return arr;
+                }
+                var yearData = function (callback) {
+                    callback(formatYear(nowYear))
+                }
+                var monthData = function (year, callback) {
+                    callback(formatMonth());
+                };
+                var dateData = function (year, month, callback) {
+                    if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                        callback(formatDate(31));
+                    }
+                    else if (/^(4|6|9|11)$/.test(month)) {
+                        callback(formatDate(30));
+                    }
+                    else if (/^2$/.test(month)) {
+                        if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                            callback(formatDate(29));
+                        }
+                        else {
+                            callback(formatDate(28));
+                        }
+                    }
+                    else {
+                        throw new Error('month is illegal');
+                    }
+                };
+                selectDateDom.bind('click', function () {
+                    var oneLevelId = showDateDom.attr('data-year');
+                    var twoLevelId = showDateDom.attr('data-month');
+                    var threeLevelId = showDateDom.attr('data-date');
+                    var iosSelect = new IosSelect(2,
+                        [yearData, monthData, dateData],
+                        {
+                            title: '选择车辆初次登记日期',
+                            itemHeight: 35,
+                            itemShowCount: 9,
+                            oneLevelId: oneLevelId,
+                            twoLevelId: twoLevelId,
+                            threeLevelId: threeLevelId,
+                            callback: function (selectOneObj, selectTwoObj, selectThreeObj, selectFourObj, selectFiveObj) {
+                                showDateDom.attr('data-year', selectOneObj.id);
+                                showDateDom.attr('data-month', selectTwoObj.id);
+                                //showDateDom.attr('data-date', selectThreeObj.id);
+                                selectDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value);
+                                if (selectOneObj.value && selectTwoObj.value) {
+                                    var date = selectOneObj.value.replace("年", '') + "-" + selectTwoObj.value.replace("月", '');
+                                    model.Owner().RegisterTime(date);
+                                }
+
+                            }
+                        });
+                });
+
+
+                //使用性质
+                var useType_show = $('#usetype');
+                var usetypedata = GetUseTypeList();
+                useType_show.bind('click', function () {
+                    var bankSelect = new IosSelect(1,
+                        [usetypedata],
+                        {
+                            container: '.container',
+                            title: '选择车辆使用性质',
+                            itemHeight: 50,
+                            itemShowCount: 3,
+                            oneLevelId: model.Owner().UseType(),
+                            callback: function (selectOneObj) {
+                                useType_show.val(selectOneObj.value);
+                                model.Owner().UseType(selectOneObj.id);
+                                model.Owner().UseTypeName(selectOneObj.value);
+                            }
+                        });
+                });
+                var carType_show = $('#cartype');
+                var cartypedata = GetCarTypeList();
+                carType_show.bind('click', function () {
+
+                    var bankSelect = new IosSelect(1,
+                        [cartypedata],
+                        {
+                            container: '.container',
+                            title: '选择车辆类型',
+                            itemHeight: 50,
+                            itemShowCount: 3,
+                            oneLevelId: model.Owner().CarType(),
+                            callback: function (selectOneObj) {
+                                carType_show.val(selectOneObj.value);
+                                model.Owner().CarType(selectOneObj.id);
+                                model.Owner().CarTypeName(selectOneObj.value);
+                            }
+                        });
+                });
+            }
+            //认证车主
+            Owner();
+            $('.Vslpopup_close').on('click', function () {
+                $('.Vsl_back').hide();
+                $('.Vslpopup').hide();
+            })
+            //添加弹窗
+            $('#DtBtn').on('click', function () {
+                if (!model.Owner().CarNumber()) {
+                    model.ShowOwner();
+                } else {
+                    $('.VsLde_back').show();
+                    $('.VsLdepopup').show();
+                }
+
+            })
+            $('.VsLdepopup_close').on('click', function () {
+                $('.VsLde_back').hide();
+                $('.VsLdepopup').hide();
+            })
+
+            //选择时间
+            var selectDateDom = $("#AsTime");
+            function getDate() {
+                var arr = [];
+                $.ajax({
+                    type: "GET",
+                    url: "/MonthWorkDay/GetWeekDateJson",
+                    async: false,
+                    data: { objectid: id },
+                    success: function (result) {
+                        if (result.IsSuccess) {
+                            var data = result.ResultData["List"];
+                            for (var i in data) {
+                                var item = data[i];
+                                arr.push({
+                                    id: i + '',
+                                    value: formatDate(item.WorkDay, "yyyy-MM-dd") + "(" + item.WeekName + ")",
+                                    text: formatDate(item.WorkDay, "yyyy-MM-dd"),
+                                    type: item.DateType
+                                });
+
+                            }
+                        } else {
+                            ShowTips(result.Message);
+                            return;
+                        }
+                    }
+                });
+                return arr;
+            }
+            if (getDate().length == 0) {
+                return;
+            }
+            var yearData = function (callback) {
+                callback(getDate());
+            }
+            function getTimeSpace() {
+                var arr = [];
+                arr.push({ id: "0", value: "上午" });
+                arr.push({ id: "1", value: "下午" });
+                return arr;
+            }
+            var timeData = function (day, callback) {
+                callback(getTimeSpace());
+            }
+
+            selectDateDom.bind('click', function () {
+                var oneLevelId = selectDateDom.attr('data-year');
+                var twoLevelId = selectDateDom.attr('data-month');
+                var iosSelect = new IosSelect(2,
+                    [yearData, timeData],
+                    {
+                        title: '选择预约时间',
+                        itemHeight: 35,
+                        itemShowCount: 9,
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        callback: function (selectOneObj, selectTwoObj) {
+                            if (selectOneObj.type == "0") {
+                                model.InsuranceOrder().ServiceDate("");
+                                model.InsuranceOrder().ServiceTime("");
+                                selectDateDom.val("");
+                                ShowTips("此时间为非工作日，不能选择");
+                                return;
+                            }
+                            var servicedate = formatDate(selectOneObj.text, 'yyyy-MM-dd');
+                            var time = selectTwoObj.value;
+                            var now = new Date();
+                            var nowdate = formatDate(now, 'yyyy-MM-dd');
+                            if (nowdate > servicedate) {
+                                ShowTips("此日期已过期，不能选择");
+                                return;
+                            }
+
+                            if (time) {
+                                if (time == "上午") {
+                                    time = "@(QX360.Business.SettingsBLL.Instance.GetValue("swsj"))";
+                                }
+                                if (time == "下午") {
+                                    time = "@(QX360.Business.SettingsBLL.Instance.GetValue("xwsj"))";
+                                }
+                                if (formatDate(now, 'yyyy-MM-dd hh:mm:ss') > formatDate(servicedate + " " + time, 'yyyy-MM-dd hh:mm:ss')) {
+
+                                    ShowTips("此时间已过期，不能选择");
+                                    return;
+                                }
+                            }
+                            selectDateDom.attr('data-year', selectOneObj.id);
+                            selectDateDom.attr('data-month', selectTwoObj.id);
+                            selectDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value);
+                            if (selectOneObj.value) {
+                                var date = selectOneObj.text;
+                                model.InsuranceOrder().ServiceDate(date);
+                            }
+                            if (selectTwoObj.value) {
+                                var time = selectTwoObj.value;
+                                model.InsuranceOrder().ServiceTime(time);
+                            }
+                        }
+                    });
+            });
+
+        });
+
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+
+        function GetUseTypeList() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetUseType",
+                //async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+        function GetCarTypeList() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetCarType",
+                //async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+    </script>
+}
+@section css{
+    <style type="text/css">
+    </style>
+}
+
+<div class="Vsl_back"></div>
+<div class="Vslpopup">
+    <div class="Vslpopup_h2">请先完善您的车辆信息</div>
+    <div class="Vslpopup_txt">
+        <input type="text" placeholder="请选择车辆使用性质" id="usetype" class="Vsl_text" data-bind="value: $root.Owner().UseTypeName" readonly />
+        <input type="text" placeholder="请选择车辆类型" id="cartype" class="Vsl_text" data-bind="value: $root.Owner().CarTypeName" readonly />
+        <input type="text" placeholder="请填写车架号后四位" class="Vsl_text" data-bind="value: $root.Owner().CarFrameNum" />
+        <input type="text" placeholder="请填写核载人数" class="Vsl_text" data-bind="value: $root.Owner().PeopleCount" />
+        <input type="text" placeholder="请填写您的车牌号" class="Vsl_text" data-bind="value: $root.Owner().CarNumber" />
+        <input type="text" placeholder="请填写联系方式" class="Vsl_text" data-bind="value: $root.Owner().MemberMobile" />
+        <input type="text" placeholder="请选择车辆注册日期" id="RgTime" class="Vsl_text" data-bind="value: $root.Owner().RegisterTime" readonly />
+        <div class="Vsl_sub"><button type="button" class="Vsl_button" data-bind="click:function(){SetOwner()}">提交</button></div>
+    </div>
+    <div class="Vslpopup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+<div class="VsLde_back"></div>
+<div class="VsLdepopup" id="personaudit">
+    <div class="VsLdepopup_h2">请选择预约保险时间</div>
+    <div class="VsLdepopup_txt">
+        <div class="VsLdepopup_li">预约人姓名：<span data-bind="text:$root.Owner().MemberName"></span></div>
+        <div class="VsLdepopup_li">车牌号：<span data-bind="text:$root.Owner().CarNumber"></span></div>
+        <div class="VsLdepopup_li">注册日期：<span data-bind="text:$root.Owner().RegisterTime"></span></div>
+        <input type="text" placeholder="请选择您的预约时间" class="Mee_text" id="AsTime" readonly>
+        <div class="VsLde_sub"><button type="button" class="Mee_button" data-bind="click:function(){$root.CreateOrder();}">确定预约</button></div>
+    </div>
+    <div class="VsLdepopup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+
+<div class="slide" style="height:4rem;">
+    <div class="swiper-container" style="height:4rem;">
+        <div class="swiper-wrapper" data-bind="foreach:$root.Insurance().AttachmentPicList()">
+            <div class="swiper-slide">
+                <img data-bind="attr:{src:PicName}" alt="pic" class="s_img" />
+            </div>
+        </div>
+        <div class="pagination s_buts s_right"></div>
+    </div>
+</div>
+
+<div class="DtSe_top">
+    <div class="DtSe_head">
+        <div class="DtSe_h1" data-bind="text:$root.Insurance().Name()"></div>
+    </div>
+    <div class="DtSe_add"><i class="iconfont icon-dingwei"></i><span data-bind="text:$root.Insurance().AddressInfo()"></span><i class="iconfont icon-jiantou Dtse_icon"></i></div>
+    <div class="DtSe_tel"><i class="iconfont icon-dianhua"></i><span data-bind="text:$root.Insurance().ConectTel()"></span><i style="float:right;margin-right:10px;margin-top:4px;" data-bind="click:function(){$root.CallTel();}">免费咨询</i><i class="iconfont icon-jiantou Dtse_icon"></i></div>
+</div>
+
+<div class="DtSe_con VsLSe_con">
+    <h3 class="DtSe_h3"><span></span>机构简介</h3>
+    <div class="" data-bind="html:$root.Insurance().VideoContent()">
+    </div>
+    <div class="DtSe_txt" data-bind="html:$root.Insurance().Content()">
+    </div>
+</div>
+
+
+<div class="VsLde_footer"><button type="button" class="Dtle_btn2" id="DtBtn">预约保险</button></div>
+
+
+

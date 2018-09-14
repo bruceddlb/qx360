@@ -1,0 +1,192 @@
+﻿@{
+    ViewBag.Title = "教练工作平台";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = "@ViewBag.Id";
+        function ViewModel() {
+            var self = this;
+            self.IsWithDriving = ko.observable("");
+            self.Teacher = ko.observable({
+                Name: ko.observable(""),
+                FaceImage: ko.observable(""),
+                SchoolName: ko.observable(),
+                Mobile: ko.observable(""),
+                TeacherId: ko.observable(""),
+            });
+            self.WorkSpace = ko.observable({
+                StudentCount: ko.observable("0"),
+                StudyOrderCount: ko.observable("0"),
+                WithDrivingCount: ko.observable("0"),
+                TrainingCount: ko.observable("0"),
+                List: ko.observable([])
+            });
+            self.BindTeacher = function () {
+                $.get("/Teacher/GetTeacherModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Teacher().FaceImage(data.FaceImage);
+                            self.Teacher().Name(data.Name);
+                            self.Teacher().SchoolName(data.SchoolName);
+                            self.Teacher().Mobile(data.Mobile);
+                            self.Teacher().TeacherId(data.TeacherId);
+                            self.IsWithDriving(data.IsWithDriving);
+                        }
+                    }
+                })
+            }
+            self.BindWorkSpace = function () {
+                $.get("/MaCenter/MyWork", null, function (result) {
+                    if (result.IsSuccess) {
+                        self.WorkSpace().StudentCount(result.ResultData["StudentCount"]);
+                        self.WorkSpace().StudyOrderCount(result.ResultData["StudyOrderCount"]);
+                        self.WorkSpace().WithDrivingCount(result.ResultData["WithDrivingCount"]);
+                        self.WorkSpace().TrainingCount(result.ResultData["TrainingCount"]);
+                        self.WorkSpace().List(result.ResultData["List"]);
+                    }
+                })
+            }
+            self.Set = function () {
+                //$("#IsBandCar").is(":checked") == true ? "1" : "0"
+                var status = ($("input[type='checkbox']").is(":checked") == true ? "1" : "0");
+
+                $.post("/Teacher/SetWithDrivingStatus", { status: status, id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        self.IsWithDriving(status);
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindTeacher();
+            model.BindWorkSpace();
+        })
+
+    </script>
+}
+<div class="Mac_top">
+    <img data-bind="attr:{src:$root.Teacher().FaceImage()==null?'/images/face.png':$root.Teacher().FaceImage}" class="Mac_top_left">
+    <div class="Mac_top_right">
+        <div class="Mac_top_name" data-bind="text:$root.Teacher().Name"></div>
+        <div class="Mac_top_tel"><em data-bind="text:$root.Teacher().SchoolName()==null?'无归属驾校':$root.Teacher().SchoolName()"></em>&nbsp; |&nbsp; <em data-bind="text:$root.Teacher().Mobile"></em></div>
+    </div>
+    <div class="" style="position: absolute;text-align: center;font-size: 0.2rem;box-sizing: border-box;padding-top: 0.1rem;
+    right: 0;
+    top: 0.55rem;
+    width: 1.4rem;
+    color: #999999;
+    border-radius: 0.3rem 0 0 0.3rem;
+    background: #fff;">
+        <p>
+            <!--ko if:$root.IsWithDriving()==1-->
+            <input class="mui-switch mui-switch-animbg" type="checkbox" data-bind="click:function(){$root.Set()}" checked>
+            <!--/ko-->
+            <!--ko if:$root.IsWithDriving()!=1-->
+            <input class="mui-switch mui-switch-animbg" type="checkbox" data-bind="click:function(){$root.Set()}">
+            <!--/ko-->
+        </p>
+        <p>陪驾开关</p>
+    </div>
+
+</div>
+
+<div class="Mac_tab">
+    <a href="/MaCenter/Student">
+        <div class="Mact_left">
+            <span data-bind="text:$root.WorkSpace().StudentCount"></span>我的学员
+        </div>
+    </a>
+    <i class="iconfont icon-sandiancaidan Mact_center"></i>
+    <a href="/MaCenter/LearnCar">
+        <div class="Mact_right">
+            <span data-bind="text:$root.WorkSpace().StudyOrderCount"></span>学车预约
+        </div>
+    </a>
+    <i class="iconfont icon-sandiancaidan Mact_center"></i>
+    <a href="/MaCenter/WithDriving">
+        <div class="Mact_right">
+            <span data-bind="text:$root.WorkSpace().WithDrivingCount"></span>陪驾预约
+        </div>
+    </a>
+    <i class="iconfont icon-sandiancaidan Mact_center"></i>
+    <a href="/MaCenter/Training">
+        <div class="Mact_right">
+            <span data-bind="text:$root.WorkSpace().TrainingCount"></span>实训预约
+        </div>
+    </a>
+
+</div>
+
+<div class="Mac_tab">
+    <a href="/Training/nav?type=2">
+        <div class="Mact_left">
+            实训
+            <span style="color: #72bf34; font-size: 0.24rem;">预约</span>
+        </div>
+    </a>
+    <i class="iconfont icon-sandiancaidan Mact_center"></i>
+    <a data-bind="attr:{href:'/MaCenter/SetStudyTime?id='+$root.Teacher().TeacherId()}">
+        <div class="Mact_right">
+            学车时间
+            <span style="color: #72bf34; font-size: 0.24rem;">设置</span>
+        </div>
+    </a>
+    <i class="iconfont icon-sandiancaidan Mact_center"></i>
+    <a data-bind="attr:{href:'/MaCenter/WithDrivingSetTime?id='+$root.Teacher().TeacherId()}">
+        <div class="Mact_right">
+            陪驾
+            <span style="color: #72bf34; font-size: 0.24rem;">设置</span>
+        </div>
+    </a>
+
+</div>
+
+
+<div class="Mac_hr">今日工作</div>
+
+<ul class="Mac_con" data-bind="foreach:$root.WorkSpace().List">
+    <li>
+        <i class="iconfont icon-jiantou2 Mac_icon"></i>
+
+        <div class="Mac_row1">
+            <div class="Mac_time"><span data-bind="attr:{class:Type==1?'Mac_span':'Mac_span_pj'},text:Title" class=""></span>预约单号：<em data-bind="text:OrderNo"></em></div>
+        </div>
+        <div class="Mac_div">
+            <div class="Mac_title">
+                <font>预约日期 :</font><em data-bind="text:formatDate(ServiceDate,'yyyy-MM-dd')+' '+ServiceTime"></em>
+            </div>
+            <div class="Mac_title">
+                <font>预  约 人 :</font><em data-bind="text:MemberName"></em> &nbsp;|&nbsp;  <em data-bind="text:MemberMobile"></em>
+            </div>
+            <div class="Mac_title">
+                <font>预约状态 :</font><span class="orcon_ok" data-bind="text:StatusName"></span>
+            </div>
+        </div>
+    </li>
+</ul>
+
+<ul class="McMy_ul">
+    <li class="McMy_list">
+        <a href="/MaCenter/Information">
+            <span class="McMy_list_left"><i class="iconfont icon-zhanghao"></i>个人信息</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+    <li class="McMy_list">
+        <a href="/MaCenter/Password">
+            <span class="McMy_list_left"><i class="iconfont icon-mima"></i>修改密码</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+    <li class="McMy_list">
+        <a href="/MaCenter/Login?sig=out">
+            <span class="McMy_list_left"><i class="iconfont icon-emoji"></i>退出登陆</span>
+            <font class="McMy_list_right"><i class="iconfont icon-jiantou"></i></font>
+        </a>
+    </li>
+</ul>

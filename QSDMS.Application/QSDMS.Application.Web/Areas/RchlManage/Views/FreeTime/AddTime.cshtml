@@ -1,0 +1,78 @@
+﻿@{
+    ViewBag.Title = "选择时间段";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var id = request('id');
+    $(function () {
+        InitialPage();
+
+    });
+
+
+    //初始化数据
+    function InitialPage() {
+        $("#ddlstart").ComboBox({
+            url: "/SystemManage/DataItemDetail/GetDataItemListJson",
+            param: { EnCode: "sjd" },
+            id: "ItemDetailId",
+            text: "ItemName",
+            description: "==请选择开始时间==",
+            height: "200px"
+        });
+        $("#ddlend").ComboBox({
+            url: "/SystemManage/DataItemDetail/GetDataItemListJson",
+            param: { EnCode: "sjd" },
+            id: "ItemDetailId",
+            text: "ItemName",
+            description: "==请选择结束时间==",
+            height: "200px"
+        });
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var pwind = $('#FreeTime', parent.document);
+        var $window = pwind[0].contentWindow;
+        var start = $("#ddlstart").attr('data-text');
+        var end = $("#ddlend").attr('data-text');
+        if (start == end)
+        {
+            dialogMsg("开始时间和结束时间不能一致", 0);
+            return;
+        }
+        $window.CallBack(id, start, end,1);
+        dialogClose();
+    }
+
+
+
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">开始时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlstart" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">结束时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlend" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+

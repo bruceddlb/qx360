@@ -1,0 +1,72 @@
+﻿@{
+    ViewBag.Title = "选择时间段";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+
+    $(function () {
+        InitialPage();
+
+    });
+
+
+    //初始化数据
+    function InitialPage() {
+        $("#ddlstart").ComboBox({
+            url: "/DataItemEnums/GetTimeSpaceType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择时段==",
+            height: "200px"
+        });
+        $("#ddltimetype").ComboBox({
+            url: "/DataItemEnums/GetTimeType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择时段类型==",
+            height: "200px"
+        });
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var pwind = $('#SetAuditWorkTime', parent.document);
+        var $window = pwind[0].contentWindow;
+        var start = $("#ddlstart").attr('data-text');
+        var type = $("#ddltimetype").attr('data-value');
+
+        $window.CallBack("", start, type);
+        dialogClose();
+    }
+
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">选择工作时段<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlstart" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">时段类型<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddltimetype" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+

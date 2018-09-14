@@ -1,0 +1,392 @@
+﻿@{
+    ViewBag.Title = "代审机构详情";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        function ViewModel() {
+            var self = this;
+
+            self.CommitteeList = ko.observableArray([]);
+            self.Audit = ko.observable({
+                Name: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                ConectTel: ko.observable(""),
+                AttachmentPicList: ko.observableArray([]),
+                Content: ko.observable(""),
+                Price: ko.observable(""),
+                VideoContent: ko.observable(""),
+                PriceContent: ko.observable(""),
+                Lng: ko.observable(""),
+                Lat: ko.observable(""),
+                ConectName: ko.observable(""),
+            });
+            self.BindAudit = function () {
+                $.get("/TakeAudit/GetAuditModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Audit().Name(data.Name);
+                            self.Audit().AddressInfo(data.AddressInfo);
+                            self.Audit().ConectTel(data.ConectTel);
+                            self.Audit().AttachmentPicList(data.AttachmentPic);
+                            self.Audit().Content(decodeHtml(data.Content));
+                            self.Audit().Price(data.MakeMoney);
+                            if (data.VideoContent) {
+                                self.Audit().VideoContent("@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"])" + data.VideoContent);
+                            }
+                            self.Audit().PriceContent(decodeHtml(data.PriceContent));
+                            self.Audit().Lng(data.Lng);
+                            self.Audit().Lat(data.Lat);
+                            self.Audit().ConectName(data.ConectName);
+                          
+                        }
+                        var mySwiper = new Swiper('.swiper-container', {
+                            pagination: '.pagination',
+                            slidesPerView: 1,
+                            loop: true,
+                            autoplay: 3000,
+                            autoplayDisableOnInteraction: false,
+                            speed: 500
+                        });
+                    }
+                });
+            }
+            self.CallTel = function () {
+                window.location.href = 'tel:' + self.Audit().ConectTel();
+            }
+            self.mapDetail = function (a, b, c, d, e, f) {
+                var aa = "";
+                aa += a + "$" + b + "$" + c + "$" + d + "$" + e + "$" + f;
+                var aa = Base64encode(aa);
+                window.location.href = "/map/index?data=" + aa;
+            }
+            self.BindCommittee = function () {
+                $.get("/AuditCommittee/List", { organizationid: id }, function (result) {
+                    if (result.IsSuccess) {
+                        self.CommitteeList.removeAll();
+                        var list = result.ResultData["List"];
+                        for (var i = 0; i < list.length; i++) {
+                            var item = list[i];
+                            var comlev = [];
+                            if (item.CommitLev) {
+                                for (var j = 0; j < item.CommitLev; j++) {
+                                    comlev.push(j);
+                                }
+                            }
+                            item.CommitteeLev = comlev;
+                            self.CommitteeList.push(item);
+                        }
+
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindAudit();
+
+            model.BindCommittee();
+            var Owner = function () {
+                //选择时间
+                var selectDateDom = $('#RgTime');
+                var showDateDom = $('#RgTime');
+                // 初始化时间
+                var now = new Date();
+                var nowYear = now.getFullYear();
+                var nowMonth = now.getMonth() + 1;
+                var nowDate = now.getDate();
+                showDateDom.attr('data-year', nowYear);
+                showDateDom.attr('data-month', nowMonth);
+                showDateDom.attr('data-date', nowDate);
+                // 数据初始化
+                function formatYear(nowYear) {
+                    var arr = [];
+                    for (var i = nowYear - 20; i <= nowYear + 20; i++) {
+                        arr.push({
+                            id: i + '',
+                            value: i + '年'
+                        });
+                    }
+                    return arr;
+                }
+                function formatMonth() {
+                    var arr = [];
+                    for (var i = 1; i <= 12; i++) {
+                        arr.push({
+                            id: i + '',
+                            value: i + '月'
+                        });
+                    }
+                    return arr;
+                }
+                function formatDate(count) {
+                    var arr = [];
+                    for (var i = 1; i <= count; i++) {
+                        arr.push({
+                            id: i + '',
+                            value: i + '日'
+                        });
+                    }
+                    return arr;
+                }
+                var yearData = function (callback) {
+                    callback(formatYear(nowYear))
+                }
+                var monthData = function (year, callback) {
+                    callback(formatMonth());
+                };
+                var dateData = function (year, month, callback) {
+                    if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                        callback(formatDate(31));
+                    }
+                    else if (/^(4|6|9|11)$/.test(month)) {
+                        callback(formatDate(30));
+                    }
+                    else if (/^2$/.test(month)) {
+                        if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                            callback(formatDate(29));
+                        }
+                        else {
+                            callback(formatDate(28));
+                        }
+                    }
+                    else {
+                        throw new Error('month is illegal');
+                    }
+                };
+                selectDateDom.bind('click', function () {
+                    var oneLevelId = showDateDom.attr('data-year');
+                    var twoLevelId = showDateDom.attr('data-month');
+                    var threeLevelId = showDateDom.attr('data-date');
+                    var iosSelect = new IosSelect(2,
+                        [yearData, monthData, dateData],
+                        {
+                            title: '选择车辆初次登记日期',
+                            itemHeight: 35,
+                            itemShowCount: 9,
+                            oneLevelId: oneLevelId,
+                            twoLevelId: twoLevelId,
+                            threeLevelId: threeLevelId,
+                            callback: function (selectOneObj, selectTwoObj, selectThreeObj, selectFourObj, selectFiveObj) {
+                                showDateDom.attr('data-year', selectOneObj.id);
+                                showDateDom.attr('data-month', selectTwoObj.id);
+                                //showDateDom.attr('data-date', selectThreeObj.id);
+                                selectDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value);
+                                if (selectOneObj.value && selectTwoObj.value) {
+                                    var date = selectOneObj.value.replace("年", '') + "-" + selectTwoObj.value.replace("月", '');
+                                    model.Owner().RegisterTime(date);
+                                }
+
+                            }
+                        });
+                });
+
+
+                //使用性质
+                var useType_show = $('#usetype');
+                var usetypedata = GetUseTypeList();
+                useType_show.bind('click', function () {
+                    var bankSelect = new IosSelect(1,
+                        [usetypedata],
+                        {
+                            container: '.container',
+                            title: '选择车辆使用性质',
+                            itemHeight: 50,
+                            itemShowCount: 3,
+                            oneLevelId: model.Owner().UseType(),
+                            callback: function (selectOneObj) {
+                                useType_show.val(selectOneObj.value);
+                                model.Owner().UseType(selectOneObj.id);
+                                model.Owner().UseTypeName(selectOneObj.value);
+                            }
+                        });
+                });
+                var carType_show = $('#cartype');
+                var cartypedata = GetCarTypeList();
+                carType_show.bind('click', function () {
+
+                    var bankSelect = new IosSelect(1,
+                        [cartypedata],
+                        {
+                            container: '.container',
+                            title: '选择车辆类型',
+                            itemHeight: 50,
+                            itemShowCount: 3,
+                            oneLevelId: model.Owner().CarType(),
+                            callback: function (selectOneObj) {
+                                carType_show.val(selectOneObj.value);
+                                model.Owner().CarType(selectOneObj.id);
+                                model.Owner().CarTypeName(selectOneObj.value);
+                            }
+                        });
+                });
+            }
+            //认证车主
+
+            //添加弹窗
+            $('#DtBtn').on('click', function () {
+                //判断按钮为有效状态
+                var disabled = $('#DtBtn').attr('class');
+                if (disabled == "Dtle_btn") {
+                    ShowTips("请先了解并同意须知");
+                    return;
+                }
+                window.location.href = "/TakeAudit/OrderSubmit?id=" + id;
+            })
+
+
+            $('#Dcde1').on('click', function () {
+                $('.Dcde_nav dd').removeClass('Dcde_nav_dd')
+                $(this).addClass('Dcde_nav_dd')
+                $('#auditinfo').show();
+                $('#auditel').hide();
+                $('#auditpriceinfo').hide();
+            })
+            $('#Dcde2').on('click', function () {
+                $('.Dcde_nav dd').removeClass('Dcde_nav_dd')
+                $(this).addClass('Dcde_nav_dd')
+                $('#auditinfo').hide()
+                $('#auditel').show()
+                $('#auditpriceinfo').hide();
+            })
+            $('#Dcde3').on('click', function () {
+                $('.Dcde_nav dd').removeClass('Dcde_nav_dd')
+                $(this).addClass('Dcde_nav_dd')
+                $('#auditinfo').hide()
+                $('#auditel').hide()
+                $('#auditpriceinfo').show();
+            })
+            //陪驾须知弹窗
+            $('.DcS_Notice span').on('click', function () {
+                $('.DcS_back').show();
+                $('.popup').show();
+            })
+            //关闭陪驾须知弹窗
+            $('.popup_close i').on('click', function () {
+                $('.DcS_back').hide();
+                $('.popup').hide();
+            })
+            //选中陪驾须知
+            $('.DcS_Notice font').on('click', function () {
+                if ($(this).attr('class') == 'DcS_Ne_font') {
+                    $(this).attr('class', '');
+
+                    $('#DtBtn').attr('class', 'Dtle_btn');
+                } else {
+                    $(this).addClass('DcS_Ne_font');
+                    $('#DtBtn').attr('class', 'Dtle_btn2');
+
+                }
+
+            })
+
+        });
+
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+
+
+    </script>
+}
+@section css{
+    <style type="text/css">
+    </style>
+}
+
+<div class="DcS_back"></div>
+<div class="popup">
+    <div class="popup_h2">代审须知</div>
+    <div class="popup_txt" style="height:230px;overflow:auto" id="widtdrivingNotice">
+        @Html.Raw(ViewBag.Notice)
+    </div>
+    <div class="popup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+
+
+<div class="slide" style="height:4rem;">
+    <div class="swiper-container" style="height:4rem;">
+        <div class="swiper-wrapper" data-bind="foreach:$root.Audit().AttachmentPicList()">
+            <div class="swiper-slide">
+                <img data-bind="attr:{src:PicName}" alt="pic" class="s_img" />
+            </div>
+        </div>
+        <div class="pagination s_buts s_right"></div>
+    </div>
+</div>
+
+<div class="DtSe_top">
+    <div class="DtSe_head">
+        <div class="DtSe_h1" data-bind="text:$root.Audit().Name()"></div>
+        @*<div class="DtSe_Price" data-bind="text:'￥'+$root.Audit().Price()+'起'"></div>*@
+    </div>
+    <div class="DtSe_add"><a href="/map/index" data-bind="click:function(){$root.mapDetail($root.Audit().Name(),$root.Audit().ConectName(),$root.Audit().ConectTel(),$root.Audit().Lng(),$root.Audit().Lat(),$root.Audit().AddressInfo())}"><i class="iconfont icon-dingwei"></i><span data-bind="text:$root.Audit().AddressInfo()"></span><i class="iconfont icon-jiantou Dtse_icon"></i></a></div>
+    <div class="DtSe_tel"><i class="iconfont icon-dianhua"></i><span data-bind="text:$root.Audit().ConectTel()"></span><i style="float:right;margin-right:10px;margin-top:4px;" data-bind="click:function(){$root.CallTel();}">免费咨询</i><i class="iconfont icon-jiantou Dtse_icon"></i></div>
+</div>
+
+
+
+<dl class="Dcde_nav">
+    <dd class="Dcde_nav_dd" id="Dcde1"><span>机构简介</span></dd>
+    <dd id="Dcde2"><span>评价</span></dd>
+    <dd id="Dcde3"><span>价格介绍</span></dd>
+</dl>
+
+<!--机构简介-->
+<div class="Dcde_con" id="auditinfo">
+    <div data-bind="attr:{style:$root.Audit().VideoContent()==''?'display:none':'display:block'}">
+        <video data-bind="attr:{src:$root.Audit().VideoContent()}" width="100%" height="340" controls="controls" preload="auto"></video>
+    </div>
+    <div class="DtSe_txt" data-bind="html:$root.Audit().Content()">
+    </div>
+</div>
+
+<ul class="EL_ul" style="display:none" id="auditel" data-bind="foreach:$root.CommitteeList">
+    <li>
+        <div class="EL_li_h2">
+            <em data-bind="text:MemberName"></em>
+            <font data-bind="foreach:CommitteeLev">
+                <i class="iconfont icon-xing1"></i>
+            </font>
+            <span data-bind="text:formatDate(CommitTime,'yyyy-MM-dd hh:mm:ss')"></span>
+        </div>
+        <div class="EL_li_text" data-bind="text:CommitContent"></div>
+    </li>
+</ul>
+
+<div class="Dcde_con" style="display:none" id="auditpriceinfo">
+    <div class="" data-bind="html:$root.Audit().PriceContent()">
+    </div>
+</div>
+<div class="DcS_Notice"><font><i class="iconfont icon-xuanzhong"></i>了解并同意</font><span>《代审须知》</span></div>
+<div style="height:30px;"></div>
+<div class=""><button type="button" class="Dtle_btn" id="DtBtn">预约代审</button></div>
+
+
+
+

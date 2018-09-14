@@ -1,0 +1,239 @@
+﻿@{
+    ViewBag.Title = "预约陪驾";
+}
+@section scripts{
+    <script type="text/javascript">
+        var provinceId = request('ProvinceId');
+        var cityId = request('CityId');
+        var countyId = request('CountyId');
+        var isTakeCar = request('isTakeCar');
+        function ViewModel() {
+            var self = this;
+            self.PageIndex = ko.observable(1);
+            self.IsEndPage = ko.observable(false);
+            self.List = ko.observableArray([]);
+            self.ProvinceId = ko.observable(provinceId);
+            self.CityId = ko.observable(cityId);
+            self.CountyId = ko.observable(countyId);
+            self.IsTakeCar = ko.observable(isTakeCar);
+
+            self.CurrentWeekList = ko.observableArray([]);
+            self.CurrentWorkTimeList = ko.observableArray([]);
+            self.toDataInfo = function (data) {
+                var obj = {};
+                for (var o in data) {
+                    obj[o] = ko.observable(data[o]);
+                }
+                return obj;
+            };
+            self.loadTeacherList = function (isAppend) {
+                var queryJson = {};
+                queryJson["provinceid"] = self.ProvinceId();
+                queryJson["cityid"] = self.CityId();
+                queryJson["countyid"] = self.CountyId();
+                queryJson["isTakeCar"] = self.IsTakeCar();
+                $.get("/Teacher/List", { pageIndex: self.PageIndex(), queryJson: JSON.stringify(queryJson) }, function (result) {
+                    self.processTeacherList(result, isAppend);
+                });
+            }
+
+            self.loadMore = function () {
+                self.PageIndex(self.PageIndex() + 1);
+                self.loadTeacherList(true);
+            }
+
+            self.processTeacherList = function (result, isAppend) {
+                if (!isAppend) {
+                    self.List.removeAll();
+                }
+                if (result.IsSuccess) {
+                    self.IsEndPage(result.ResultData["IsEndPage"]);
+                    //self.toEntityArray(result, self.List);
+                    var data = result.ResultData["List"];
+                    for (var i in data) {
+                        var item = data[i];
+                        item.WithDrivingPrice = item.WithDrivingPrice_SW + "(上午)," + item.WithDrivingPrice_XW + "(下午)," + item.WithDrivingPrice_WS + "(晚上)";
+                        self.List.push(item);
+                    }
+                }
+            }
+            //显示当前一周日期
+            self.BindWeek = function () {
+                $.get("/WithDrivingFreeTime/GetCurrentWeekList", null, function (result) {
+                    if (result.IsSuccess) {
+                        self.CurrentWeekList.removeAll();
+                        var data = result.ResultData["List"];
+                        for (var i = 0; i < data.length; i++) {
+                            var item = data[i];
+                            if (item.IsCurrentDay == "1") {
+                                var txt = formatDate(item.FreeDate, "yyyy年MM月dd日") + item.WeekName;
+                                $("#divcurrentdate").text(txt);
+                            }
+                            self.CurrentWeekList.push(item);
+                        }
+                    }
+                });
+            }
+            //预约时间
+            self.BindWorkTime = function () {
+                $.get("/WithDrivingFreeTime/GetCurrentWorkTimeList", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        var IsOver = 0;
+                        self.CurrentWorkTimeList.removeAll();
+                        //var data = self.CurrentWeekList();
+                        var now = new Date();
+                        var date = formatDate(now, 'yyyy-MM-dd');
+                        for (var i = 0; i < data.length; i++) {
+                            var freetime = data[i];
+                            var time = freetime.TimeSection;//formatDate()
+                            if (time) {
+                                if (time == "上午") {
+                                    time = "@(QX360.Business.SettingsBLL.Instance.GetValue("swsj"))";
+                                }
+                                if (time == "下午") {
+                                    time = "@(QX360.Business.SettingsBLL.Instance.GetValue("xwsj"))";
+                                }
+                                if (time == "晚上") {
+                                    time = "@(QX360.Business.SettingsBLL.Instance.GetValue("wssj"))";
+                                }
+                            }
+                            var freedate = $(".Dtlv_date_span").parent().attr("servicedate");
+                            freedate = formatDate(freedate, 'yyyy-MM-dd');
+                            if (formatDate(now, 'yyyy-MM-dd hh:mm:ss') > formatDate(freedate + " " + time, 'yyyy-MM-dd hh:mm:ss')) {
+                                IsOver = 1;
+                            } else {
+                                IsOver = 0;
+                            }
+                            freetime.IsOver = IsOver;
+                            self.CurrentWorkTimeList.push(freetime);
+                        }
+
+                    }
+                });
+            }
+            //点击日期选择时间
+            self.OnClickFreeDate = function (id) {
+                var $this = $("#" + id);
+                var data = self.CurrentWeekList();
+                var now = new Date();
+                var date = formatDate(now, 'yyyy-MM-dd');
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    if (item.WithDrivingFreeDateId == id) {
+                        if (date > formatDate(item.FreeDate, 'yyyy-MM-dd')) {
+                            return;
+                        }
+                        $this.siblings().find("span").removeClass("Dtlv_date_span");
+                        $this.find("span").addClass("Dtlv_date_span");
+                        var txt = formatDate(item.FreeDate, "yyyy年MM月dd日") + item.WeekName;
+                        $("#divcurrentdate").text(txt);
+                        //重新获取时间
+                        self.BindWorkTime();
+                    }
+                }
+            }
+            //跳转选择教练
+            self.NavToChoose2 = function (time) {
+                var freedate = $(".Dtlv_date_span").parent().attr("servicedate");
+                var url = "/WithDriving/Choose2?freedate=" + freedate + "&timesection=" + time + "&provinceId=" + provinceId + "&cityId=" + cityId + "&countyId=" + countyId + "&isTakeCar=" + isTakeCar;
+                window.location.href = encodeURI(encodeURI(url));
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.loadTeacherList(false);
+            model.BindWeek();
+            model.BindWorkTime();
+            FastClick.attach(document.body);
+
+            $(window).scroll(function () {
+                var scrollTop = $(this).scrollTop();
+                var scrollHeight = $(document).height();
+                var windowHeight = $(this).height();
+                if (scrollTop + windowHeight == scrollHeight && !model.IsEndPage()) {
+                    model.loadMore();
+                }
+            });
+            //筛选
+            $('#Dclia1').on('click', function () {
+                $('#Dclia2').removeClass('DcNew_li_a')
+                $('#Dclia1').addClass('DcNew_li_a')
+                $('#teacherDiv').show()
+                $('#TimeDiv').hide()
+            })
+            $('#Dclia2').on('click', function () {
+                $('#Dclia1').removeClass('DcNew_li_a')
+                $('#Dclia2').addClass('DcNew_li_a')
+                $('#teacherDiv').hide()
+                $('#TimeDiv').show()
+            })
+        })
+
+
+    </script>
+}
+<ul class="DcNew_ul">
+    <li class="DcNew_li_a" id="Dclia1">按照教练</li>
+    <li id="Dclia2">按时间</li>
+</ul>
+<div id="teacherDiv">
+    <ul class="Dcc_dl" data-bind="foreach:List">
+        <dd>
+            <a data-bind="attr:{href:'/WithDriving/Choose1?id='+TeacherId+'&istakecar='+ $root.IsTakeCar()}" class="Dcc_po_btn">预约</a>
+            <img data-bind="attr:{src:FaceImage}" class="Dcc_dd_img">
+            <div class="Dcc_ddst">
+                <div class="Dcc_ddst_h3" data-bind="text:Name+' '+(TakeCarType==null?'':'('+TakeCarType+')')"></div>
+                <div class="Dcc_ddst_mh"><span data-bind="text:SchoolName==null?'无归属驾校':SchoolName"></span><span>|</span><span data-bind="text:LevName==null?'未设置等级':LevName"></span></div>
+                <div class="Dcc_ddst_mh2" data-bind="text:'￥'+WithDrivingPrice"></div>
+            </div>
+        </dd>
+    </ul>
+    <div class="page__bd" style="margin-bottom:80px;">
+        <div class="weui-loadmore">
+            <!--ko if:!IsEndPage() && List().length>0-->
+            <a href="javascript:void(0);" data-bind="click:function(){loadMore();}">查看更多</a>
+            <!--/ko-->
+            <!--ko if:IsEndPage()-->
+            <a href="javascript:void(0);" style="color:#ccc">没有更多了</a>
+            <!--/ko-->
+            <!--ko if:List().length==0-->
+            <a href="javascript:void(0);" style="color:#ccc">没有相关信息</a>
+            <!--/ko-->
+        </div>
+    </div>
+
+</div>
+
+<div class="TimeDiv" id="TimeDiv">
+    <div class="Dtlv_date" data-bind="foreach:$root.CurrentWeekList()">
+        <!--ko if:!IsCurrentDay-->
+        <div class="Dtlv_date_list" data-bind="attr:{id:WithDrivingFreeDateId ,ServiceDate:formatDate(FreeDate,'yyyy-MM-dd')},click:function(){$root.OnClickFreeDate(WithDrivingFreeDateId)}"><span><font data-bind="text:WeekName.replace('星期','')"></font><em data-bind="text:formatDate(FreeDate,'MM-dd')"></em></span></div>
+        <!--/ko-->
+        <!--ko if:IsCurrentDay-->
+        <div class="Dtlv_date_list" data-bind="attr:{id:WithDrivingFreeDateId ,ServiceDate:formatDate(FreeDate,'yyyy-MM-dd')},click:function(){$root.OnClickFreeDate(WithDrivingFreeDateId)}"><span class="Dtlv_date_span"><font data-bind="text:WeekName.replace('星期','')"></font><em data-bind="text:formatDate(FreeDate,'MM-dd')"></em></span></div>
+        <!--/ko-->
+    </div>
+    <div class="DcNew_date" id="divcurrentdate"></div>
+
+    <div class="DcTime_div" data-bind="foreach:$root.CurrentWorkTimeList()">
+        <!--ko if:IsOver=="1"-->
+        <div class="DcTime_list">
+            <div class="DcTime_h3" data-bind="text:TimeSection+'('+Remark+')'"></div>
+            <a class="DcTime_bln2">已过时</a>
+        </div>
+        <!--/ko-->
+        <!--ko if:IsOver!="1"-->
+        <div class="DcTime_list">
+            <div class="DcTime_h3" data-bind="text:TimeSection+'('+Remark+')'"></div>
+            <a data-bind="click:function(){$root.NavToChoose2(TimeSection)}" class="DcTime_bln">立即预约</a>
+        </div>
+        <!--/ko-->
+    </div>
+</div>
+
+
+
+

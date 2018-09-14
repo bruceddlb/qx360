@@ -1,0 +1,484 @@
+﻿@{
+    ViewBag.Title = "汽车商城";
+}
+@section scripts{
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=@(QSDMS.Util.Config.GetValue("baidumap_client_key"))"></script>
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.Area = ko.observable({
+                Province: ko.observableArray([]),
+                City: ko.observableArray([]),
+                County: ko.observableArray([])
+            });
+            self.DistanceRange = ko.observableArray([]);
+            self.PriceRange = ko.observableArray([]);
+            self.BrandRange = ko.observableArray([]);
+
+            self.PageIndex = ko.observable(1);
+            self.IsEndPage = ko.observable(false);
+            self.List = ko.observableArray([]);
+            self.BannerList = ko.observableArray([]);
+            self.KeyWord = ko.observable("");
+            self.ProvinceId = ko.observable("");
+            self.CityId = ko.observable("");
+            self.CountyId = ko.observable("");
+            self.DistanceId = ko.observable("");
+            self.PriceId = ko.observable("");
+            self.BrandId = ko.observable("");
+            self.Lng = ko.observable("");
+            self.Lat = ko.observable("");
+            self.toDataInfo = function (data) {
+                var obj = {};
+                for (var o in data) {
+                    obj[o] = ko.observable(data[o]);
+                }
+                return obj;
+            };
+            self.loadShopCarList = function (isAppend) {
+                var queryJson = {};
+                queryJson["keyword"] = self.KeyWord();
+                queryJson["provinceid"] = self.ProvinceId();
+                queryJson["cityid"] = self.CityId();
+                queryJson["countyid"] = self.CountyId();
+                queryJson["distanceid"] = self.DistanceId();
+                queryJson["priceid"] = self.PriceId();
+                queryJson["brandid"] = self.BrandId();
+                queryJson["lat"] = self.Lat();
+                queryJson["lng"] = self.Lng();
+                $.get("/Shop/GetList", { pageIndex: self.PageIndex(), queryJson: JSON.stringify(queryJson) }, function (result) {
+                    self.processShopCarList(result, isAppend);
+                });
+            }
+
+            self.loadMore = function () {
+                self.PageIndex(self.PageIndex() + 1);
+                self.loadShopCarList(true);
+            }
+
+            self.processShopCarList = function (result, isAppend) {
+                if (!isAppend) {
+                    self.List.removeAll();
+                }
+                if (result.IsSuccess) {
+                    self.IsEndPage(result.ResultData["IsEndPage"]);
+                    //self.toEntityArray(result, self.List);
+                    var data = result.ResultData["List"];
+                    for (var i in data) {
+                        var item = data[i];
+                        // self.List.push(item)
+                        if (item.ShopCarList) {
+                            var shopcardata = item.ShopCarList;
+                            for (var j in shopcardata) {
+                                var shopcar = shopcardata[j];
+                                shopcar.Shop = item;
+                                //teacher.WithDrivingPrice = item.WithDrivingPrice;
+                                self.List.push(shopcar);
+                            }
+                        }
+                    }
+                }
+            }
+            self.CutWord = function (str) {
+                var Ilength = 35;
+                if (str) {
+                    var _exp = "...";
+                    if (str.length > Ilength) {
+                        return str.substring(0, Ilength) + _exp;
+                    }
+                    else {
+                        return str;
+                    }
+                } else {
+                    return "";
+                }
+                return str;
+            }
+            self.Seach = function () {
+                self.PageIndex(1);
+                self.loadShopCarList(false);
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+            $.get("/MapPosition/GetUserPoint", null, function (result) {
+                if (result.IsSuccess) {
+                    var data = result.ResultData["Data"];
+                    var lat = data.Lat;
+                    var lng = data.Lng;
+                    if (lat) {
+                        model.Lng(lng);
+                        model.Lat(lat);
+                        model.loadShopCarList(false);
+
+                    }
+                } else {
+
+                    //定位当前地址
+                    var geolocation = new BMap.Geolocation();
+                    geolocation.getCurrentPosition(function (r) {
+                        if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+                            //var mk = new BMap.Marker(r.point);
+                            //alert('您的位置：' + r.point.lng + ',' + r.point.lat);
+
+                            model.Lng(r.point.lng);
+                            model.Lat(r.point.lat);
+                            model.loadShopCarList(false);
+
+                            $.post("/MapPosition/SetUserPoint", { "lat": r.point.lat, "lng": r.point.lng }, function (result) {
+
+                            });
+                        }
+                        else {
+                            alert('failed' + this.getStatus());
+                            model.loadShopCarList(false);
+                        }
+                    },
+                    {
+                        enableHighAccuracy: true
+                    })
+                }
+            });
+
+            model.Area().Province(GetAreaData(1));
+            model.Area().City(GetAreaData(2));
+            model.Area().County(GetAreaData(3));
+            model.DistanceRange(GetDistanceRange());
+            model.PriceRange(GetPriceRange());
+            model.BrandRange(GetBrandRange());
+            FastClick.attach(document.body);
+
+            $(window).scroll(function () {
+                var scrollTop = $(this).scrollTop();
+                var scrollHeight = $(document).height();
+                var windowHeight = $(this).height();
+                if (scrollTop + windowHeight == scrollHeight && !model.IsEndPage()) {
+                    model.loadMore();
+                }
+            });
+            //默认显示区域数据 显示第一个省
+            var normalproviceid = $("#divarea .As_snav_left dd:eq(0)").attr("id");
+            $("#divarea .As_snav_center dd").css({ "display": "none" });
+            $("#divarea .As_snav_center dd[parentid='" + normalproviceid + "']").css({ "display": "block" });
+            $("#" + normalproviceid).addClass('Ptl_snav_dd');
+            var normalcityid = $(".As_snav_center dd[parentid='" + normalproviceid + "']:eq(0)").attr("id");
+            $("#divarea .As_snav_right dd").css({ "display": "none" });
+            $("#divarea .As_snav_right dd[parentid='" + normalcityid + "']").css({ "display": "block" });
+            $("#" + normalcityid).addClass('Pcr_snav_rtdd');
+            //筛选
+            $('.As_nav_left .Asdiv').on('click', function () {
+                $('.As_back').show()//背景
+                $('.Asdiv').find('span').removeClass('As_span')
+                $(this).find('span').addClass('As_span')
+                $('.As_snav').hide()
+                $(this).next('.As_snav').show()
+            })
+            //选择区域
+            //省
+            $('#divarea .As_snav_left dd').on('click', function () {
+                $('#divarea .As_snav_left dd').removeClass('Ptl_snav_dd');
+                $(this).addClass('Ptl_snav_dd');
+                $("#divarea .As_snav_center dd").css({ "display": "none" });
+                $("#divarea .As_snav_center dd[parentid='" + $(this).attr("id") + "']").css({ "display": "block" });
+                model.ProvinceId($(this).attr("id"));
+            })
+            //市
+            $('#divarea .As_snav_center dd').on('click', function () {
+                $('#divarea .As_snav_center dd').removeClass('Pcr_snav_rtdd');
+                $(this).addClass('Pcr_snav_rtdd');
+                $("#divarea .As_snav_right dd").css({ "display": "none" });
+                $("#divarea .As_snav_right dd[parentid='" + $(this).attr("id") + "']").css({ "display": "block" });
+                model.CityId($(this).attr("id"));
+            })
+            //区
+            //选择后关闭
+            $('#divarea .As_snav_right dd').on('click', function () {
+                $('#divarea .Asdiv').find('span').removeClass('Ptl_span');
+                $('.As_back').hide();
+                $('.As_snav').hide();
+                model.CountyId($(this).attr("id"));
+
+                //清空其他的条件
+                model.DistanceId("");
+                model.PriceId("");
+                model.BrandId("");
+                model.Seach();
+            })
+            //距离
+            $('#divdistance .As_snav_right dd').on('click', function () {
+                $('#divdistance .Asdiv').find('span').removeClass('Ptl_span');
+                $('.As_back').hide();
+                $('.As_snav').hide();
+                model.DistanceId($(this).attr("id"));
+
+                //清空其他的条件
+                model.ProvinceId("");
+                model.CityId("");
+                model.CountyId("");
+                model.PriceId("");
+                model.BrandId("");
+                model.Seach();
+            })
+            $('#divprice .As_snav_right dd').on('click', function () {
+                $('#divprice .Asdiv').find('span').removeClass('Ptl_span');
+                $('.As_back').hide();
+                $('.As_snav').hide();
+                model.PriceId($(this).attr("id"));
+
+                //清空其他的条件
+                model.ProvinceId("");
+                model.CityId("");
+                model.CountyId("");
+                model.DistanceId("");
+                model.BrandId("");
+                model.Seach();
+            })
+            $('#divbrand .As_snav_right dd').on('click', function () {
+                $('#divbrand .Asdiv').find('span').removeClass('Ptl_span');
+                $('.As_back').hide();
+                $('.As_snav').hide();
+                model.BrandId($(this).attr("id"));
+
+                //清空其他的条件
+                model.ProvinceId("");
+                model.CityId("");
+                model.CountyId("");
+                model.DistanceId("");
+                model.PriceId("");
+                model.Seach();
+            })
+
+
+            //空白关闭
+            $('.As_back').on('click', function () {
+                $('.Asdiv').find('span').removeClass('As_span')
+                $('.As_back').hide()
+                $('.As_snav').hide()
+            })
+
+        });
+
+        //获取区域信息
+        function GetAreaData(layer) {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/Area/GetAreaList",
+                async: false,
+                data: { layer: layer },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.AreaId,
+                                "value": item.AreaName,
+                                "parentid": item.ParentId
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+        function GetDistanceRange() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetDistanceRange",
+                async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+        function GetPriceRange() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetCarPriceRange",
+                async: false,
+                data: null,
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+
+        function GetBrandRange() {
+            var rs = [];
+            $.ajax({
+                type: "GET",
+                url: "/DataItemEnums/GetBrandRange",
+                async: false,
+                data: { EnCode: "qcpp" },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        for (var i in data) {
+                            var item = data[i];
+                            rs.push({
+                                "id": item.ItemId,
+                                "value": item.ItemName,
+                            });
+                        }
+                    }
+                }
+            });
+            return rs;
+        }
+
+    </script>
+}
+@section css{
+}
+<script type="text/javascript">
+    $(function () {
+
+    })
+</script>
+
+<style type="text/css">
+    .Dtmenu li {
+        margin-bottom: 10px;
+    }
+
+    #divarea .As_snav_left {
+        float: left;
+        width: 33%;
+        background: #f8f8f8;
+        height: 4rem;
+        overflow-y: scroll;
+    }
+
+    #divarea .As_snav_center {
+        float: left;
+        width: 33.3%;
+        background: #f8f8f8;
+        height: 4rem;
+        overflow-y: scroll;
+    }
+
+    #divarea .As_snav_right {
+        float: left;
+        width: 33%;
+        background: #fff;
+        height: 4rem;
+        overflow-y: scroll;
+    }
+
+    .Ptl_snav_dd {
+        background: #f8f8f8;
+    }
+
+    .Pcr_snav_rtdd {
+        background: #fff;
+    }
+</style>
+
+<div class="Assh_div">
+    <div class="As_search">
+        <input type="search" placeholder="请输入关键字查找" data-bind="value:$root.KeyWord" class="Asse_input">
+        <span class="Asse_span" data-bind="click:function(){$root.Seach()}"><i class="iconfont icon-sousuo"></i></span>
+    </div>
+</div>
+<div class="As_con">
+    <div class="As_back"></div>
+    <div class="As_nav As_nav">
+        <div class="As_nav_left" id="divarea">
+            <div class="Asdiv"><span>区域</span><i class="iconfont icon-chevron-tiny-down"></i></div>
+            <div class="As_snav">
+                <dl class="As_snav_left" data-bind="foreach: $root.Area().Province">
+                    <dd data-bind="attr:{id:id,parentid:parentid},text:value"></dd>
+                </dl>
+                <dl class="As_snav_center" data-bind="foreach: $root.Area().City">
+                    <dd data-bind="attr:{id:id,parentid:parentid,title:value},text:value" style="display:none;overflow:hidden"></dd>
+
+                </dl>
+                <dl class="As_snav_right" data-bind="foreach: $root.Area().County">
+                    <dd data-bind="attr:{id:id,parentid:parentid,title:value},text:value" style="display: none; overflow: hidden; "></dd>
+
+                </dl>
+            </div>
+        </div>
+        <div class="As_nav_left" id="divbrand">
+            <div class="Asdiv"><span>品牌</span><i class="iconfont icon-chevron-tiny-down"></i></div>
+            <div class="As_snav">
+                <dl class="As_snav_right As_snav_length" data-bind="foreach:$root.BrandRange">
+                    <dd data-bind="attr:{id:id,title:value},text:value"></dd>
+                </dl>
+            </div>
+        </div>
+        <div class="As_nav_left" id="divprice">
+            <div class="Asdiv"><span>价格</span><i class="iconfont icon-chevron-tiny-down"></i></div>
+            <div class="As_snav">
+                <dl class="As_snav_right As_snav_length" data-bind="foreach:$root.PriceRange">
+                    <dd data-bind="attr:{id:id,title:value},text:value"></dd>
+                </dl>
+            </div>
+        </div>
+        <div class="As_nav_left" id="divdistance">
+            <div class="Asdiv"><span>距离</span><i class="iconfont icon-chevron-tiny-down"></i></div>
+            <div class="As_snav">
+                <dl class="As_snav_right As_snav_length" data-bind="foreach:$root.DistanceRange">
+                    <dd data-bind="attr:{id:id,title:value},text:value"></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <ul class="As_ul" data-bind="foreach:List">
+        <li>
+            <a data-bind="attr:{href:'/Shop/Car?id='+ShopCarId}">
+                <i class="iconfont icon-jiantou As_po_icon"></i>
+                <img data-bind="attr:{src:FaceImage}" class="As_li_img">
+                <div class="As_list">
+                    <div class="As_list_h3"><span data-bind="text:BrandName"></span><span data-bind="text:Name"></span></div>
+                    <div class="As_list_sm"><span data-bind="text:Shop.Name"></span><em>|&nbsp;</em><span data-bind="text:Shop.CountyName"></span></div>
+                    <div class="As_list_sm"></div>
+                </div>
+                <div class="As_list_mh"><span data-bind="text:'￥'+LimitPrice+'万'"></span>~<span data-bind="text:'￥'+MaxPrice+'万'"></span></div>
+
+            </a>
+        </li>
+
+    </ul>
+
+    <div class="page__bd" style="margin-bottom:80px;">
+        <div class="weui-loadmore">
+            <!--ko if:!IsEndPage() && List().length>0-->
+            <a href="javascript:void(0);" data-bind="click:function(){loadMore();}">查看更多</a>
+            <!--/ko-->
+            <!--ko if:IsEndPage()-->
+            <a href="javascript:void(0);" style="color:#ccc">没有更多了</a>
+            <!--/ko-->
+            <!--ko if:List().length==0-->
+            <a href="javascript:void(0);" style="color:#ccc">没有相关信息</a>
+            <!--/ko-->
+        </div>
+    </div>
+</div>

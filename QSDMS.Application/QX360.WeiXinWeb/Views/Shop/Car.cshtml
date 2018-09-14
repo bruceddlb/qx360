@@ -1,0 +1,317 @@
+﻿@{
+    ViewBag.Title = "车辆详情";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        function ViewModel() {
+            var self = this;
+            self.CurrentWeekList = ko.observableArray([]);
+            self.Account = ko.observable({
+                MemberName: ko.observable(""),
+                MemberMobile: ko.observable(""),
+                MemberId: ko.observable(""),
+            });
+            self.Car = ko.observable({
+                Id: ko.observable(""),
+                Name: ko.observable(""),
+                BrandName: ko.observable(""),
+                AttachmentPicList: ko.observableArray([]),
+                LimitPrice: ko.observable(""),
+                MaxPrice: ko.observable(""),
+                AddreessInfo: ko.observable(""),
+                ConectTel: ko.observable(""),
+                Content: ko.observable(""),
+            });
+
+            self.SeeCarOrder = ko.observable({
+                ShopCarId: ko.observable(""),
+                ShopCarName: ko.observable(""),
+                ShopName: ko.observable(""),
+                ShopId: ko.observable(""),
+                MemberName: ko.observable(""),
+                MemberMobile: ko.observable(""),
+                MemberId: ko.observable(""),
+                ServiceDate: ko.observable(""),
+                ServiceTime: ko.observable(""),
+            });
+            self.BindCar = function () {
+                $.get("/Shop/GetCharModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.SeeCarOrder().ShopCarId(data.ShopCarId);
+                            self.SeeCarOrder().ShopCarName(data.Name);
+
+                            self.Car().Name(data.Name);
+                            self.Car().BrandName(data.BrandName);
+                            self.Car().LimitPrice(data.LimitPrice);
+                            self.Car().MaxPrice(data.MaxPrice);
+                            self.Car().AttachmentPicList(data.AttachmentPicList);
+                            self.Car().Content(decodeHtml(data.Content));
+                            if (data.Shop) {
+                                self.SeeCarOrder().ShopName(data.Shop.Name);
+                                self.SeeCarOrder().ShopId(data.Shop.ShopId);
+
+                                self.Car().AddreessInfo(data.Shop.AddressInfo);
+                                self.Car().ConectTel(data.Shop.ConectTel);
+                            }
+                        }
+                        var mySwiper = new Swiper('.swiper-container', {
+                            pagination: '.pagination',
+                            slidesPerView: 1,
+                            loop: true,
+                            autoplay: 3000,
+                            autoplayDisableOnInteraction: false,
+                            speed: 500
+                        });
+                    }
+                });
+            }
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.SeeCarOrder().MemberName(data.MemberName);//可以修改
+                            self.SeeCarOrder().MemberMobile(data.Mobile);//可以修改
+                            self.SeeCarOrder().MemberId(data.MemberId);//取注册用户的
+                        }
+                    }
+                });
+            }
+
+            self.CreateOrder = function () {
+                if (!self.SeeCarOrder().MemberName()) {
+                    ShowTips("预约人不能为空");
+                    return;
+                }
+                if (!self.SeeCarOrder().MemberMobile()) {
+                    ShowTips("预约人联系方式");
+                    return;
+                }
+                if (!self.SeeCarOrder().ServiceDate()) {
+                    ShowTips("请选择预约时间");
+                    return;
+                }
+                $.post("/Shop/CreateOrder", { "data": ko.toJSON(self.SeeCarOrder()) }, function (result) {
+                    if (result.IsSuccess) {
+                        HidePop();
+                        ShowTips(result.Message, "ok");
+                        setTimeout(function () {
+                            location.href = "/Shop/Return";
+                        }, 200)
+
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindCar();
+            model.BindUser();
+
+            //添加弹窗
+            $('.Asde_footer').on('click', function () {
+                if (!model.SeeCarOrder().MemberId()) {
+                    GotoLoginPage();
+                } else {
+                    $('.Asde_back').show();
+                    $('.Asdepopup').show();
+                }
+            })
+            $('.Asdepopup_close').on('click', function () {
+                HidePop();
+            })
+
+            //选择考试时间
+            var showDateDom = $('#AsTime');
+            var selectDateDom = $('#AsTime');
+            // 初始化时间
+            var now = new Date();
+            var nowYear = now.getFullYear();
+            var nowMonth = now.getMonth() + 1;
+            var nowDate = now.getDate();
+            showDateDom.attr('data-year', nowYear);
+            showDateDom.attr('data-month', nowMonth);
+            showDateDom.attr('data-date', nowDate);
+            // 数据初始化
+            function formatYear(nowYear) {
+                var arr = [];
+                for (var i = nowYear - 5; i <= nowYear + 5; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '年'
+                    });
+                }
+                return arr;
+            }
+            function formatMonth() {
+                var arr = [];
+                for (var i = 1; i <= 12; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '月'
+                    });
+                }
+                return arr;
+            }
+            function formatDate(count) {
+                var arr = [];
+                for (var i = 1; i <= count; i++) {
+                    arr.push({
+                        id: i + '',
+                        value: i + '日'
+                    });
+                }
+                return arr;
+            }
+            var yearData = function (callback) {
+                callback(formatYear(nowYear))
+            }
+            var monthData = function (year, callback) {
+                callback(formatMonth());
+            };
+            var dateData = function (year, month, callback) {
+                if (/^(1|3|5|7|8|10|12)$/.test(month)) {
+                    callback(formatDate(31));
+                }
+                else if (/^(4|6|9|11)$/.test(month)) {
+                    callback(formatDate(30));
+                }
+                else if (/^2$/.test(month)) {
+                    if (year % 4 === 0 && year % 100 !== 0 || year % 400 === 0) {
+                        callback(formatDate(29));
+                    }
+                    else {
+                        callback(formatDate(28));
+                    }
+                }
+                else {
+                    throw new Error('month is illegal');
+                }
+            };
+            var hourData = function (one, two, three, callback) {
+                var hours = [];
+                for (var i = 0, len = 24; i < len; i++) {
+                    hours.push({
+                        id: i,
+                        value: i + '时'
+                    });
+                }
+                callback(hours);
+            };
+            var minuteData = function (one, two, three, four, callback) {
+                var minutes = [];
+                for (var i = 0, len = 60; i < len; i++) {
+                    minutes.push({
+                        id: i,
+                        value: i + '分'
+                    });
+                }
+                callback(minutes);
+            };
+            selectDateDom.bind('click', function () {
+                var oneLevelId = showDateDom.attr('data-year');
+                var twoLevelId = showDateDom.attr('data-month');
+                var threeLevelId = showDateDom.attr('data-date');
+                var fourLevelId = showDateDom.attr('data-hour');
+                var fiveLevelId = showDateDom.attr('data-minute');
+                var iosSelect = new IosSelect(5,
+                    [yearData, monthData, dateData, hourData, minuteData],
+                    {
+                        title: '选择预约时间',
+                        itemHeight: 35,
+                        itemShowCount: 9,
+                        oneLevelId: oneLevelId,
+                        twoLevelId: twoLevelId,
+                        threeLevelId: threeLevelId,
+                        fourLevelId: fourLevelId,
+                        fiveLevelId: fiveLevelId,
+                        callback: function (selectOneObj, selectTwoObj, selectThreeObj, selectFourObj, selectFiveObj) {
+                            showDateDom.attr('data-year', selectOneObj.id);
+                            showDateDom.attr('data-month', selectTwoObj.id);
+                            showDateDom.attr('data-date', selectThreeObj.id);
+                            showDateDom.attr('data-hour', selectFourObj.id);
+                            showDateDom.attr('data-minute', selectFiveObj.id);
+                            selectDateDom.val(selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value + ' ' + selectFourObj.value + ' ' + selectFiveObj.value);
+                            if (selectOneObj.value && selectTwoObj.value && selectThreeObj.value) {
+                                var date = selectOneObj.value.replace("年", '') + "-" + selectTwoObj.value.replace("月", '') + "-" + selectThreeObj.value.replace("日", '');
+                                model.SeeCarOrder().ServiceDate(date);
+                            }
+                            if (selectFourObj.value && selectFiveObj.value) {
+                                var time = selectFourObj.value.replace("时", '') + ":" + selectFiveObj.value.replace("分", '');
+                                model.SeeCarOrder().ServiceTime(time);
+                            }
+                        }
+                    });
+            });
+        });
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+        function HidePop() {
+            $('.Asde_back').hide();
+            $('.Asdepopup').hide();
+        }
+    </script>
+}
+
+
+<div class="Asde_back"></div>
+<div class="Asdepopup">
+    <div class="Asdepopup_h2">请完善您的预约信息</div>
+    <div class="Asdepopup_txt">
+        <div class="Asdepopup_li"><input type="text" placeholder="预约人姓名" data-bind="value:$root.SeeCarOrder().MemberName()"></div>
+        <div class="Asdepopup_li"><input type="text" placeholder="联系方式" data-bind="value:$root.SeeCarOrder().MemberMobile()"></div>
+        <input type="text" placeholder="请选择您的预约时间" class="Mee_text" id="AsTime" readonly>
+        <div class="Asde_sub"><button type="button" data-bind="click:function(){$root.CreateOrder();}" class="Mee_button">确定预约</button></div>
+    </div>
+    <div class="Asdepopup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+
+
+<div class="slide" style="height:4rem;">
+    <div class="swiper-container" style="height:4rem;">
+        <div class="swiper-wrapper" data-bind="foreach:$root.Car().AttachmentPicList()">
+            <div class="swiper-slide">
+                <img data-bind="attr:{src:PicName}" alt="pic" class="s_img" />
+            </div>
+        </div>
+        <div class="pagination s_buts s_right"></div>
+    </div>
+</div>
+
+<div class="Asde_top">
+    <div class="Asde_head">
+        <div class="Asde_h1"><span data-bind="text:$root.Car().BrandName"></span>&nbsp;<span data-bind="text:$root.Car().Name"></span></div>
+        <div class="Asde_Price"><span data-bind="text:'￥'+$root.Car().LimitPrice()+'万'"></span>~<span data-bind="text:'￥'+$root.Car().MaxPrice()+'万'"></span></div>
+    </div>
+    <div class="Asde_add"><i class="iconfont icon-dingwei"></i><span data-bind="text:$root.Car().AddreessInfo"></span><i class="iconfont icon-jiantou Asde_icon"></i></div>
+    <div class="Asde_tel"><i class="iconfont icon-dianhua"></i><span data-bind="text:$root.Car().ConectTel"></span><i class="iconfont icon-jiantou Asde_icon"></i></div>
+</div>
+
+
+<!--车辆介绍-->
+<div class="Asde_con">
+    <h3 class="Asde_h3"><span></span>车辆介绍</h3>
+    <div class="Asde_txt" data-bind="html:$root.Car().Content()">
+
+    </div>
+</div>
+
+<div class="Asde_footer"><button type="button" class="Asde_btn2" id="DtBtn">预约看车</button></div>

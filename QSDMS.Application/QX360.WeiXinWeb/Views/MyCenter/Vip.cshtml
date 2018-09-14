@@ -1,0 +1,77 @@
+﻿@{
+    ViewBag.Title = "Vip";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.Account = ko.observable({
+                FaceImage: ko.observable(""),
+                MemberName: ko.observable(""),
+                Mobile: ko.observable(""),
+                MemberId: ko.observable(""),
+                IsOwner: ko.observable(""),
+                LevName: ko.observable(""),
+                Point: ko.observable("0"),
+                NikeName: ko.observable(""),
+                OpenId: ko.observable(""),
+                VipOverDate: ko.observable(""),
+            });
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Account().MemberName(data.MemberName);
+                            self.Account().NikeName(data.NikeName);
+                            self.Account().Mobile(data.Mobile);
+                            self.Account().MemberId(data.MemberId);
+                            if (data.HeadIcon) {
+                                var newpath = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + data.HeadIcon;
+                                self.Account().FaceImage(newpath);
+                            }
+                            self.Account().LevName(data.LevName);
+
+                            if (data.VipOverDate) {
+                                self.Account().VipOverDate(data.VipOverDate);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+            model.BindUser();
+        });
+
+    </script>
+}
+
+
+<div class="McVip_top">
+    <div class="McVip_top_pto"><img data-bind="attr:{src:$root.Account().FaceImage()==null?'/images/face.png':$root.Account().FaceImage}" class="McVip_top_img"></div>
+
+    <div class="McVip_top_right">
+        <div class="McVip_top_name" data-bind="text:$root.Account().MemberName"></div>
+        <div class="McVip_top_sm">
+            <span><i class="iconfont icon-huiyuan"></i><em data-bind="text:$root.Account().LevName"></em></span>
+        </div>
+
+        @*<div class="McVip_po">
+            <span>续费</span>
+            <em data-bind="text:formatDate($root.Account().VipOverDate(),'yyyy-MM-dd')+'到期'"></em>
+            <i class="iconfont icon-arrow_r1"></i>
+        </div>*@
+    </div>
+</div>
+
+<div class="McVip_hr">您已享受的权益</div>
+
+<div class="McVip_con">
+    <div class="McVip_list"><img src="/content/images/vip.jpg"></div>
+</div>
+

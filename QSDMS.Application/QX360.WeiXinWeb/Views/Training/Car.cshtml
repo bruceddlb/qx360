@@ -1,0 +1,147 @@
+﻿@{
+    ViewBag.Title = "实训车辆";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        var type = request('type');
+        var subjectid = request('trainingtype');
+        function ViewModel() {
+            var self = this;
+            self.Type = ko.observable(type);
+            self.TrainingCarList = ko.observableArray([]);
+            self.School = ko.observable({
+                Name: ko.observable(""),
+                FaceImage: ko.observable(""),
+                AddressInfo: ko.observable(""),
+                ConectTel: ko.observable(""),
+                TagList: ko.observableArray([]),
+                Content: ko.observable(""),
+
+            });
+            self.CallTel = function () {
+                window.location.href = 'tel:' + self.School().ConectTel();
+            }
+            self.SubscribCar = function (id) {
+                if (type == "2") {//教练预约
+                    window.location.href = "/Training/Time2?objectid=" + id + "&subjectid=" + subjectid;
+                } else {
+                    //如果该会员是教练则为教练预约操作页面
+                    $.get("/TrainingCar/CheckMemberIsTeacher", null, function (result) {
+                        if (result.IsSuccess) {
+                            if (result.Code == "1") {
+                                window.location.href = "/Training/Time2?objectid=" + id + "&subjectid=" + subjectid;
+                            } else if (result.Code == "-1") {
+                                GotoLoginPage();
+                            } else {
+                                window.location.href = "/Training/Time?objectid=" + id + "&subjectid=" + subjectid;
+                            }
+                        } else {
+                            alert("系统错误")
+                        }
+
+
+                    });
+
+                }
+            }
+            self.BindSchool = function () {
+                $.get("/School/GetSchoolModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.School().Name(data.Name);
+                            self.School().ConectTel(data.ConectTel);
+                            self.School().FaceImage(data.FaceImage);
+                            self.School().TagList(data.TagList);
+                            self.School().Content(decodeHtml(data.Content));
+                            self.BindTraingCar(id, subjectid);
+                        }
+                    }
+                });
+            }
+            self.BindTraingCar = function (schoolid, trainingtype) {
+                $.get("/TrainingCar/GetTrainingCarList", { schoolid: schoolid, trainingtype: trainingtype }, function (result) {
+                    if (result.IsSuccess) {
+                        var list = result.ResultData["List"];
+                        if (list) {
+                            self.TrainingCarList(list);
+                        }
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindSchool();
+
+            $('.Dtlv_date_list').on('click', function () {
+                $('.Dtlv_date_list').find('span').removeClass('Dtlv_date_span')
+                $(this).find('span').addClass('Dtlv_date_span')
+            })
+        });
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+    </script>
+}
+@section css{
+    <style type="text/css">
+    </style>
+}
+<div class="Dtlv_top">温馨提示：预约实训，仅可预约一周内的时间.</div>
+@*<ul class="Dtlv_ul">
+        <li>
+            <img data-bind="attr:{src:$root.School().FaceImage}" class="Dtlv_li_img">
+            <div class="Dtlv_list">
+                <div class="Dtlv_list_h3" data-bind="text:$root.School().Name()"></div>
+                <div class="Dtlv_list_sm" data-bind="foreach:$root.School().TagList()"><span data-bind="text:Value"></span></div>
+            </div>
+        </li>
+    </ul>*@
+<ul class="Dtlt_dl">
+    <dd>
+        <img data-bind="attr:{src:$root.School().FaceImage}" class="Dtlt_dd_img">
+        <div class="Dtlt_ddst">
+            <div class="Dtlt_ddst_h3 Dtlt_ddst_h33" data-bind="text:$root.School().Name"></div>
+            <div class="Dtlt_ddst_mh" data-bind="foreach:$root.School().TagList()"><span data-bind="text:Value"></span></div>
+        </div>
+        <a data-bind="click:function(){$root.CallTel();}" class="Dtlt_po_btn"><i class="iconfont icon-dianhua1"></i></a>
+        <div class="DtSe_tel"><span data-bind="html:$root.School().Content()"></span></div>
+    </dd>
+</ul>
+
+<ul class="Dtlv_dl" data-bind="foreach:$root.TrainingCarList()">
+    <dd>
+        <a data-bind="click:function(){$root.SubscribCar(TrainingCarId)}" class="Dtlv_po_btn">预约</a>
+        <img data-bind="attr:{src:FaceImage==null?'/content/images/ptlv_06.jpg':FaceImage}" src="" class="Dtlv_dd_img">
+        <div class="Dtlv_ddst">
+            <div class="Dtlv_ddst_h3"><span data-bind="text:Name"></span><span data-bind="text:CarNumber"></span></div>
+            <div class="Dtlv_ddst_mh" data-bind="text:SchoolName"></div>
+            <div class="Dtlv_ddst_mh" data-bind="text:Remark"></div>
+        </div>
+    </dd>
+</ul>

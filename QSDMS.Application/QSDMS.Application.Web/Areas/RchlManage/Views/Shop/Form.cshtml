@@ -1,0 +1,278 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+<script>
+    var _ImageList = [];
+    var editor;
+    var dtips;
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        dtips = $("#destips");
+        InitControl();
+        $("#btn_finish").bind("click", function () {
+            AcceptClick();
+        })
+    });
+
+
+
+    //初始化数据
+    function InitControl() {
+        //省份
+        $("#ProvinceId").ComboBox({
+            url: "/SystemManage/Area/GetAreaListJson",
+            param: { parentId: "0" },
+            id: "AreaCode",
+            text: "AreaName",
+            description: "选择省",
+            height: "170px",
+            allowSearch: true
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            $("#CityId").ComboBox({
+                url: "/SystemManage/Area/GetAreaListJson",
+                param: { parentId: value },
+                id: "AreaCode",
+                text: "AreaName",
+                description: "选择市",
+                height: "170px"
+
+            });
+        });
+        //城市
+        $("#CityId").ComboBox({
+            description: "选择市",
+            height: "170px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            if (value) {
+                $("#CountyId").ComboBox({
+                    url: "/SystemManage/Area/GetAreaListJson",
+                    param: { parentId: value },
+                    id: "AreaCode",
+                    text: "AreaName",
+                    description: "选择县/区",
+                    height: "170px"
+                });
+            }
+        });
+        //县/区
+        $("#CountyId").ComboBox({
+            description: "选择县/区",
+            height: "170px"
+        });
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/Shop/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+                        if (data.ProvinceId) {
+                            $("#ProvinceId").trigger("change");
+                        }
+                        if (data.CityId) {
+                            $("#CityId").ComboBoxSetValue(data.CityId).trigger("change");
+                        }
+                        if (data.CountyId) {
+                            $("#CountyId").ComboBoxSetValue(data.CountyId);
+                        }
+                        //封面
+                        if (data.FaceImage) {
+                            $("#HidFaceImage").val(data.FaceImage);
+                            var host = '@(System.Configuration.ConfigurationManager.AppSettings["ImageHost"] == "" ? string.Format("http://{0}{1}", Request.Url.Host, Request.Url.Port == 80 ? "" : ":" + Request.Url.Port) : System.Configuration.ConfigurationManager.AppSettings["ImageHost"])';
+                            document.getElementById('uploadPreview').src = host + data.FaceImage;
+                        }
+                        if (data.Lng != null && data.Lat != null) {
+                            $("#point").val("经度：" + data.Lng + ",纬度：" + data.Lat);
+                        }
+                    }
+                }
+            });
+        }
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["FaceImage"] = $("#HidFaceImage").val();
+        postData["ProvinceId"] = $("#ProvinceId").attr('data-value');
+        postData["ProvinceName"] = $("#ProvinceId").attr('data-text');
+        postData["CityId"] = $("#CityId").attr('data-value');
+        postData["CityName"] = $("#CityId").attr('data-text');
+        postData["CountyId"] = $("#CountyId").attr('data-value');
+        postData["CountyName"] = $("#CountyId").attr('data-text');
+        $.SaveForm({
+            url: "/QX360Manage/Shop/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+        $(window).resize(function (e) {
+        });
+        uploadFacePic();
+
+    }
+    //设置位置坐标
+    function SelectPoint() {
+        var txt = "";
+        var Province = $("#ProvinceId").attr('data-text');
+        if (Province) {
+            txt += Province;
+        }
+        var City = $("#CityId").attr('data-text');
+        if (City) {
+            txt += City;
+        }
+        var County = $("#CountyId").attr('data-text');
+        if (County) {
+            txt += County;
+        }
+        var address = $("#AddressInfo").val();
+        if (!Province) {
+            dialogMsg("请先选择区域", 0);
+            return;
+        }
+        var x = $("#Lng").val();
+        var y = $("#Lat").val();
+        dialogOpen({
+            id: "mappoint",
+            title: '标注地图位置',
+            url: '/BaiduMap/Index?x=' + x + "&y=" + y,//escape(txt + address),
+            width: "1000px",
+            height: "600px",
+            btn: null
+        });
+    }
+
+    function uploadFacePic() {
+        $("#uploadPreview").unbind("click").bind("click", function () {
+            $('#uploadFaceImage').trigger("click");
+        })
+        //上传图标
+        $('#uploadFaceImage').change(function () {
+            var f = document.getElementById('uploadFaceImage').files[0];
+            var src = window.URL.createObjectURL(f);
+            document.getElementById('uploadPreview').src = src;
+            var formData = new FormData();
+            //为FormData对象添加数据
+            $.each($('#uploadFaceImage')[0].files, function (i, file) {
+                formData.append('file', file);
+            });
+
+            //上传应用图标
+            $.ajax({
+                url: "/Upload/UploadFile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data && data.IsSuccess) {
+                        $("#HidFaceImage").val(data.ResultData["files"]);
+                    }
+                    else {
+                        alert(data.Message);
+                    }
+                }
+            });
+        });
+    }
+</script>
+<style>
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+
+        <tr>
+            <td class="formTitle"> 车店名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Name" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 车店封面</td>
+            <td>
+                <input type="hidden" id="HidFaceImage" />
+                <div style="text-align: center;">
+                    <div class="" style="width: 100px; height: 100px;">
+                        <img id="uploadPreview" style="width: 100px; height: 100px; border-radius: 100px; border:0px" src="~/Content/images/add.png" />
+                        <input type="file" name="uploadFaceImage" id="uploadFaceImage" style="display:none">
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 车店地址<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div style="float: left;">
+                    <div id="ProvinceId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;" isvalid="yes" checkexpession="NotNull"></div>
+                    <div id="CityId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;" isvalid="yes" checkexpession="NotNull"></div>
+                    <div id="CountyId" type="select" class="ui-select" style="float: left; width: 200px; margin-right: 1px;"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 详细地址<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="AddressInfo" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 经纬度<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input type="hidden" id="Lng" />
+                <input type="hidden" id="Lat" />
+                <input id="point" type="text" class="form-control input-profile" readonly onclick="SelectPoint()" /><span onclick="SelectPoint()" class="input-button" title="选取坐标">...</span>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 联系人<font face="宋体">*</font></td>
+            <td class="formValue"> <input id="ConectName" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" /> </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 联系电话<font face="宋体">*</font></td>
+            <td class="formValue"> <input id="ConectTel" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" /> </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">是否有效</td>
+            <td class="formValue">
+                <div class="checkbox">
+                    <label>
+                        <input id="Status" type="checkbox" checked="checked" />
+                        是
+                    </label>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 排序号</td>
+            <td class="formValue">
+                <input id="SortNum" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NumOrNull" />
+            </td>
+        </tr>
+    </table>
+</div>
+

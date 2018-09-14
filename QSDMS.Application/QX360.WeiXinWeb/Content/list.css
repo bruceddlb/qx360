@@ -1,0 +1,55 @@
+﻿@charset "utf-8";
+.putaojiuList { background-color:#f0f0f0; padding:.5rem;}
+.putaojiuList li {float:left; transition:.5s ease all; -webkit-transition:.5s ease all; -moz-transition:.5s ease all; -o-transition:.5s ease all; width:50%; padding:.5rem;}
+.putaojiuList li article {border:1px solid #dedede; background-color:#fff;}
+.putaojiuList li img {width:100%; height:auto;}
+.putaojiuList li aside {padding:.5rem; line-height:20px; position:relative; z-index:1;}
+.putaojiuList li aside a {display:block; position:relative; text-align:center;}
+.putaojiuList li aside h5 a { text-align:left;}
+.putaojiuList li aside a img { width:100%;}/* max-width:150px; max-height:150px;*/
+.putaojiuList li div {padding:0 .5rem;}
+.putaojiuList li h5 { font-size:1.4rem;  line-height:2rem; font-weight:normal; margin:.5rem 0px;box-sizing:content-box; -webkit-box-sizing:content-box;height:4rem; overflow:hidden;}
+.putaojiuList li h5 a:hover { color:#9b3538;}
+
+.starBox { margin-bottom:.5rem; font-size:1.2rem;}
+.starboxInfo {background:url(../images/huodong/staroff.png) repeat 0 0; width:6rem; height:1.2rem;-webkit-background-size:1.2rem; -moz-background-size:1.2rem; background-size:1.2rem;}
+.starboxInfo em { float:left; width:20%; background:url(../images/huodong/staron.png) repeat 0 0; height:1.2rem;-webkit-background-size:1.2rem; -moz-background-size:1.2rem; background-size:1.2rem;}
+.starboxInfo.comments em  { background-image:url(../images/huodong/star_pl.png);}
+
+/*葡萄酒列表*/
+.paixu { height:4.1rem; border-bottom:1px solid #dddddd; border-top:1px solid #dddddd; background-color:#f4f4f4;}
+.paixu a { width:25%; float:left; background-color:#fff; font-size:1.4rem; text-align:center; height:3.9rem; line-height:3.9rem; position:relative;}
+
+.paixu a span { display:none; background:url(../images/list/arrow_gray.png) no-repeat 50% 50%;-webkit-background-size:1.3rem; height:2rem; -moz-background-size:1.3rem; background-size:1.3rem;position:absolute; margin-left:1.1rem; left:50%; width:2rem; top:1rem;-webkit-transition: -webkit-transform .5s ease; -moz-transition: -moz-transform .5s ease; -o-transition: -o-transform .5s ease;transition: transform .5s ease;}
+.paixu a.current  span,.paixu a:active,.paixu a.current { color:#a61919; }
+.paixu a:active span ,.paixu a.current  span { transform:rotate(180deg); -webkit-transform:rotate(180deg); -moz-transform:rotate(180deg); -o-transform:rotate(180deg);background-image:url(../images/list/arrow_red.png);}
+
+.gwc {background:url(../images/new/gwc.png) no-repeat 50% 50%; width:50px; height:50px; background-size:60% auto; -webkit-background-size:60% auto; position:absolute; right:0; bottom:0; z-index:10;}
+
+
+
+.cartList { margin:0 0 1rem; border:1px solid #dddddd; background-color:#fff;}
+.cartList li {position:relative; min-height:8.3rem; padding-bottom:.8em; border-bottom:1px solid #ddd;}
+.favorlist li { min-height:93px;}
+.cartList li.divide { padding:1rem; min-height:inherit; font-size:1.2rem; line-height:1.5; color:#999;}
+.cartList li.divide em {font-size:1.5rem; font-style:normal;}
+.cartList li:last-child {border-bottom:0 none; }
+.cartList li img {position:absolute; left:4.4rem; top:.3rem; width:7.5rem; height:7.5rem; z-index:9;}
+.checkboxWrap { position:absolute; z-index:10; width:2.6rem; height:2.6rem; background:url(../images/order/check.png) no-repeat 0 0;-webkit-background-size:2.6rem auto; -moz-background-size:2.6rem auto; background-size:2.6rem auto; left:1rem; top:1rem;}
+.checkboxWrap.current {background-position:0 100%;}
+.cartList li div {font-size:1.2rem; color:#666666; margin-left:13rem; padding:1rem .5rem 0 0;}
+.cartList li div h5 {font-size:1.2rem; line-height:1.5rem; font-weight:normal;}
+
+.kucun {margin-top:.5rem;}
+.kucun span { float:left;}
+.kucun span.kc { border-right:1px solid #ddd; text-align:center; padding:0 .5rem; border-bottom:1px solid #ddd; border-top:1px solid #ddd;}
+.kucun span.kc:first-child { border-left:1px solid #ddd; border-top-left-radius:4px; border-bottom-left-radius:4px; -webkit-border-top-left-radius:4px; -webkit-border-bottom-left-radius:4px; -moz-border-radius-topleft:4px; -moz-border-radius-bottomleft:4px;}
+.kucun span.kc:nth-child(3) {border-top-right-radius:4px; border-bottom-right-radius:4px; -webkit-border-bottom-right-radius:4px; -webkit-border-top-right-radius:4px; -moz-border-radius-bottomright:4px; -moz-border-radius-topright:4px;}
+.kucun span.minus {font-size:1rem;}
+.kucun span.plus {font-size:1.2rem; }
+
+.checkouTotal {padding:1rem 1.8rem 0; font-size:1.2rem; color:#666; line-height:2rem;}
+.fixBuy { background-color:#fff; position:fixed; bottom:0; width:100%; z-index:10; border-top:1px solid #ddd; max-width:640px;}
+
+
+

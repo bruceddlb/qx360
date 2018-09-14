@@ -1,0 +1,116 @@
+﻿@{
+    ViewBag.Title = "查看";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script src="/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+<link href="/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+<script>
+
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+
+    });
+    //初始化数据
+    function InitControl() {
+
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/Advise/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+
+                        //图片
+                        if (data.AttachmentPicList) {
+                            var html = "";
+                            var imgslist = data.AttachmentPicList;
+                            if (imgslist) {
+                                for (var i = 0; i < imgslist.length; i++) {
+                                    var path = imgslist[i].PicName;
+                                    var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + path;
+                                    html += '<li style=" background:#ccc;position:relative;"><a class="magnifier" href="' + path + '">';
+                                    html += '<img src="' + path + '"/>';
+                                    html += '</a>';
+                                    html += '</li>';
+                                }
+                                $("#imgs").append(html);
+                                //查看图片
+                                jQuery('.magnifier').touchTouch();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+    }
+
+    //初始化页面
+    function InitialPage() {
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+    }
+</script>
+<style>
+    #imgs li {
+        float: left;
+        margin-right: 5px;
+    }
+
+        #imgs li img {
+            width: 100px;
+            height: 100px;
+        }
+</style>
+
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle"> 联系人</td>
+            <td class="formValue">
+                <input id="ConnectName" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 联系电话</td>
+            <td class="formValue">
+                <input id="ConnectTel" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 时间</td>
+            <td class="formValue">
+                <input id="CreateTime" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">反馈图片</td>
+            <td>
+                <input type="file" name="uploadFile" id="uploadFile" style="display:none;">
+                <ul id="imgs"></ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle"> 问题描述</td>
+            <td class="formValue"> <textarea id="AdviseContent" rows="5" style="width:100%"></textarea> </td>
+        </tr>
+
+    </table>
+</div>

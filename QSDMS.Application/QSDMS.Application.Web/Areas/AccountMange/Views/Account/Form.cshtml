@@ -1,0 +1,133 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = '@ViewBag.AccountId';
+    $(function () {
+        InitialPage();
+        InitControl();
+    });
+
+    //初始化数据
+    function InitControl() {
+        //会员类型
+        $("#ddlMemberType").ComboBox({
+            url: "/SystemManage/DataItemDetail/GetDataItemListJson",
+            param: { EnCode: "hylx" },
+            id: "ItemDetailId",
+            text: "ItemName",
+            description: "==请会员类型选择==",
+            height: "200px"
+        });
+        //会员等级
+        $("#ddlMemberLevel").ComboBox({
+            url: "/SystemManage/DataItemDetail/GetDataItemListJson",
+            param: { EnCode: "hydj" },
+            id: "ItemDetailId",
+            text: "ItemName",
+            description: "==请会员等级选择==",
+            height: "200px"
+        });
+
+        if (!!keyValue) {
+            //设置控件值
+            $.SetForm({
+                url: "/AccountMange/Account/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+
+                        if (data.MemberLevel) {
+                            $("#ddlMemberLevel").ComboBoxSetValue(data.MemberLevel);
+                        }
+                        if (data.MemberType) {
+                            $("#ddlMemberType").ComboBoxSetValue(data.MemberType);
+                        }
+
+                    }
+                }
+            });
+        }
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["MemberLevel"] = $("#ddlMemberLevel").attr('data-value');
+        postData["MemberType"] = $("#ddlMemberType").attr('data-value');
+
+        $.SaveForm({
+            url: "/AccountMange/Account/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+
+    }
+</script>
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">会员账号</td>
+            <td class="formValue">
+                <input id="Mobile" type="text" class="form-control input-profile"  readonly/>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">会员名称</td>
+            <td class="formValue">
+                <input id="UserName" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">会员类型</td>
+            <td class="formValue">
+                <div id="ddlMemberType" type="select" class="ui-select">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">会员等级</td>
+            <td class="formValue">
+                <div id="ddlMemberLevel" type="select" class="ui-select">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">微信昵称</td>
+            <td class="formValue">
+                <input id="WXName" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">微信OpenId</td>
+            <td class="formValue">
+                <input id="WXOpenId" type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+    </table>
+</div>

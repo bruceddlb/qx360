@@ -1,0 +1,208 @@
+﻿@{
+    ViewBag.Title = "评价学员";
+}
+
+<script type="text/javascript">
+    var id = request('id');
+    function ViewModel() {
+        var self = this;
+        self.CourseItemList = ko.observableArray([]);
+        self.CommitLev = ko.observable("");
+        self.CommitContent = ko.observable("");
+        self.StudyOrderId = ko.observable(id);
+        self.ClassId = ko.observable("");
+        self.ClassName = ko.observable("");
+        self.SubjectId = ko.observable("");
+        self.SubjectName = ko.observable("");
+        self.StudyContent = ko.observable("");
+        //查询学员学车信息
+        self.BindStudy = function () {
+            $.get("/Study/GetStudyModel", { id: id }, function (result) {
+                if (result.IsSuccess) {
+
+                    var studydata = result.ResultData["Data"];
+                    if (studydata) {
+                        var memberId = studydata.MemberId;
+                        $.get("/Apply/GetApplayInfo", { memberid: memberId }, function (result) {
+                            if (result.IsSuccess) {
+                                var applyData = result.ResultData["Data"];
+                                if (applyData) {
+                                    $.post("/Subject/GetSubject", { subjectid: applyData.SubjectId }, function (result) {
+                                        if (result.IsSuccess) {
+                                            var subjectData = result.ResultData["Data"];
+                                            if (subjectData) {
+                                                // var memberId = studydata.MemberId;
+                                                self.ClassId(subjectData.ItemId);
+                                                self.ClassName(subjectData.SubjectName);
+
+                                                $.ajax({
+                                                    type: "GET",
+                                                    url: "/Course/List",
+                                                    async: false,
+                                                    data: { classid: subjectData.ItemId },
+                                                    success: function (result) {
+                                                        if (result.IsSuccess) {
+                                                            var examdata = [];
+                                                            var data = result.ResultData["List"];
+                                                            for (var i in data) {
+                                                                var item = data[i];
+                                                                examdata.push({
+                                                                    "id": item.CourseId,
+                                                                    "value": item.CourseName,
+                                                                });
+                                                            }
+                                                        }
+                                                        if (examdata.length == 0) {
+                                                            return;
+                                                        }
+                                                        var MeeType_show = document.querySelector('#EsType');
+                                                        //选择考试科目
+                                                        MeeType_show.addEventListener('click', function () {
+                                                            var bankSelect = new IosSelect(1,
+                                                                [examdata],
+                                                                {
+                                                                    container: '.container',
+                                                                    title: '选择科目',
+                                                                    itemHeight: 50,
+                                                                    itemShowCount: 3,
+                                                                    oneLevelId: MeeType_show,
+                                                                    callback: function (selectOneObj) {
+                                                                        MeeType_show.value = selectOneObj.value;
+                                                                        self.SubjectId(selectOneObj.id);
+                                                                        self.SubjectName(selectOneObj.value);
+
+                                                                        //绑定项目
+                                                                        self.BindCourseItem(selectOneObj.id);
+                                                                    }
+                                                                });
+                                                        });
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        //学车项目
+        self.BindCourseItem = function (subjectid) {
+            $.get("/CourseItem/List", { courseid: subjectid }, function (result) {
+                if (result.IsSuccess) {
+                    self.CourseItemList(result.ResultData["List"]);
+
+                    $('.myre_cx a').click(function () {
+                        if ($(this).attr("class") == 'myre_cx_hover') {
+                            $(this).removeClass('myre_cx_hover')
+                            $(this).find('.my_checkbox').attr("checked", false)
+                        } else {
+                            $(this).addClass('myre_cx_hover')
+                            $(this).find('.my_checkbox').attr("checked", 'checked')
+                        }
+                    })
+                }
+            });
+        }
+
+        self.Send = function () {
+            var postData = {};
+            var studycontent = "";
+            $("#divStudyContent input[type='checkbox']").each(function () {
+                var $this = $(this);
+                if ($this.is(":checked")) {
+                    studycontent += $this.val() + ",";
+                }
+            })
+            $("#divStudyType input[type='radio']").each(function () {
+                var $this = $(this);
+                if ($this.is(":checked")) {
+                    self.CommitLev($this.attr("rel"));
+                }
+            })
+            studycontent = studycontent.substring(0, studycontent.length - 1);
+            self.StudyContent(studycontent);
+            if (!self.SubjectId()) {
+                ShowTips("请选择科目");
+                return;
+            }
+            if (!self.StudyContent()) {
+                ShowTips("请选择学车项目");
+                return;
+            }
+            if (!self.CommitLev()) {
+                ShowTips("请选择评价类型");
+                return;
+            }
+            if (!self.CommitContent()) {
+                ShowTips("请填写评价");
+                return;
+            }
+
+            postData["CommitLev"] = self.CommitLev();
+            postData["CommitContent"] = self.CommitContent();           
+            postData["StudyOrderId"] = self.StudyOrderId();
+            postData["ClassId"] = self.ClassId();
+            postData["ClassName"] = self.ClassName();
+            postData["SubjectId"] = self.SubjectId();
+            postData["SubjectName"] = self.SubjectName();
+            postData["StudyContent"] = self.StudyContent();
+
+            $.post("/TeacherCommittee/Send", { json: JSON.stringify(postData) }, function (result) {
+                if (result.IsSuccess) {
+                    ShowTips(result.Message, "ok");
+                    setTimeout(function () {
+                        window.location.href = "/MaCenter/LearnCar";
+
+                    }, 200);
+
+                } else {
+                    ShowTips(result.Message);
+                }
+            });
+        }
+    }
+    $(function () {
+        var model = new ViewModel();
+        ko.applyBindings(model);
+        model.BindStudy();
+
+        $('.myre_m a').click(function () {
+            $(this).find('.my_radio').attr("checked", 'checked')
+            $(this).parent().find('a').removeClass('myre_m_hover')
+            $(this).addClass('myre_m_hover')
+        })
+       
+
+    })
+
+  
+</script>
+<div class="LeEv">评价学员</div>
+
+<div class="LeEv_div">
+
+    <div class="EvSt_input"><input type="text" placeholder="请选择考试科目" class="EvSt_text" id="EsType" readonly></div>
+
+    <div class="myre_cx">
+        <span>选择项目：</span>
+        <div style="margin-left:1.3rem;" data-bind="foreach:$root.CourseItemList" id="divStudyContent">
+            <a href="javascript:void(0)"><input type="checkbox" name="jiang1" class="my_checkbox" data-bind="value:Name"><span data-bind="text:'&nbsp;&nbsp;'+Name"> </span> </a>
+        </div>
+    </div>
+
+    <div class="myre_m">
+        <span>评价类型：</span>
+        <div style="margin-left:1.3rem;" id="divStudyType">
+            <a href="javascript:void(0)"><input type="radio" name="jiang" class="my_radio" rel="1">&nbsp;&nbsp;优秀</a>
+            <a href="javascript:void(0)"><input type="radio" name="jiang" class="my_radio" rel="2">&nbsp;&nbsp;良好</a>
+            <a href="javascript:void(0)"><input type="radio" name="jiang" class="my_radio" rel="3">&nbsp;&nbsp;差</a>
+        </div>
+    </div>
+    <div class="LeEv_text"><textarea placeholder="请输入评价内容" data-bind="value:$root.CommitContent"></textarea></div>
+</div>
+
+
+<div class="LeEv_btn"><button type="button" class="Mcin_botton2" data-bind="click:function(){$root.Send()}">提交评价</button></div>

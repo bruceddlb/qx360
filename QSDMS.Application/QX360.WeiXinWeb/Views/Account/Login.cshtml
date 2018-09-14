@@ -1,0 +1,71 @@
+﻿@{
+    ViewBag.Title = "登陆";
+}
+@section scripts{
+    <script>
+        function ViewModel() {
+            var self = this;
+            self.LoginInfo = ko.observable({
+                MemberName: ko.observable(""),
+                Pwd: ko.observable(""),
+                OpenId: ko.observable(request("openid")),
+                ReturnUrl: ko.observable(request("returnurl")),
+            });
+            //保存
+            self.Login = function () {
+                if (!self.LoginInfo().MemberName()) {
+                    ShowTips("请输入手机号码");
+                    return;
+                }
+                if (!self.LoginInfo().Pwd()) {
+                    ShowTips("请输入密码");
+                    return;
+                }
+
+                $.post("/Account/Login", { UserName: self.LoginInfo().MemberName(), UserPwd: self.LoginInfo().Pwd(), OpenId: self.LoginInfo().OpenId(), ReturnUrl: self.LoginInfo().ReturnUrl() }, function (result) {
+                    if (result.IsSuccess) {
+                        var returnUrl = (result.ResultData["ReturnUrl"]);
+                        if (returnUrl) {
+                            window.location.href = returnUrl;
+                        } else {
+                            window.location.href = "/MyCenter/Index";
+                        }
+                    }
+                    else {
+                        ShowTips(result.Message);
+                    }
+                })
+            }
+
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+
+
+        })
+    </script>
+}
+<div class="Mber_top">
+    <div class="Mber_top_h1">会员登录</div>
+</div>
+
+<div class="Mber_con">
+    <div class="Mber_row">
+        <i class="iconfont icon-shoujihaoma2"></i>
+        <div class="Mber_input">
+            <input type="text" placeholder="请输入登陆名/手机号码" class="Mber_input_text" data-bind="value:LoginInfo().MemberName">
+        </div>
+    </div>
+    <div class="Mber_row">
+        <i class="iconfont icon-mima"></i>
+        <div class="Mber_input">
+            <input type="password" placeholder="请输入密码" class="Mber_input_text" data-bind="value:LoginInfo().Pwd">
+        </div>
+    </div>
+</div>
+
+<div class="Mber_btn">
+    <input type="submit" value="登录" class="Mber_sub" data-bind="click:function(){$root.Login();}">
+</div>
+<div class="Mber_sm">尚未注册，<a data-bind="attr:{href:'/Account/Register?openid='+ $root.LoginInfo().OpenId()}">立即注册</a></div>

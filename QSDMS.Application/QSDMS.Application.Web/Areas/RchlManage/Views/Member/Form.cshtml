@@ -1,0 +1,151 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+    });
+
+    //初始化数据
+    function InitControl() {
+
+        //会员等级
+        $("#ddlMemberLevel").ComboBox({
+            url: "/DataItemEnums/GetUserType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择会员类型==",
+            height: "200px"
+        });
+        //所属驾校
+        $("#ddlSchool").ComboBox({
+            url: "/QX360Manage/School/GetDataListJson",
+            param: null,
+            id: "SchoolId",
+            text: "Name",
+            description: "==请选择所属驾校==",
+            height: "200px"
+        });
+
+        if (!!keyValue) {
+            $("#Mobile").attr("readonly", "readonly");
+            //设置控件值
+            $.SetForm({
+                url: "/QX360Manage/Member/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    if (data != null) {
+                        $("#form1").SetWebControls(data);
+
+                        if (data.LevId) {
+                            $("#ddlMemberLevel").ComboBoxSetValue(data.LevId);
+                        }
+                        if (data.SchoolId) {
+                            $("#ddlSchool").ComboBoxSetValue(data.SchoolId);
+                        }
+
+
+                    }
+                }
+            });
+        }
+
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["LevId"] = $("#ddlMemberLevel").attr('data-value');
+        postData["LevName"] = $("#ddlMemberLevel").attr('data-text');
+        postData["SchoolId"] = $("#ddlSchool").attr('data-value');
+        postData["SchoolName"] = $("#ddlSchool").attr('data-text');
+
+        $.SaveForm({
+            url: "/QX360Manage/Member/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //初始化页面
+    function InitialPage() {
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+
+    }
+</script>
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">手机号码<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Mobile" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>       
+        <tr>
+            <td class="formTitle">会员姓名<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="MemberName" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">会员昵称</td>
+            <td class="formValue">
+                <input id="NikeName" type="text" class="form-control input-profile"  />
+            </td>
+        </tr>
+       
+        <tr>
+            <td class="formTitle">所属驾校</td>
+            <td class="formValue">
+                <div id="ddlSchool" type="select" class="ui-select" >
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">会员等级<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="ddlMemberLevel" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">登陆密码<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="Pwd" type="text" class="form-control input-profile" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">白班学时<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="StudyHour1" type="text" class="form-control input-profile" isvalid="yes" value="0" checkexpession="Num" />
+            </td>
+        </tr>    
+        <tr>
+            <td class="formTitle">夜班学时<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="StudyHour2" type="text" class="form-control input-profile" isvalid="yes" value="0" checkexpession="Num" />
+            </td>
+        </tr>    
+    </table>
+</div>

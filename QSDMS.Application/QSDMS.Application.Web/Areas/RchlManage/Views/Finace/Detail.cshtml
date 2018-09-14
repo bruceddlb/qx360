@@ -1,0 +1,158 @@
+﻿@{
+    ViewBag.Title = "首页看板";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+
+<script>
+    var type = request('type');
+    var date = request('date');
+    $(function () {
+        GetGrid();
+        //查询事件
+        $("#btn_Search").click(function () {
+            GetGrid();
+        });
+    });
+    function GetGrid() {
+        $.SetForm({
+            url: "/QX360Manage/Finace/GetDetailJson",
+            param: { type: type, date: date },
+            success: function (data) {
+                if (data != null) {
+                    $("#title").text(data.title);
+                    $("#subtitle").text(data.subtitle);
+                    $("#currentInCosMoney").text(data.currentInCosMoney);
+                    $("#currentOutCosMoney").text(data.currentOutCosMoney);
+                    $("#preInCosMoney").text(data.preInCosMoney);
+                    $("#preOutCosMoney").text(data.preOutCosMoney);
+                    var html = "";
+                    if (data.currentInList) {
+                        var totalMoney = 0;
+                        for (var i = 0; i < data.currentInList.length; i++) {
+                            var item = data.currentInList[i];
+                            html += '<tr>';
+                            html += '<td style="text-align:center">' + item.Name + ' </td>';
+                            html += '<td>￥' + item.TotalMoney + '</td>';
+                            html += '</tr>';
+                            totalMoney += item.TotalMoney;
+                        }
+                        html += '<tr>';
+                        html += '<td style="text-align:center">合计 </td>';
+                        html += '<td>￥' + totalMoney + '</td>';
+                        html += '</tr>';
+                        $("#divin").html(html);
+                    }
+                    if (data.currentOutList) {
+                        html = "";
+                        totalMoney = 0;
+                        for (var i = 0; i < data.currentOutList.length; i++) {
+                            var item = data.currentOutList[i];
+                            html += '<tr>';
+                            html += '<td style="text-align:center">' + item.Name + ' </td>';
+                            html += '<td>￥' + item.TotalMoney + '</td>';
+                            html += '</tr>';
+                            totalMoney += item.TotalMoney;
+                        }
+                        html += '<tr>';
+                        html += '<td style="text-align:center">合计 </td>';
+                        html += '<td>￥' + totalMoney + '</td>';
+                        html += '</tr>';
+                        $("#divout").html(html);
+                    }
+                }
+            }
+        });
+    }
+</script>
+<style></style>
+
+<div class="">
+    <div class="toolbar">
+        <div class="btn-group animated fadeInDownBig">
+            <a id="btn-replace" class="btn btn-default" href="#" onclick="window.history.go(-1);"><i class="fa fa-step-backward"></i>&nbsp;返回</a>
+        </div>
+    </div>
+</div>
+<div class="" style="">
+    <div class="portal-panel" style="background:white">
+        <div class="row">
+            <h2 style="text-align:center;padding:10px;" id="title"></h2>
+            <div class="portal-panel-content" style="overflow: hidden;">
+                <div style="padding:10px"><span> 币种：人民币</span><span style="float:right;margin-right:10px"> 账单周期：<span id="subtitle"></span></span></div>
+                <div class="row" style="background-color: #F3F3F4; height: 100px;">
+                    <div style="width: 25%; position: relative; float: left;">
+                        <div class="" style="text-align:center;padding:30px;">
+                            <div>上期收入</div>
+                            <div style="font-weight:bold;font-size:18px;padding-top:10px"><span id="preInCosMoney"></span></div>
+
+                        </div>
+                    </div>
+                    <div style="width: 25%; position: relative; float: left;">
+                        <div class="" style="text-align:center;padding:30px;">
+                            <div>本期收入</div>
+                            <div style="font-weight:bold;font-size:18px;padding-top:10px"><span id="currentInCosMoney"></span></div>
+
+                        </div>
+                    </div>
+                    <div style="width: 25%; position: relative; float: left;">
+                        <div class="" style="text-align:center;padding:30px;">
+                            <div>上期支出</div>
+                            <div style="font-weight:bold;font-size:18px;padding-top:10px"><span id="preOutCosMoney"></span></div>
+
+                        </div>
+                    </div>
+                    <div style="width: 25%; position: relative; float: left;">
+                        <div class="" style="text-align:center;padding:30px;">
+                            <div>本期支出</div>
+                            <div style="font-weight:bold;font-size:18px;padding-top:10px"><span id="currentOutCosMoney"></span></div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title" style="border-left: 10px solid #2F4050">
+                        <h5>本期收入</h5>
+                    </div>
+                    <div class="ibox-content" style="border: 1px solid #F3F3F4; ">
+                        <table class="table table-hover no-margins">
+                            <thead>
+                                <tr>
+                                    <th>项目</th>
+                                    <th>金额(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="divin">
+                               
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title" style="border-left: 10px solid #2F4050">
+                        <h5>本期支出</h5>
+                    </div>
+                    <div class="ibox-content" style="border: 1px solid #F3F3F4; ">
+                        <table class="table table-hover no-margins">
+                            <thead>
+                                <tr>
+                                    <th>项目</th>
+                                    <th>金额(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="divout">
+                               
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

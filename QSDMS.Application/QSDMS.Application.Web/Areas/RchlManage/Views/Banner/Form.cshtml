@@ -1,0 +1,133 @@
+﻿@{
+    ViewBag.Title = "编辑";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+
+}
+<script>
+    var keyValue = request('keyValue');//获得主键
+    $(function () {
+
+        initControl();
+
+        ////上传图片
+        $('#uploadPreview').unbind("click").bind("click", function () {
+            $("#uploadFile").click();
+        });
+
+    })
+    //初始化控件
+    function initControl() {
+
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/QX360Manage/Banner/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                    //图片
+                    if (data.ImgPath) {
+                        document.getElementById('uploadPreview').src = data.ImgPath;
+                    }
+                }
+            });
+        } else {
+
+        }
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "/QX360Manage/Banner/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //检查文件类型
+    function UpPicFile() {
+        var array = new Array('gif', 'jpeg', 'png', 'jpg');  //可以上传的文件类型
+        var fileContentType = $("#uploadFile").val().match(/^(.*)(\.)(.{1,8})$/)[3]; //这个文件类型正则很有用：）
+        var isExists = false;
+        for (var i in array) {
+            if (fileContentType.toLowerCase() == array[i].toLowerCase()) {
+                isExists = true;
+            }
+        }
+        if (isExists == false) {
+            $("#uploadFile").val("")
+            dialogMsg("上传图片类型不正确!", 2);
+            return false;
+        }
+        var f = document.getElementById('uploadFile').files[0]
+        var src = window.URL.createObjectURL(f);
+        document.getElementById('uploadPreview').src = src;
+        var formData = new FormData();
+        //为FormData对象添加数据
+        $.each($('#uploadFile')[0].files, function (i, file) {
+            formData.append('file', file);
+        });
+        //上传应用图标
+        $.ajax({
+            url: "/Upload/UploadFile",
+            type: 'POST',
+            data: formData,
+            async: false,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                if (data && data.IsSuccess) {
+                    $("#ImgPath").val(data.ResultData["files"]);
+                }
+                else {
+                    alert(data.Message);
+                }
+            }
+        });
+    }
+</script>
+
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form" style="table-layout: auto;">
+        <tr>
+            <td class="formTitle">标题<font face="宋体">*</font></td>
+            <td class="formValue" colspan="3">
+                <input id="Name" type="text" class="form-control" placeholder="请输入标题" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">图片</td>
+            <td class="formValue" colspan="3">
+                <input id="ImgPath" type="hidden" />
+                <div class="" style="width: 100px; height: 100px;">
+                    <img id="uploadPreview" style="width: 100px; height: 100px; border-radius: 100px;" src="~/Content/images/add.png" />
+                    <input type="file" name="uploadFile" id="uploadFile" style="display:none" onchange="UpPicFile()">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">连接地址</td>
+            <td class="formValue" colspan="3">
+                <input id="HrefUrl" type="text" class="form-control" placeholder="请输入连接网址" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">描述</td>
+            <td class="formValue" colspan="3">
+                <input id="Remark" type="text" class="form-control" style="height: 70px;" />
+            </td>
+        </tr>
+
+    </table>
+</div>

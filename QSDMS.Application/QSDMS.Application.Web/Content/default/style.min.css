@@ -1,0 +1,23 @@
+﻿/*风格样式*/
+.layui-layer-iframe{border-color:#fff;border-top-color:#2F4050;border-right:0;border-left:0;border-radius:0 0 3px 3px}
+.layui-layer-dialog{border-color:#fff;border-top-color:#2F4050;border-right:0;border-left:0;border-radius:0 0 3px 3px}
+.layui-layer-title{border-color:#2F4050;border-radius:0;background:#2F4050;color:#fff}
+.layui-layer-setwin .layui-layer-close1{text-shadow:none}
+.layui-layer-content{border-bottom:1px solid #f1f1f1}
+.layui-layer-dialog .layui-layer-content{border-bottom:0 solid #f1f1f1}
+.layui-layer-msg .layui-layer-content{border-bottom:1px solid #BBB}
+.layui-layer-msg{border-radius:8px}
+.layui-layer-iframe .layui-layer-btn{background-color:#FFF;padding-top:4px;color:#999}
+.layui-layer-btn a{border-radius:3px}
+.layui-layer-btn .layui-layer-btn0{background:#1E2E3B;border:1px solid #1E2E3B}
+.layui-layer-btn .layui-layer-btn0:hover{background:#283744;border:1px solid #283744}
+.layui-layer-btn .layui-layer-btn1{background:#FFF;border:1px solid #ccc;color:#666}
+.layui-layer-btn .layui-layer-btn1:hover{background:#FFF;border:1px solid #ccc;color:#666}
+.layui-layer-btn{border:0}
+.layui-layer-shade{opacity:.15!important}
+
+/*表格选择状态样式*/
+.ui-state-highlight, .ui-widget-content .ui-state-highlight, .ui-widget-header .ui-state-highlight{background: #2F4050;color:#fff;}
+.btn-success,.btn-primary{background:#2F4050;border-color:#2F4050}
+.btn-success:hover,..btn-primary:hover{background-color:#2F4050;opacity:0.8}
+.bbit-tree-node .bbit-tree-selected,.ui-select-option-content li.liactive{background-color: #2F4050;color:#fff;}

@@ -1,0 +1,365 @@
+﻿@{
+    ViewBag.Title = "用户管理";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+    var cuurentlogin = QSDMS.Model.OperatorProvider.Provider.Current();
+}
+<script>
+    var keyValue = request('keyValue');
+    var instanceId = "";
+    var formId = "";
+    $(function () {
+        GetRoleTree();
+        GetAuthorizeDataTree();
+        GetOrganizeType();
+        initControl();
+
+    })
+    //初始化控件
+    function initControl() {
+        if ("@(cuurentlogin.Account==QSDMS.Util.Config.GetValue("SysAccount"))"!="True") {
+            $("#hidetr").hide();
+            $("#txtAuthorize").attr('isvalid', 'yes');
+        }
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/BaseManage/User/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                    if (data.OrganizeType) {
+                        $("#ddlOrganizeType").ComboBoxSetValue(data.OrganizeType)
+                    }
+                    $("#Password").val("******").attr('disabled', 'disabled');
+                    var text = "";
+                    //角色
+                    for (var i = 0; i < $("#roleTree").getCheckedAllNodes().length; i++) {
+                        var id = $("#roleTree").getCheckedAllNodes()[i];
+                        if (id) {
+                            var a = $("#roleTree").find("span[data-value='" + id + "']").text();
+                            text += a + ",";
+                        }
+                    }
+                    $("#txtRole").val(text.substring(0, text.length - 1));
+                    //授权机构
+                    text = "";
+                    for (var i = 0; i < $("#authorizeTree").getCheckedAllNodes().length; i++) {
+                        var id = $("#authorizeTree").getCheckedAllNodes()[i];
+                        if (id) {
+                            var a = $("#authorizeTree").find("span[data-value='" + id + "']").text();
+                            text += a + ",";
+                        }
+                    }
+                    $("#txtAuthorize").val(text.substring(0, text.length - 1));
+
+                }
+            });
+        }
+
+
+    }
+    function GetOrganizeType() {
+        $("#ddlOrganizeType").ComboBox({
+            url: "/DataItemEnums/GetOrganizeType",
+            param: null,
+            id: "ItemId",
+            text: "ItemName",
+            description: "==请选择账号类型==",
+            height: "200px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+
+        });
+    }
+    //获取系统功能
+    function GetRoleTree() {
+        var item = {
+            height: 220,
+            showcheck: true,
+            url: "/BaseManage/UserRole/RoleTreeJson?userid=" + keyValue
+        };
+        $("#roleTree").treeview(item);
+    }
+    function GetAuthorizeDataTree() {
+        var item = {
+            height: 220,
+            showcheck: true,
+            url: "/BaseManage/UserAuthorizeData/AuthorizeDataTreeJson?userid=" + keyValue
+        };
+        $("#authorizeTree").treeview(item);
+    }
+    //保存表单
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["OrganizeType"] = $("#ddlOrganizeType").attr('data-value');
+        postData["OrganizeTypeName"] = $("#ddlOrganizeType").attr('data-text');
+        console.log(JSON.stringify(postData))
+        $.SaveForm({
+            url: "/BaseManage/User/SaveForm",
+            param: { "keyValue": keyValue, "strUserEntity": JSON.stringify(postData) },
+            loading: "正在保存数据...",
+            success: function (data) {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+    //用户角色授权
+    function SelectRole() {
+        var showRoleList = function () {
+            var $subnePanel = $("#rolePanel");
+            var control = $("#txtRole");
+            var divpa = document.getElementById("rolePanel");
+            var offset = control.offset();
+            divpa.style.top = (offset.top + control.height() + 12) + "px";
+            divpa.style.left = (offset.left) + "px";
+            $subnePanel.removeClass("hide");
+            $subnePanel.width(control.width() + 25);
+
+            $subnePanel.css("position", "absolute");
+            $subnePanel.css("z-index", "1000");
+            $subnePanel.unbind("mouseout").bind('mouseout', function () {
+                var $this = $(this);
+                if ($this.length != 0) {
+                    var width = $this.width();
+                    var offset = $this.offset();
+                    var w = $(document).width();
+                    var top = offset.top + $this.height();
+                    var left = 0;
+                    if (offset.left + width + 9 > w) {
+                        left = offset.left + $this.width() - width + 4;
+                    }
+                    else {
+                        left = offset.left;
+                    }
+                    var ev = window.event;
+                    var x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    var y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                    if (!(x >= left && x <= left + width - 2 &&
+                        y >= offset.top && y <= top - 2)) {
+
+                        $subnePanel.addClass("hide");
+                    }
+                }
+            });
+
+            $subnePanel.find(".clostc").click(function () {
+                $subnePanel.addClass("hide");
+            });
+
+            //确定事件
+            $("#btn_userrole").bind("click", function () {
+                var text = "";
+                var ids = "";
+                for (var i = 0; i < $("#roleTree").getCheckedAllNodes().length; i++) {
+                    var id = $("#roleTree").getCheckedAllNodes()[i];
+                    if (id) {
+                        var a = $("#roleTree").find("span[data-value='" + id + "']").text();
+                        ids += id + "|" + a + ",";
+                        text += a + ",";
+                    }
+                }
+                if (ids) {
+                    $("#RoleId").val(ids.substring(0, ids.length - 1));
+                    control.val(text.substring(0, text.length - 1));
+                } else {
+                    $("#RoleId").val("");
+                    control.val("");
+                }
+                //rs.id = String($("#roleTree").getCheckedAllNodes());
+
+                $subnePanel.addClass("hide");
+            })
+        }
+        //废弃
+        var hideRoleListList = function () {
+            var $subnePanel = $("#rolePanel");
+            $subnePanel.addClass("hide");
+        }
+        showRoleList();
+    }
+    function SelectAuthorize() {
+        if ($("#ddlOrganizeType").attr('data-value')) {
+            GetAuthorizeDataTree();
+        }
+
+        var showAuthorizeList = function () {
+            var $subnePanel = $("#authorizePanel");
+            var control = $("#txtAuthorize");
+            var divpa = document.getElementById("authorizePanel");
+            var offset = control.offset();
+            divpa.style.top = (offset.top + control.height() + 12) + "px";
+            divpa.style.left = (offset.left) + "px";
+            $subnePanel.removeClass("hide");
+            $subnePanel.width(control.width() + 25);
+
+            $subnePanel.css("position", "absolute");
+            $subnePanel.css("z-index", "1000");
+            $subnePanel.unbind("mouseout").bind('mouseout', function () {
+                var $this = $(this);
+                if ($this.length != 0) {
+                    var width = $this.width();
+                    var offset = $this.offset();
+                    var w = $(document).width();
+                    var top = offset.top + $this.height();
+                    var left = 0;
+                    if (offset.left + width + 9 > w) {
+                        left = offset.left + $this.width() - width + 4;
+                    }
+                    else {
+                        left = offset.left;
+                    }
+                    var ev = window.event;
+                    var x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    var y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                    if (!(x >= left && x <= left + width - 2 &&
+                        y >= offset.top && y <= top - 2)) {
+
+                        $subnePanel.addClass("hide");
+                    }
+                }
+            });
+
+            //确定事件
+            $("#btn_userauthorize").bind("click", function () {
+                var text = "";
+                var ids = "";
+                for (var i = 0; i < $("#authorizeTree").getCheckedAllNodes().length; i++) {
+                    var id = $("#authorizeTree").getCheckedAllNodes()[i];
+                    if (id == "A001" || id == "A002" || id == "A003" || id == "A004" || id == "A005") {
+                        continue;
+                    }
+                    if (id) {
+                        var a = $("#authorizeTree").find("span[data-value='" + id + "']").text();
+                        ids += id + "|" + a + ",";
+                        text += a + ",";
+                    }
+                }
+                //rs.id = String($("#roleTree").getCheckedAllNodes());
+                //$("#AuthorizeDataId").val(String($("#authorizeTree").getCheckedAllNodes()));
+                if (ids) {
+                    $("#AuthorizeDataId").val(ids.substring(0, ids.length - 1));
+                    control.val(text.substring(0, text.length - 1));
+                } else {
+                    $("#AuthorizeDataId").val("");
+                    control.val("");
+                }
+                $subnePanel.addClass("hide");
+            })
+        }
+        showAuthorizeList();
+    }
+</script>
+<div style="margin-left: 10px; margin-right: 10px;">
+    @*<ul class="nav nav-tabs">
+            <li class="active"><a href="#BaseInfo" data-toggle="tab">基本信息</a></li>
+            <li><a href="#ExpandInfo" data-toggle="tab">扩展属性</a></li>
+        </ul>*@
+    <div class="tab-content" style="padding-top: 15px;">
+        <div id="BaseInfo" class="tab-pane active" style=" padding-right: 30px;">
+            <table class="form">
+                <tr>
+                    <td class="formTitle">账户<font face="宋体">*</font></td>
+                    <td class="formValue">
+                        <input id="Account" type="text" onblur="$.ExistField(this.id,'/BaseManage/User/ExistAccount')" class="form-control" placeholder="请输入账户" isvalid="yes" checkexpession="NotNull" />
+                    </td>
+                    <td class="formTitle">密码<font face="宋体">*</font></td>
+                    <td class="formValue">
+                        <input id="Password" type="text" class="form-control" placeholder="请输入密码" isvalid="yes" checkexpession="NotNull" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">姓名</td>
+                    <td class="formValue">
+                        <input id="RealName" type="text" class="form-control" />
+                    </td>
+                    <td class="formTitle">授权机构</td>
+                    <td class="formValue">
+                        <input type="hidden" id="AuthorizeDataId" />
+                        <textarea id="txtAuthorize" rows="1" class="form-control input-profile" readonly onclick="SelectAuthorize()" isvalid="no" checkexpession="NotNull"></textarea> <span class="input-button" title="选取授权机构">...</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle"></td>
+                    <td class="formValue"></td>
+                    <td class="formTitle"></td>
+                    <td class="formValue">此处权限继承上级权限设置</td>
+                </tr>
+                <tr id="hidetr">
+                    <td class="formTitle">账号类型</td>
+                    <td class="formValue">
+                        <div id="ddlOrganizeType" type="select" class="ui-select">
+                        </div>
+                    </td>
+                    <td class="formTitle">角色</td>
+                    <td class="formValue">
+                        <input type="hidden" id="RoleId" />
+                        <textarea id="txtRole" rows="1" class="form-control input-profile" readonly onclick="SelectRole()"></textarea> <span class="input-button" title="选取角色">...</span>
+
+                    </td>
+
+                </tr>
+               
+                <tr>
+                    <td class="formTitle">手机</td>
+                    <td class="formValue">
+                        <input id="Mobile" type="text" class="form-control" />
+                    </td>
+                    <td class="formTitle">电话</td>
+                    <td class="formValue">
+                        <input id="Telephone" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">邮箱</td>
+                    <td class="formValue">
+                        <input id="Email" type="text" class="form-control" />
+                    </td>
+
+                    <td class="formTitle">微信</td>
+                    <td class="formValue">
+                        <input id="WeChat" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">QQ</td>
+                    <td class="formValue">
+                        <input id="OICQ" type="text" class="form-control" />
+                    </td>
+                    <td class="formTitle">MSN</td>
+                    <td class="formValue">
+                        <input id="" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle" valign="top" style="padding-top: 4px;">
+                        备注
+                    </th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Description" class="form-control" style="height: 50px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="ExpandInfo" class="tab-pane ">
+            <div class="app_layout app_preview" style="border-top: 1px solid #ccc;" id="frmpreview"></div>
+        </div>
+    </div>
+    <div>
+        <div id="rolePanel" class="hide" style="border: 1px solid #ccc; width: 300px; background: #fff; height: 280px; overflow: auto; ">
+            <div id="roleTree" style="margin: 10px; height: 100px;"></div>
+            <div style="text-align:right;margin-right:10px">
+                <a id="btn_userrole" class="btn btn-success"> 确定</a>
+            </div>
+        </div>
+        <div id="authorizePanel" class="hide" style="border: 1px solid #ccc; width: 300px; background: #fff; height:280px; overflow: auto;">
+            <div id="authorizeTree" style="margin: 10px; height: 100px;"></div>
+            <div style="text-align:right;margin-right:10px">
+                <a id="btn_userauthorize" class="btn btn-success"> 确定</a>
+            </div>
+        </div>
+    </div>
+</div>
+

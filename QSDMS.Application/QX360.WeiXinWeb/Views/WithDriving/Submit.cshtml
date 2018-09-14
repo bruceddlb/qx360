@@ -1,0 +1,245 @@
+﻿@{
+    ViewBag.Title = "确认订单";
+}
+@section scripts{
+    <script type="text/javascript">
+        var teacherid = request('teacherid');
+        var freetimeid = request('freetimeid');
+        var freedate = request('freedate');
+        var timesection = decodeURI(decodeURI(request('timesection')));
+        var istakecar = request("istakecar");
+        var $target;
+        function ViewModel() {
+            var self = this;
+            self.CurrentWeekList = ko.observableArray([]);
+            self.WithDrivingOrder = ko.observable({
+                TeacherId: ko.observable(""),
+                TeacherName: ko.observable(""),
+                FaceImage: ko.observable(""),
+                LevName: ko.observable(""),
+                Price: ko.observable(@(QX360.Business.SettingsBLL.Instance.GetValue("withdrivingprice"))),
+                SchoolName: ko.observable(""),
+                SchoolId: ko.observable(""),
+                MemberName: ko.observable(""),
+                MemberMobile: ko.observable(""),
+                MemberId: ko.observable(""),
+                IsBandCar: ko.observable(""),
+                ServiceDate: ko.observable(freedate),
+                ServiceTime: ko.observable(timesection),
+            });
+            self.BindTeacher = function () {
+                $.get("/Teacher/GetTeacherModel", { id: teacherid }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.WithDrivingOrder().TeacherId(data.TeacherId);
+                            self.WithDrivingOrder().TeacherName(data.Name);
+                            self.WithDrivingOrder().FaceImage(data.FaceImage);
+                            self.WithDrivingOrder().LevName(data.LevName);
+                            if (data.School) {
+                                self.WithDrivingOrder().SchoolName(data.School.Name);
+
+                            } else {
+                                self.WithDrivingOrder().SchoolName("未归属驾校");
+                            }
+                        }
+                    }
+                });
+            }
+            self.BindUser = function () {
+                $.post("/Account/GetUserDetail", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.WithDrivingOrder().MemberName(data.MemberName);//可以修改
+                            self.WithDrivingOrder().MemberMobile(data.Mobile);//可以修改
+                            self.WithDrivingOrder().MemberId(data.MemberId);//取注册用户的
+                        }
+                    } else {
+                        GotoLoginPage();
+                    }
+                });
+            }
+
+            self.CreateOrder = function () {
+                //判断按钮为有效状态
+                var disabled = $('#DtBtn').attr('class');
+                if (disabled == "Dtle_btn") {
+                    return;
+                }
+                self.WithDrivingOrder().IsBandCar(istakecar);
+                $.post("/WithDriving/CreateOrder", { "data": ko.toJSON(self.WithDrivingOrder()), freetimeid: freetimeid }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, "ok");
+                        setTimeout(function () {
+                            location.href = "/WithDriving/Return";
+                        }, 200)
+
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+            self.Pay = function () {
+                //判断按钮为有效状态
+                var disabled = $('#DtBtn').attr('class');
+                if (disabled == "Dtle_btn") {
+                    return;
+                }
+                //微信支付先注释 直接创建订单
+                $target = $(event.target);
+                $target.attr('disabled', 'disabled');
+                //self.WxPay();
+                self.CreateOrder();
+            }
+            //创建支付
+            self.CreatePay = function () {
+                $.ajax({
+                    url: "/Purse/WxPay",
+                    type: "post",
+                    data: { money: self.WithDrivingOrder().Price(), tradetitle: "陪驾费用支付" },
+                    success: function (result) {
+                        if (result.IsSuccess) {
+                            var data = result.ResultData["data"];
+                            self.apiCallback(data.tradeNo, JSON.parse(data.param));
+                        }
+                        else {
+                            alert(result.Message);
+                            $target.removeAttr('disabled');
+                        }
+                    }
+                });
+            }
+            //微信支付
+            self.WxPay = function () {
+                if (typeof WeixinJSBridge == "undefined") {
+                    if (document.addEventListener) {
+                        document.addEventListener('WeixinJSBridgeReady', self.apiCallback, false);
+                    }
+                    else if (document.attachEvent) {
+                        document.attachEvent('WeixinJSBridgeReady', self.apiCallback);
+                        document.attachEvent('onWeixinJSBridgeReady', self.apiCallback);
+                    }
+                }
+                else {
+                    self.CreatePay();
+                }
+
+            }
+            self.apiCallback = function (tradeNo, param) {
+                WeixinJSBridge.invoke(
+                'getBrandWCPayRequest',
+                param,
+                function (res) {
+                    if (res.err_msg == "get_brand_wcpay_request:ok") {
+                        //支付成功创建报名订单
+                        self.CreateOrder();
+
+                    }
+                    else {
+                        //alert(res.err_code + res.err_desc + res.err_msg);
+                        alert("支付失败,请重新支付!");
+                        $target.removeAttr('disabled');
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindTeacher();
+            model.BindUser();
+            //陪驾须知弹窗
+            $('.DcS_Notice span').on('click', function () {
+                $('.DcS_back').show();
+                $('.popup').show();
+            })
+            //关闭陪驾须知弹窗
+            $('.popup_close i').on('click', function () {
+                $('.DcS_back').hide();
+                $('.popup').hide();
+            })
+            //选中陪驾须知
+            $('.DcS_Notice font').on('click', function () {
+                if ($(this).attr('class') == 'DcS_Ne_font') {
+                    $(this).attr('class', '');
+
+                    $('#DtBtn').attr('class', 'Dtle_btn');
+                } else {
+                    $(this).addClass('DcS_Ne_font');
+                    $('#DtBtn').attr('class', 'Dtle_btn2');
+
+                }
+
+            })
+        });
+
+    </script>
+}
+@section css{
+    <style type="text/css">
+        .Dtlt_list {
+            overflow: hidden;
+            border-top: 1px solid #eee;
+            display: block;
+            clear: both;
+        }
+
+        .Dtlt_con {
+            margin-bottom: 0rem;
+        }
+
+        .Dtlt_sub {
+            border: 1px solid #ff6a00;
+            background: #ff6a00;
+            color: #fff;
+        }
+    </style>
+}
+<div class="DcS_back"></div>
+<div class="popup">
+    <div class="popup_h2">陪驾须知</div>
+    <div class="popup_txt" style="height:230px;overflow:auto" id="widtdrivingNotice">
+        @Html.Raw(ViewBag.Notice)
+    </div>
+    <div class="popup_close"><i class="iconfont icon-guanbi"></i></div>
+</div>
+
+<ul class="Dccde_dl">
+    <dd>
+        <img data-bind="attr:{src:$root.WithDrivingOrder().FaceImage}" class="Dccde_dd_img">
+        <div class="Dccde_ddst">
+            <div class="Dccde_ddst_h3" data-bind="text:$root.WithDrivingOrder().TeacherName"></div>
+            <div class="Dccde_ddst_mh"><span data-bind="text:$root.WithDrivingOrder().SchoolName()"></span><span>|</span><span data-bind="text:$root.WithDrivingOrder().LevName()"></span></div>
+            <div class="Dccde_ddst_mh2" data-bind="text:'￥'+$root.WithDrivingOrder().Price()"></div>
+        </div>      
+    </dd>
+</ul>
+
+<ul class="DcS_ul">
+    <li>
+        <div class="DcS_left">预约时间</div>
+        <div class="DcS_right DcS_right2" data-bind="text:$root.WithDrivingOrder().ServiceDate()+' '+ $root.WithDrivingOrder().ServiceTime()">
+            2018-01-12 08:00-09:00
+        </div>
+    </li>
+
+    <li class="Dcs_li_hr">您的信息</li>
+    <li>
+        <div class="DcS_left">姓名</div>
+        <div class="DcS_right DcS_right2"><input type="text" placeholder="请输入姓名" data-bind="value:$root.WithDrivingOrder().MemberName()"></div>
+    </li>
+    <li>
+        <div class="DcS_left">联系手机</div>
+        <div class="DcS_right DcS_right2"><input type="text" placeholder="请输入联系方式" class="DtIn_text" data-bind="value:$root.WithDrivingOrder().MemberMobile()"></div>
+    </li>
+</ul>
+
+<div class="DcS_Notice"><font><i class="iconfont icon-xuanzhong"></i>了解并同意</font><span>《陪驾须知》</span></div>
+
+<div style="margin-top:90px"></div>
+<div class="DtIn_bottom" style="">
+    <div class="DtIn_bm_left"><span data-bind="text:'￥'+$root.WithDrivingOrder().Price()"></span></div>
+    <div class="DtIn_bm_right"><button type="button" class="Dtle_btn" id="DtBtn" data-bind="click:function(){$root.Pay();}">确认订单</button></div>
+</div>

@@ -1,0 +1,481 @@
+﻿@{
+    ViewBag.Title = "选择时间";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        var studytype = request('type');
+        function ViewModel() {
+            var self = this;
+            self.AllIsSubrit = ko.observable("false");
+            self.CurrentWeekList = ko.observableArray([]);
+            self.CurrentWeekTimeList = ko.observableArray([]);
+            self.CommitteeList = ko.observableArray([]);
+            self.StudyOrder = ko.observable({
+                TeacherId: ko.observable(""),
+                TeacherName: ko.observable(""),
+                FaceImage: ko.observable(""),
+                LevName: ko.observable(""),
+                StudyType: ko.observable(studytype),
+                SchoolName: ko.observable(""),
+                SchoolId: ko.observable(""),
+                ServiceDate: ko.observable(""),
+                ServiceTime: ko.observable(""),
+                Mobile: ko.observable(""),
+                DetailList: ko.observableArray([])
+            });
+            self.Teacher = ko.observable({
+                Name: ko.observable(""),
+                FaceImage: ko.observable(""),
+                LevName: ko.observable(""),
+                Content: ko.observable(""),
+                SchoolName: ko.observable(""),
+                Mobile: ko.observable(""),
+            });
+
+            self.BindTeacher = function (id) {
+                $.get("/Teacher/GetTeacherModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.StudyOrder().TeacherId(data.TeacherId);
+                            self.StudyOrder().TeacherName(data.Name);
+                            self.StudyOrder().FaceImage(data.FaceImage);
+                            self.StudyOrder().LevName(data.LevName);
+                            self.StudyOrder().Mobile(data.Mobile);
+                            if (data.School) {
+                                self.StudyOrder().SchoolName(data.School.Name);
+                                self.StudyOrder().SchoolId(data.School.SchoolId);
+                            }
+
+                            self.Teacher().Name(data.Name);
+                            self.Teacher().FaceImage(data.FaceImage);
+                            self.Teacher().LevName(data.LevName);
+                            self.Teacher().Mobile(data.Mobile);
+                            self.Teacher().Content(decodeHtml(data.Content));
+                            if (data.School) {
+                                self.Teacher().SchoolName(data.School.Name);
+                            } else {
+                                self.Teacher().SchoolName("无归属驾校");
+                            }
+                        }
+                    }
+                });
+            }
+            //获取当前的报名信息
+            //self.BindApply = function () {
+            //    $.post("/Apply/GetMyOrderInfo", null, function (result) {
+            //        if (result.IsSuccess) {
+            //            var data = result.ResultData["Data"];
+            //            if (data) {
+            //                if (!data.TeacherId) {
+            //                    window.location.href = "/Study/NoTeacher";
+            //                } else {
+            //                    $("#pannel").css({ "display": "block" });
+            //                    self.BindTeacher(data.TeacherId);
+            //                    self.BindTime(data.TeacherId);
+            //                }
+            //            }
+            //        }
+            //    });
+            //}
+            //self.BindTime = function (id) {
+            //    $.get("/FreeTime/GetWeekDateJson", { objectid: id }, function (result) {
+            //        if (result.IsSuccess) {
+            //            var data = result.ResultData["List"];
+            //            if (data) {
+            //                var now = new Date();
+            //                var date = formatDate(now, 'yyyy-MM-dd');
+            //                for (var i = 0; i < data.length; i++) {
+            //                    var item = data[i];
+            //                    if (date > formatDate(item.FreeDate, 'yyyy-MM-dd')) {
+            //                        item.IsOver = 1;
+            //                    } else {
+            //                        item.IsOver = 0;
+            //                    }
+            //                    self.CurrentWeekList.push(item);
+            //                }
+            //            }
+
+            //            $('.Dtlt_list_right span').on('click', function () {
+            //                var Selected = $('.Dtlt_Selected').length;
+            //                var DtltClass = $(this).attr('class');
+            //                if (DtltClass == 'Dtlt_free' && !Selected) {
+            //                    $(this).attr('class', 'Dtlt_Selected');
+            //                } else if (DtltClass == 'Dtlt_Selected') {
+            //                    $(this).attr('class', 'Dtlt_free')
+            //                }
+            //                Selected = $('.Dtlt_Selected').length;
+            //                if (Selected) {
+            //                    $('#DtBtn').attr('class', 'Dtle_btn2')
+            //                } else {
+            //                    $('#DtBtn').attr('class', 'Dtle_btn')
+            //                }
+            //            });
+            //        }
+            //    });
+            //}
+
+            self.BindCommittee = function () {
+                $.get("/StudyCommittee/List", { teacherid: id }, function (result) {
+                    if (result.IsSuccess) {
+                        self.CommitteeList.removeAll();
+                        var list = result.ResultData["List"];
+                        for (var i = 0; i < list.length; i++) {
+                            var item = list[i];
+                            var comlev = [];
+                            if (item.CommitLev) {
+                                for (var j = 0; j < item.CommitLev; j++) {
+                                    comlev.push(j);
+                                }
+                            }
+                            item.CommitteeLev = comlev;
+                            self.CommitteeList.push(item);
+                        }
+
+                    }
+                });
+            }
+
+            self.CallTel = function () {
+                window.location.href = 'tel:' + self.StudyOrder().Mobile();
+            }
+            self.CreateOrder = function () {
+                var Selected = $('.DcTime_bln').length;
+                if (!Selected) {
+                    return;
+                }
+                var freedate = $(".Dtlv_date_span").parent().attr("servicedate");
+                self.StudyOrder().ServiceDate(freedate);
+                var detail = [];
+                var servicetimes = "";
+                $(".DcTime_bln").each(function () {
+                    var $this = $(this);
+                    var studyfreetimeid = $this.attr("studyfreetimeid");
+                    var timetype = $this.attr("timetype");
+                    var servicetime = $this.attr("timesection");
+                    detail.push({
+                        "StudyFreeTimeId": studyfreetimeid,
+                        "ServiceDate": freedate,
+                        "ServiceTime": servicetime,
+                        "TimeType": timetype,
+                    });
+                    servicetimes += servicetime + ",";
+
+                })
+                self.StudyOrder().ServiceTime(servicetimes);
+                self.StudyOrder().DetailList(detail);
+                $.post("/Study/CreateOrder", { "data": ko.toJSON(self.StudyOrder()) }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message, "ok");
+                        setTimeout(function () {
+                            location.href = "/Study/Return";
+                        }, 200)
+
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+
+            //绑定数据
+            self.BindWeek = function () {
+                $.get("/StudyFreeTime/GetWeekDateJson", { objectid: id }, function (result) {
+                    var now = new Date();
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        self.CurrentWeekList(data);
+                        var now = new Date();
+                        var date = formatDate(now, 'yyyy-MM-dd');
+                        for (var i = 0; i < data.length; i++) {
+                            var item = data[i];
+                            if (item.IsCurrentDay == "1") {
+                                var txt = formatDate(item.FreeDate, "yyyy年MM月dd日") + item.WeekName;
+                                $("#divcurrentdate").text(txt);
+                                if (item.FreeTimeList) {
+                                    self.CurrentWeekTimeList.removeAll();
+                                    var freelist = item.FreeTimeList;
+                                    var IsOver = 0;
+
+                                    for (var j = 0; j < freelist.length; j++) {
+                                        var freetime = freelist[j];
+                                        var time = freetime.TimeSection;
+
+                                        if (time) {
+                                            time = time.split('-')[0];
+                                        }
+                                        if (date > formatDate(item.FreeDate, 'yyyy-MM-dd')) {
+                                            IsOver = 1;
+                                        } else {
+
+                                            var freeDate = (formatDate(item.FreeDate, 'yyyy-MM-dd'))
+                                            if (formatDate(now, 'yyyy-MM-dd hh:mm:ss') > formatDate(freeDate + " " + time, 'yyyy-MM-dd hh:mm:ss')) {
+                                                IsOver = 1;
+                                            } else {
+                                                IsOver = 0;
+                                            }
+                                        }
+                                        freetime.IsOver = IsOver;
+                                        self.CurrentWeekTimeList.push(freetime);
+                                    }
+                                    self.AllSubscribe(freelist);
+                                }
+
+                            }
+                        }
+                    } else {
+                        alert(result.Message);
+                    }
+                });
+            }
+
+            //点击日期选择时间
+            self.OnClickFreeDate = function (id) {
+                var $this = $("#" + id);
+
+                var data = self.CurrentWeekList();
+                var now = new Date();
+                var date = formatDate(now, 'yyyy-MM-dd');
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    if (item.StudyFreeDateId == id) {
+                        if (date > formatDate(item.FreeDate, 'yyyy-MM-dd')) {
+                            ShowTips("此日期已过期，不能选择");
+                            return;
+                        }
+
+                        //if (item.DateType == "0") {
+                        //    ShowTips("此日期为考试时间，如需预约，请与考场联系");
+                        //    return;
+                        //}
+                        $this.siblings().find("span").removeClass("Dtlv_date_span");
+                        $this.find("span").addClass("Dtlv_date_span");
+                        var txt = formatDate(item.FreeDate, "yyyy年MM月dd日") + item.WeekName;
+                        $("#divcurrentdate").text(txt);
+                        if (item.FreeTimeList) {
+                            self.CurrentWeekTimeList.removeAll();
+                            var freelist = item.FreeTimeList;
+                            var IsOver = 0;
+                            for (var j = 0; j < freelist.length; j++) {
+                                var freetime = freelist[j];
+                                var time = freetime.TimeSection;//formatDate()
+                                if (time) {
+                                    time = time.split('-')[0];
+                                }
+                                if (date > formatDate(item.FreeDate, 'yyyy-MM-dd')) {
+                                    IsOver = 1;
+                                } else {
+                                    var freeDate = (formatDate(item.FreeDate, 'yyyy-MM-dd'))
+                                    if (formatDate(now, 'yyyy-MM-dd hh:mm:ss') > formatDate(freeDate + " " + time, 'yyyy-MM-dd hh:mm:ss')) {
+                                        IsOver = 1;
+                                    } else {
+                                        IsOver = 0;
+                                    }
+                                }
+                                freetime.IsOver = IsOver;
+                                self.CurrentWeekTimeList.push(freetime);
+                            }
+                            self.AllSubscribe(freelist);
+                        }
+                    }
+                }
+            }
+
+            //都被预约显示提示
+            self.AllSubscribe = function (data) {
+                var flag = true;
+                if (data) {
+                    for (var i = 0; i < data.length; i++) {
+                        var item = data[i];
+                        if (item.FreeStatus == "1") {
+                            flag = false;
+                            break;
+                        }
+                    }
+                    if (flag) {
+                        self.AllIsSubrit("true");
+                    } else {
+                        self.AllIsSubrit("false");
+                    }
+                }
+            }
+
+            //设置选中时间
+            self.SetSubscribe = function (id) {
+                var $target = $(event.target);
+                if ($target.hasClass("DcTime_bln3")) {
+                    $target.attr("class", "DcTime_bln");
+                } else {
+                    $target.attr("class", "DcTime_bln3");
+                }
+                var Selected = $('.DcTime_bln').length;
+                if (Selected) {
+                    $('#DtBtn').attr('class', 'Dtle_btn2')
+                } else {
+                    $('#DtBtn').attr('class', 'Dtle_btn')
+                }
+            }
+
+        }
+
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindTeacher(id);
+            model.BindWeek();
+            model.BindCommittee();
+            $('#Dcde1').on('click', function () {
+                $('.Dcde_nav dd').removeClass('Dcde_nav_dd')
+                $(this).addClass('Dcde_nav_dd')
+                $('#TimeId').show()
+                $('#TextPId').hide()
+                $('#ELul').hide()
+            })
+            $('#Dcde2').on('click', function () {
+                $('.Dcde_nav dd').removeClass('Dcde_nav_dd')
+                $(this).addClass('Dcde_nav_dd')
+                $('#TimeId').hide()
+                $('#TextPId').show()
+                $('#ELul').hide()
+            })
+            $('#Dcde3').on('click', function () {
+                $('.Dcde_nav dd').removeClass('Dcde_nav_dd')
+                $(this).addClass('Dcde_nav_dd')
+                $('#TimeId').hide()
+                $('#TextPId').hide()
+                $('#ELul').show()
+            })
+        });
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+    </script>
+}
+@section css{
+    <style type="text/css">
+        .Dtlt_list {
+            overflow: hidden;
+            border-top: 1px solid #eee;
+            display: block;
+            clear: both;
+        }
+
+        .Dtlt_con {
+            margin-bottom: 0rem;
+        }
+    </style>
+}
+<div id="pannel" style="">
+    <ul class="Dtlt_dl">
+        <dd>
+            <img data-bind="attr:{src:$root.Teacher().FaceImage}" class="Dtlt_dd_img">
+            <div class="Dtlt_ddst">
+                <div class="Dtlt_ddst_h3 Dtlt_ddst_h33" data-bind="text:$root.Teacher().Name"></div>
+                <div class="Dtlt_ddst_mh"><span data-bind="text:$root.Teacher().SchoolName()==null?'无归属驾校':$root.Teacher().SchoolName()"></span><span>&nbsp;|&nbsp;</span><span data-bind="text:$root.Teacher().LevName()==null?'未设置等级':$root.Teacher().LevName()"></span></div>
+            </div>
+            <a data-bind="click:function(){$root.CallTel();}" class="Dtlt_po_btn"><i class="iconfont icon-dianhua1"></i></a>
+        </dd>
+    </ul>
+
+    <dl class="Dcde_nav">
+        <dd class="Dcde_nav_dd" id="Dcde1"><span>选择时间</span></dd>
+        <dd id="Dcde2"><span>教练介绍</span></dd>
+        <dd id="Dcde3"><span>评价</span></dd>
+    </dl>
+
+    <div id="TimeId">
+        <div class="Dtlv_date" data-bind="foreach:$root.CurrentWeekList()">
+            <!--ko if:!IsCurrentDay-->
+            <div class="Dtlv_date_list" data-bind="attr:{id:StudyFreeDateId ,ServiceDate:formatDate(FreeDate,'yyyy-MM-dd')},click:function(){$root.OnClickFreeDate(StudyFreeDateId)}"><span><font data-bind="text:WeekName.replace('星期','')"></font><em data-bind="text:formatDate(FreeDate,'MM-dd')"></em></span></div>
+            <!--/ko-->
+            <!--ko if:IsCurrentDay-->
+            <div class="Dtlv_date_list" data-bind="attr:{id:StudyFreeDateId ,ServiceDate:formatDate(FreeDate,'yyyy-MM-dd')},click:function(){$root.OnClickFreeDate(StudyFreeDateId)}"><span class="Dtlv_date_span"><font data-bind="text:WeekName.replace('星期','')"></font><em data-bind="text:formatDate(FreeDate,'MM-dd')"></em></span></div>
+            <!--/ko-->
+        </div>
+        <div class="DcNew_date" id="divcurrentdate"></div>
+        <div class="" style=" background: #fff;overflow: hidden;font-size: 0.24rem;margin-top: 0.15rem;">
+            <div class="Dtlt_h2">
+                <div class="Dtlt_title">选择时间</div>
+                <div class="Dtlt_sm">
+                    <span><font></font>忙碌</span>
+                    <span><font class="Dtltfont"></font>空闲</span>
+                    <span><font class="Dtltfont2"></font>当前选择</span>
+                </div>
+            </div>
+            <div class="DcTime_div" data-bind="foreach:$root.CurrentWeekTimeList()">
+                <!--ko if:IsOver=="1"-->
+                <div class="DcTime_list">
+                    <div class="DcTime_h3" data-bind="attr:{StudyFreeTimeId:StudyFreeTimeId},text:TimeSection"></div>
+                    <a class="DcTime_bln2">已过时</a>
+                </div>
+                <!--/ko-->
+                <!--ko if:IsOver!="1"-->
+                <div class="DcTime_list">
+                    <!--ko if:FreeStatus!="1"-->
+                    <div class="DcTime_h3" data-bind="attr:{StudyFreeTimeId:StudyFreeTimeId},text:TimeSection"></div>
+                    <a class="DcTime_bln2">已被预约</a>
+                    <!--/ko-->
+                    <!--ko if:FreeStatus=="1"-->
+                    <div class="DcTime_h3" data-bind="text:TimeSection"></div>
+                    <a class="DcTime_bln3" data-bind="attr:{StudyFreeTimeId:StudyFreeTimeId,TimeType:TimeType,TimeSection:TimeSection},click:function(){$root.SetSubscribe(StudyFreeTimeId)}">立即预约</a>
+                    <!--/ko-->
+
+                </div>
+                <!--/ko-->
+
+            </div>
+        </div>
+        <div class="page__bd" style="">
+            <div class="weui-loadmore">
+                <!--ko if:$root.AllIsSubrit()=="true"-->
+                <a href="javascript:void(0);" style="color:#ccc">该日期预约已满,请与该驾校联系</a>
+                <!--/ko-->
+            </div>
+        </div>
+        <div style="height:60px"></div>
+        <div class="Dtle_footer"><button type="button" class="Dtle_btn" id="DtBtn" data-bind="click:function(){$root.CreateOrder();}">确认</button></div>
+        @*<div class="Dtle_footer"><button type="button" class="Dtle_btn" id="DtBtn" data-bind="click:function(){$root.CreateOrder();}">立即预约</button></div>*@
+    </div>
+
+    <div class="Dcde_con" id="TextPId">
+        <div class="Dcde_txt" data-bind="html:$root.Teacher().Content()">
+        </div>
+    </div>
+
+    <ul class="EL_ul" id="ELul" data-bind="foreach:$root.CommitteeList">
+        <li>
+            <div class="EL_li_h2">
+                <em data-bind="text:MemberName"></em>
+                <font data-bind="foreach:CommitteeLev">
+                    <i class="iconfont icon-xing1"></i>
+                </font>
+                <span data-bind="text:formatDate(CommitTime,'yyyy-MM-dd hh:mm:ss')"></span>
+            </div>
+            <div class="EL_li_text" data-bind="text:CommitContent"></div>
+        </li>
+    </ul>
+
+</div>

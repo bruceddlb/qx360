@@ -1,0 +1,192 @@
+﻿@{
+    ViewBag.Title = "文章列表";
+    Layout = "~/Views/Shared/_LayoutList.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+        //类型
+        $("#ddlType").ComboBox({
+            url: "/ArticleManage/Category/GetListJson",          
+            id: "ClassId",
+            text: "ClassName",
+            description: "==请选择类型==",
+            height: "200px"
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $("#gridTable").setGridHeight($(window).height() - 160);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $("#gridTable");
+        var queryJson = {};
+        queryJson["keyword"] = $("#txt_Keyword").val();
+        queryJson["categoryId"] = $("#ddlType").attr('data-value');
+        $gridTable.jqGrid({
+            url: "/ArticleManage/Article/GetPageListJson",
+            datatype: "json",
+            postData: { queryJson: JSON.stringify(queryJson) },
+            height: $(window).height() - 160,
+            autowidth: true,
+            colModel: [
+                { label: '主键', name: 'ArticleId', hidden: true },
+
+                { label: '标题', name: 'ArticleTitle', ItemNameindex: 'ArticleTitle', width: 300, align: 'center', sortable: true },
+
+                { label: '所属分类', name: 'CategoryName', index: 'CategoryName', width: 150, align: 'center', sortable: true },
+                { label: '地点', name: 'Address', index: 'Address', width: 200, align: 'center', sortable: true },
+                { label: '联系人', name: 'ContactName', index: 'ContactName', width: 150, align: 'center', sortable: true },
+                { label: '联系电话', name: 'ContactTel', index: 'ContactTel', width: 150, align: 'center', sortable: true },
+                { label: '浏览次数', name: 'ViewCount', index: 'ViewCount', width: 100, align: 'center', sortable: true },
+                { label: '发布时间', name: 'CreatorTime', index: 'CreatorDate', width: 100, align: 'center', sortable: true },
+                {
+                    label: "是否置顶", name: "IsTop", index: "IsTop", width: 80, align: "center", sortable: false,
+                    formatter: function (cellvalue) {
+                        switch (cellvalue.toString()) {
+                            case "@((int)Hydrosphere.Data.Enums.YesOrNo.是)":
+                                return "<span class=\"label label-success\">@Hydrosphere.Data.Enums.YesOrNo.是</span>";
+                                break;
+                            case "@((int)Hydrosphere.Data.Enums.YesOrNo.否)":
+                                return "<span class=\"label label-danger\">@Hydrosphere.Data.Enums.YesOrNo.否</span>";
+                                break;
+                        }
+                    }
+                },
+                {
+                    label: "是否发布", name: "IsPublic", index: "IsPublic", width: 50, align: "center", sortable: true,
+                    formatter: function (cellvalue) {
+                        return cellvalue == "@((int)Hydrosphere.Data.Enums.YesOrNo.否)" ? "<span class=\"label label-danger\">@Hydrosphere.Data.Enums.YesOrNo.否</span>" : "<span class=\"label label-success\">@Hydrosphere.Data.Enums.YesOrNo.是</span>";
+                    }
+                }
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100, 500, 1000],
+            pager: "#gridPager",
+            sortname: 'CreatorTime',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true
+
+        });
+
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {};
+            queryJson["keyword"] = $("#txt_Keyword").val();
+            queryJson["categoryId"] = $("#ddlType").attr('data-value');
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+    }
+
+    function btn_add() {
+        dialogOpen({
+            id: "Form",
+            title: '创建',
+            url: '/ArticleManage/Article/Form',
+            width: "1080px",
+            height: "880px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+
+    //修改
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue("ArticleId");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: "Form",
+                title: '编辑',
+                url: '/ArticleManage/Article/Form?keyValue=' + keyValue,
+                width: "1080px",
+                height: "880px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $("#gridTable").jqGridRowValue("ArticleId");
+        if (keyValue) {
+            $.RemoveForm({
+                url: "/ArticleManage/Article/RemoveForm",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#gridTable").trigger("reloadGrid");
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的数据！', 0);
+        }
+    }
+    //发布处理
+    function btn_audit() {
+        var keyValue = $("#gridTable").jqGridRowValue("ArticleId");
+        if (checkedRow(keyValue)) {
+            $.ConfirmAjax({
+                msg: "注：您确定要【此操作】吗？",
+                url: "/ArticleManage/Article/Publish",
+                param: { keyValue: keyValue },
+                success: function (result) {
+                    if (result.IsSuccess) {
+                        $("#gridTable").trigger("reloadGrid");
+                    }
+                }
+            })
+        }
+    }
+
+</script>
+<div class="toolbarPanel">
+    <div class="row">
+        <div class="col-md-2">
+            <div id="ddlType" type="select" class="ui-select">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" />
+        </div>
+        <div class="col-md-1">
+            <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+        </div>
+
+
+        <div class="toolbar">
+            <div class="btn-group animated fadeInDownBig">
+                <a id="btn-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                <a id="btn-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新建</a>
+                <a id="btn-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                <a id="btn-edit" class="btn btn-default" onclick="btn_audit()"><i class="fa fa-toggle-on"></i>&nbsp;发布</a>
+                <a id="btn-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+            </div>
+        </div>
+    </div>
+
+</div><div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager" style="padding: 10px; height: 40px; background: #F3F3F4;"></div>
+</div>

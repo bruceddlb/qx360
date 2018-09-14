@@ -1,0 +1,105 @@
+﻿@{
+    ViewBag.Title = "教练";
+}
+@section scripts{
+    <script type="text/javascript">
+        var id = request('id');
+        function ViewModel() {
+            var self = this;
+            self.Id = ko.observable("");
+            self.Teacher = ko.observable({
+                Name: ko.observable(""),
+                FaceImage: ko.observable(""),
+                LevName: ko.observable(""),
+                WithDrivingPrice: ko.observable(""),
+                Content: ko.observable(""),
+                SchoolName: ko.observable(""),
+
+            });
+            self.BindTeacher = function () {
+                $.get("/Teacher/GetTeacherModel", { id: id }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["Data"];
+                        if (data) {
+                            self.Teacher().Name(data.Name);
+                            self.Teacher().FaceImage(data.FaceImage);
+                            self.Teacher().LevName(data.LevName);
+                            if (data.School) {
+                                self.Teacher().Content(decodeHtml(data.School.Content));
+                                self.Teacher().WithDrivingPrice(data.School.WithDrivingPrice);
+                                self.Teacher().SchoolName(data.School.Name);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindTeacher();
+            model.Id(id);
+        });
+
+        // HTML编码
+        function encodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            }
+
+            return value.replace(/&/g, "&amp;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/'/, "&quot;");
+        }
+
+
+        /// <summary>
+        /// HTML解码
+        /// </summary>
+        function decodeHtml(value) {
+            if (!value || value.length == 0) {
+                return "";
+            };
+            return value.replace(/&lt;/g, "<")
+                        .replace(/&gt;/g, ">")
+                        .replace(/&amp;/g, "&")
+                        .replace(/&quot;/g, "'");
+        }
+
+    </script>
+}
+@section css{
+    <style type="text/css">
+    </style>
+}
+<ul class="Dccde_dl">
+    <dd>
+        <img data-bind="attr:{src:$root.Teacher().FaceImage}" class="Dccde_dd_img">
+        <div class="Dccde_ddst">
+            <div class="Dccde_ddst_h3" data-bind="text:$root.Teacher().Name"></div>
+            <div class="Dccde_ddst_mh"><span data-bind="text:$root.Teacher().SchoolName()"></span><span>|</span><span data-bind="text:$root.Teacher().LevName()"></span></div>
+            <div class="Dccde_ddst_mh2" data-bind="text:'￥'+$root.Teacher().WithDrivingPrice()"></div>
+        </div>
+    </dd>
+</ul>
+
+<!--驾校简介-->
+<div class="DtSe_con">
+    <h3 class="DtSe_h3"><span></span>注意事项</h3>
+    <div class="DtSe_txt" data-bind="html:$root.Teacher().Content()">
+    </div>
+</div>
+
+<!--报名须知-->
+<div class="DtSe_con" style="margin-bottom:1rem;">
+    <h3 class="DtSe_h3"><span></span>陪驾步骤</h3>
+    <ul class="DtSe_Notice">
+        <li><span>1</span><div class="DtSe_Ne_div">网上报名成功后，您可携带本人身份证，前往驾校。</div></li>
+        <li><span>2</span><div class="DtSe_Ne_div">经工作人审核合格后，领取《机动车驾驶人身份证》</div></li>
+        <li><span>3</span><div class="DtSe_Ne_div">报名学员提交齐报名材料后，有本校为你安排法规培训课。</div></li>
+    </ul>
+</div>
+
+<div class="Dccde_footer"><a data-bind="attr:{href:'/WithDriving/Submit?id='+$root.Id()}"><button type="button" class="Dccde_btn">立即预约</button></a></div>

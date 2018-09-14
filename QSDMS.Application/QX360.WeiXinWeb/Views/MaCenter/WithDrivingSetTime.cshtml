@@ -1,0 +1,245 @@
+﻿@{
+    ViewBag.Title = "设置空闲时间";
+}
+@section scripts{
+    <script type="text/javascript">
+        function ViewModel() {
+            var self = this;
+            self.CurrentWeekList = ko.observableArray([]);
+            self.CurrentFreeTimeList = ko.observableArray([]);
+            self.CurrentDate = ko.observable("");
+            self.IsOver = ko.observable("0");
+            self.ServiceAreaList = ko.observableArray([]);
+            self.BindWeek = function () {
+                $.get("/WithDrivingFreeTime/GetWeekDateJson", { objectid: "@ViewBag.ObjectId" }, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        if (data) {
+                            for (var i = 0; i < data.length; i++) {
+                                var item = data[i];
+                                self.CurrentWeekList.push(item);
+                                if (item.IsCurrentDay) {
+                                    self.CurrentDate();
+                                    self.GetFreeTime(item.WithDrivingFreeDateId);
+                                }
+                            }
+                        }
+                        $('.Mast_dl dd').on('click', function () {
+                            $('.Mast_dl dd').find('span').removeClass('Mast_date_span')
+                            $(this).find('span').addClass('Mast_date_span')
+                        })
+                    }
+                });
+            }
+            self.GetFreeTime = function (freedateid) {
+                $.get("/WithDrivingFreeTime/GetFreeTimeList", { freedateid: freedateid }, function (result) {
+                    if (result.IsSuccess) {
+                        var freedate = self.CurrentWeekList();
+                        if (freedate) {
+                            var now = new Date();
+                            var date = formatDate(now, 'yyyy-MM-dd');
+                            for (var i = 0; i < freedate.length; i++) {
+                                var item = freedate[i];
+                                if (item.WithDrivingFreeDateId == freedateid) {
+                                    self.CurrentDate(formatDate(item.FreeDate, 'yyyy-MM-dd'));
+                                    self.CurrentFreeTimeList.removeAll();
+                                    var freelist = result.ResultData["List"];
+                                    var IsOver = 0;
+                                    for (var j = 0; j < freelist.length; j++) {
+                                        var freetime = freelist[j];
+                                        var time = freetime.TimeSection;//formatDate()
+                                        var time = freetime.TimeSection;
+                                        if (time) {
+                                            if (time == "上午") {
+                                                time = "@(QX360.Business.SettingsBLL.Instance.GetValue("swsj"))";
+                                            }
+                                            if (time == "下午") {
+                                                time = "@(QX360.Business.SettingsBLL.Instance.GetValue("xwsj"))";
+                                            }
+                                            if (time == "晚上") {
+                                                time = "@(QX360.Business.SettingsBLL.Instance.GetValue("wssj"))";
+                                            }
+                                        }
+                                        if (date > formatDate(item.FreeDate, 'yyyy-MM-dd')) {
+                                            IsOver = 1;
+                                        } else {
+                                            var freeDate = (formatDate(item.FreeDate, 'yyyy-MM-dd'))
+                                            if (formatDate(now, 'yyyy-MM-dd hh:mm:ss') > formatDate(freeDate + " " + time, 'yyyy-MM-dd hh:mm:ss')) {
+                                                IsOver = 1;
+                                            } else {
+                                                IsOver = 0;
+                                            }
+                                        }
+                                        freetime.IsOver = IsOver;
+                                        self.CurrentFreeTimeList.push(freetime);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            self.BtnNext = function () {
+                var eq = 0;
+                $("#divFreeDate dd").each(function (i) {
+                    var $this = $(this);
+                    var activityclass = $this.find("span").attr("class");
+                    if (activityclass == "Mast_date_span") {
+                        //alert(i)
+                        eq = parseInt(i + 1);
+                    }
+                })
+                if (eq > 0 && eq < 7) {
+                    $("#divFreeDate dd:eq('" + parseInt(eq - 1) + "')").find('span').removeClass('Mast_date_span')
+                    $("#divFreeDate dd:eq('" + eq + "')").find("span").attr("class", "Mast_date_span");
+                    var freedateid = $("#divFreeDate dd:eq('" + eq + "')").attr("freedateid");
+                    self.GetFreeTime(freedateid);
+                }
+            }
+            self.SetFreeTime = function (freetimeid, freedateid) {
+                var DtltClass = $("#divFreeTime").find("span[freetimeid='" + freetimeid + "']").attr('class');
+                if (DtltClass == 'Mast_free') {
+                    var calback = function () {
+                        $.post("/WithDrivingFreeTime/SetFreeTime", { freetimeid: freetimeid }, function (result) {
+                            if (result.IsSuccess) {
+                                self.GetFreeTime(freedateid);
+                            } else {
+                                ShowTips(result.Message);
+                            }
+                        });
+                    }
+                    ConfirmDialog(calback, "设置此时间不能被预约,确定此操作吗?");
+
+                }
+            }
+            self.SaveServiceArea = function () {
+                var ids = "";
+                var names = "";
+                $("#divServicearea span").each(function () {
+                    var $this = $(this);
+                    if ($this.hasClass("Mast_set_Selected word-wrap")) {
+                        ids += $this.attr("areaid") + ",";
+                        names += $this.text() + ",";
+                    }
+                });
+                if (ids) {
+                    ids = ids.substring(0, ids.length - 1);
+                    names = names.substring(0, names.length - 1);
+                }
+                $.post("/Teacher/SaveServiceArea", { ids: ids, names: names }, function (result) {
+                    if (result.IsSuccess) {
+                        ShowTips(result.Message);
+                    } else {
+                        ShowTips(result.Message);
+                    }
+                });
+            }
+            self.SetServiceArea = function (id) {
+                var DtltClass = $("#divServicearea").find("span[areaid='" + id + "']");
+                if (DtltClass.attr('class') == 'Mast_free word-wrap') {
+                    DtltClass.attr("class", "Mast_set_Selected word-wrap");
+                } else {
+                    DtltClass.attr("class", "Mast_free word-wrap");
+                }
+            }
+            self.BindMyServiceArea = function () {
+                $.get("/Teacher/GetServiceArea", null, function (result) {
+                    if (result.IsSuccess) {
+                        var data = result.ResultData["List"];
+                        var serviceids = result.ResultData["ServiceAreaIds"];
+                        var areaarr = [];
+                        if (serviceids) {
+                            areaarr = serviceids.split(',');
+                        }
+                        if (data) {
+                            for (var i = 0; i < data.length; i++) {
+                                var flag = false;
+                                var item = data[i];
+                                for (var j = 0; j < areaarr.length; j++) {
+                                    if (item.AreaId == areaarr[j]) {
+                                        flag = true;
+                                        break;
+                                    }
+                                }
+                                if (flag) {
+                                    item.IsCheck = "1";
+                                } else {
+                                    item.IsCheck = "0";
+                                }
+                                self.ServiceAreaList.push(item);
+
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        $(function () {
+            var model = new ViewModel();
+            ko.applyBindings(model);
+            model.BindWeek();
+            model.BindMyServiceArea();
+        })
+    </script>
+}
+<style>
+    .word-wrap {
+        overflow: hidden;
+        word-wrap: break-word;
+        word-break: break-all;
+        white-space: nowrap;
+        -o-text-overflow: ellipsis;
+        text-overflow: ellipsis;
+    }
+</style>
+<div class="Mast_hr">备注：设置近一周周服务时间. 时间设置不可修改，请谨慎设置</div>
+<div class="Mast_top">
+    <div class="Mast_h1">设置可预约时间</div>
+    <ul class="Mast_ul" data-bind="foreach:$root.CurrentWeekList()">
+        <li data-bind="text:WeekName"></li>
+
+    </ul>
+    <dl class="Mast_dl" data-bind="foreach:$root.CurrentWeekList()" id="divFreeDate">
+        <!--ko if:!IsCurrentDay-->
+        <dd data-bind="attr:{freedateid:WithDrivingFreeDateId}"><span data-bind="click:function(){$root.GetFreeTime(WithDrivingFreeDateId)},text:formatDate(FreeDate,'MM-dd')"></span></dd>
+        <!--/ko-->
+        <!--ko if:IsCurrentDay-->
+        <dd data-bind="attr:{freedateid:WithDrivingFreeDateId}"><span class="Mast_date_span" data-bind="click:function(){$root.GetFreeTime(WithDrivingFreeDateId)}">今日</span></dd>
+        <!--/ko-->
+    </dl>
+</div>
+
+<div class="Mast_set">
+    <div class="Mast_h1">设置可预约时间</div>
+    <div class="Mast_set_time" data-bind="foreach:$root.CurrentFreeTimeList" id="divFreeTime">
+        <!--ko if:IsOver=="1"-->
+        <span class="Mast_set_over" data-bind="text:TimeSection,attr:{freetimeid:WithDrivingFreeTimeId}"></span>
+        <!--/ko-->
+        <!--ko if:IsOver!="1"-->
+        <!--ko if:FreeStatus==1-->
+        <span class="Mast_free" data-bind="text:TimeSection,click:function(){$root.SetFreeTime(WithDrivingFreeTimeId,WithDrivingFreeDateId)},attr:{freetimeid:WithDrivingFreeTimeId}"></span>
+        <!--/ko-->
+        <!--ko if:FreeStatus!=1-->
+        <span class="Mast_set_Selected" data-bind="text:TimeSection,attr:{freetimeid:WithDrivingFreeTimeId}"></span>
+        <!--/ko-->
+        <!--/ko-->
+
+
+    </div>
+</div>
+<div class="Mast_btn"><button type="button" class="Mast_botton2" id="MastBtn" data-bind="click:function(){$root.BtnNext();}">下一天</button></div>
+
+<div class="Mast_set">
+    <div class="Mast_h1">我的服务范围</div>
+    <div class="Mast_set_time" data-bind="foreach:$root.ServiceAreaList" id="divServicearea">
+        <!--ko if:IsCheck==1-->
+        <span class="Mast_set_Selected word-wrap" data-bind="text:AreaName,click:function(){$root.SetServiceArea(AreaId)},attr:{AreaId:AreaId}"></span>
+        <!--/ko-->
+        <!--ko if:IsCheck!=1-->
+        <span class="Mast_free word-wrap" data-bind="text:AreaName,click:function(){$root.SetServiceArea(AreaId)},attr:{AreaId:AreaId}"></span>
+        <!--/ko-->
+    </div>
+</div>
+
+<div class="Mast_btn"><button type="button" class="Mast_botton2" id="MastBtn" data-bind="click:function(){$root.SaveServiceArea();}">设置服务范围</button></div>

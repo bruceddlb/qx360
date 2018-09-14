@@ -1,0 +1,277 @@
+﻿@{
+    ViewBag.Title = "查看";
+    Layout = "~/Views/Shared/_LayoutForm.cshtml";
+}
+@section Head{
+    <script src="~/Content/scripts/plugins/touchTouch/touchTouch.jquery.js"></script>
+    <link href="~/Content/scripts/plugins/touchTouch/touchTouch.css" rel="stylesheet" />
+    <style>
+        .ulpanel li {
+            float: left;
+            margin-right: 5px;
+        }
+
+            .ulpanel li img {
+                width: 100px;
+                height: 100px;
+            }
+    </style>
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        InitControl();
+    });
+
+    //初始化数据
+    function InitControl() {
+        //省份
+        $("#ProvinceId").ComboBox({
+            url: "/SystemManage/Area/GetAreaListJson",
+            param: { parentId: "0" },
+            id: "AreaCode",
+            text: "AreaName",
+            description: "选择省",
+            height: "170px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            $("#CityId").ComboBox({
+                url: "/SystemManage/Area/GetAreaListJson",
+                param: { parentId: value },
+                id: "AreaCode",
+                text: "AreaName",
+                description: "选择市",
+                height: "170px"
+            });
+        });
+        //城市
+        $("#CityId").ComboBox({
+            description: "选择市",
+            height: "170px"
+        }).bind("change", function () {
+            var value = $(this).attr('data-value');
+            if (value) {
+                $("#CountyId").ComboBox({
+                    url: "/SystemManage/Area/GetAreaListJson",
+                    param: { parentId: value },
+                    id: "AreaCode",
+                    text: "AreaName",
+                    description: "选择县/区",
+                    height: "170px"
+                });
+            }
+        });
+        //县/区
+        $("#CountyId").ComboBox({
+            description: "选择县/区",
+            height: "170px"
+        });
+
+        //设置控件值
+        $.SetForm({
+            url: "/AccountMange/CardCase/GetFormJson",
+            param: { keyValue: keyValue },
+            success: function (data) {
+                if (data != null) {
+                    $("#form1").SetWebControls(data);
+                    if (data.ProvinceId) {
+                        $("#ProvinceId").trigger("change");
+                    }
+                    if (data.CityId) {
+                        $("#CityId").ComboBoxSetValue(data.CityId).trigger("change");
+                    }
+                    $("#CountyId").ComboBoxSetValue(data.CountyId);
+                    if (data.FaceLogo) {
+                        var html = "";
+                        var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]" + data.FaceLogo;
+                        html += '<li><a class="magnifier" href="' + path + '">';
+                        html += '<img src="' + path + '"/>';
+                        html += '</a>';
+                        html += '</li>';
+                        $("#facelogo").empty().append(html);
+                    }
+
+                    if (data.TagList) {
+                        html = "";
+                        for (var i = 0; i < data.TagList.length; i++) {
+                            var item = data.TagList[i];
+                            html += '<li>';
+                            html += item.Tag;
+                            html += '</li>';
+                        }
+                        $("#tags").empty().append(html);
+                    }
+                    if (data.ProductList) {
+                        var html = "";
+                        var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]";
+                        for (var i = 0; i < data.ProductList.length; i++) {
+                            var item = data.ProductList[i];
+                            var name = path + item.FilePath
+                            html += '<li><a class="magnifier" href="' + name + '" title=' + item.FileDesc + '>';
+                            html += '<img src="' + name + '"/>';
+                            html += '</a>';
+                            html += '</li>';
+                        }
+                        $("#productlist").empty().append(html);
+                    }
+                    if (data.ProjectList) {
+                        var html = "";
+                        var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]";
+                        for (var i = 0; i < data.ProjectList.length; i++) {
+                            var item = data.ProjectList[i];
+                            var name = path + item.FilePath
+                            html += '<li><a class="magnifier" href="' + name + '" title=' + item.FileDesc + '>';
+                            html += '<img src="' + name + '"/>';
+                            html += '</a>';
+                            html += '</li>';
+                        }
+                        $("#projectlist").empty().append(html);
+                    }
+                    if (data.FileList) {
+                        var html = "";
+                        var path = "@System.Configuration.ConfigurationManager.AppSettings["ImageHost"]";
+                        for (var i = 0; i < data.FileList.length; i++) {
+                            var item = data.FileList[i];
+                            var name = path + item.FilePath
+                            html += '<li><a  href="' + name + '">';
+                            html += item.FileName;
+                            html += '</a>';
+                            html += '</li>';
+                        }
+                        $("#filelist").empty().append(html);
+                    }
+                    //查看图片
+                    jQuery('.magnifier').touchTouch();
+                }
+            }
+        });
+    }
+
+    //初始化页面
+    function InitialPage() {
+
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            //window.setTimeout(function () {
+            //    //$('.profile-nav').height($(window).height() - 20);
+            //    //$('.profile-content').height($(window).height() - 20);
+            //}, 200);
+            //e.stopPropagation();
+        });
+
+
+    }
+</script>
+<div style="margin-left: 10px; margin-top: 20px; margin-right: 30px;overflow:auto">
+    <table class="form">
+        <tr>
+            <td class="formTitle">公司名称</td>
+            <td class="formValue">
+                <input id="ComName" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">公司简介</td>
+            <td class="formValue">
+                <textarea id="ComInfo" class="form-control input-profile" style="height: 70px;"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系人</td>
+            <td class="formValue">
+                <input id="Name" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">手机号码</td>
+            <td class="formValue">
+                <input id="Mobile" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">职务</td>
+            <td class="formValue">
+                <input id="Job" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">所在地</td>
+            <td class="formValue">
+                <div style="float: left; class =" form-control input-profile">
+                    <div id="ProvinceId" type="select" class="ui-select" style="float: left; width: 100px; margin-right: 1px;"></div>
+                    <div id="CityId" type="select" class="ui-select" style="float: left; width: 100px; margin-right: 1px;"></div>
+                    <div id="CountyId" type="select" class="ui-select" style="float: left; width: 100px; margin-right: 1px;"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">详细地址</td>
+            <td class="formValue">
+                <textarea id="AddressInfo" class="form-control input-profile" style="height: 50px;"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">业务领域</td>
+            <td class="formValue">
+                <textarea id="BussAreas" class="form-control input-profile" style="height: 70px;"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">签名</td>
+            <td class="formValue">
+                <input id="HeartWord" readonly type="text" class="form-control input-profile" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">标签</td>
+            <td class="formValue">
+                <ul id="tags" class="ulpanel"></ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">业务领域</td>
+            <td class="formValue">
+                <textarea id="BussAreas" class="form-control input-profile" style="height: 70px;"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">业务领域</td>
+            <td class="formValue">
+                <textarea id="BussAreas" class="form-control input-profile" style="height: 70px;"></textarea>
+            </td>
+
+        </tr>
+        <tr>
+            <td class="formTitle">名片照片</td>
+            <td class="formValue">
+                <ul id="facelogo" class="ulpanel"></ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">产品照片</td>
+            <td class="formValue">
+                <ul id="productlist" class="ulpanel"></ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">项目照片</td>
+            <td class="formValue">
+                <ul id="projectlist" class="ulpanel"></ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">附件资料</td>
+            <td class="formValue">
+                <ul id="filelist" class="ulpanel"></ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">更多信息</td>
+            <td class="formValue">
+                <textarea id="Remark" class="form-control input-profile" style="height: 100px;"></textarea>
+            </td>
+
+        </tr>
+    </table>
+</div>
