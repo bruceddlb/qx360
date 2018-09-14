@@ -233,7 +233,12 @@ $.dmsindex = {
     }
 }
 
-
+function NavFrame(data)
+{
+    //data={Icon:,FullName:,Url:}
+    $("#modelTitle").html('<i class="' + data.Icon + '"></i>' + data.FullName);
+    $("#DMS_iframe").attr("src", contentPath + data.Url);
+}
 //共子页面调用方法
 function OpenNav(id, para) {
     if (id) {

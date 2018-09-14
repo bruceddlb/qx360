@@ -49,11 +49,6 @@
         $(function () {
             //首页加载
             $.dmsindex.load();
-            //$("#side-menu").slimScroll({
-            //    height: "100%",
-            //    railOpacity: 0.8,
-            //    alwaysVisible: 1
-            //})
         });
         //清除缓存
         function removeCache() {
@@ -75,17 +70,19 @@
 
         //个人中心
         function personCenter() {
-            dialogOpen({
-                id: "personCenter",
-                title: '个人中心',
-                url: '/PersonCenter/Index',
-                width: "1100px",
-                height: "800px",
-                btn: null,
-                callBack: function (iframeId) {
-                    top.frames[iframeId].AcceptClick();
-                }
-            });
+            var data = { Icon: "", FullName: "个人中心", Url: "/PersonCenter/Index" }
+            NavFrame(data);
+            //dialogOpen({
+            //    id: "personCenter",
+            //    title: '个人中心',
+            //    url: '/PersonCenter/Index',
+            //    width: "1100px",
+            //    height: "800px",
+            //    btn: null,
+            //    callBack: function (iframeId) {
+            //        top.frames[iframeId].AcceptClick();
+            //    }
+            //});
         }
     </script>
 </head>
@@ -100,8 +97,9 @@
                     <b class="caret hidden-sm-only"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="#">个人中心</a></li>
-                    <li><a href="signin.html">退出</a></li>
+                    <li><a class="" href="javascript:personCenter();">个人信息</a></li>
+                    <li><a href="javascript:removeCache();">清空缓存</a></li>
+                    <li><a href="#" onclick="$.dmsindex.indexOut()">安全退出</a></li>
                 </ul>
             </li>
         </ul>
