@@ -314,8 +314,11 @@
     <Content Include="Content\adminFirst\img\avatar.png" />
     <Content Include="Content\adminFirst\img\bg.png" />
     <Content Include="Content\adminFirst\img\header-profile.png" />
+    <Content Include="Content\adminFirst\img\login-back-01.jpg" />
     <Content Include="Content\adminFirst\img\locked.png" />
     <Content Include="Content\adminFirst\img\login-background.jpg" />
+    <Content Include="Content\adminFirst\img\login-icon.png" />
+    <Content Include="Content\adminFirst\img\login-icon2.png" />
     <Content Include="Content\adminFirst\img\tab_close.png" />
     <Content Include="Content\adminFirst\img\user.png" />
     <Content Include="Content\adminFirst\index.min.css" />
@@ -1496,6 +1499,7 @@
     <Content Include="Content\styles\dms-ui.css" />
     <Content Include="Content\default\index.min.css" />
     <Content Include="Content\styles\style.min.css" />
+    <Content Include="Content\styles\util.css" />
     <Content Include="Demo12.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
@@ -1827,6 +1831,7 @@
     <Content Include="Views\OnlinePdf\Index.cshtml" />
     <Content Include="Views\Home\AdminFirst.cshtml" />
     <Content Include="Views\Home\AdminFirstDesktop.cshtml" />
+    <Content Include="Views\Login\LoginFirst.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\QSDMS.API\QSMS.API.csproj">

@@ -37,6 +37,11 @@ namespace QSDMS.Application.Web.Controllers
             return View();
         }
 
+        public ActionResult LoginFirst()
+        {
+            return View();
+        }
+
         /// <summary>
         /// 获取验证码
         /// </summary>

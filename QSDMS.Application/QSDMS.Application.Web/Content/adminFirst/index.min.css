@@ -80,7 +80,15 @@ a {
         background-color: transparent;
         transition: color .3s ease-in-out 0s;
     }
-
+    .nav-primary > ul > li.active {
+    border-left: 2px solid #19aa8d;
+    background: #162636;
+    }
+    .nav-primary.bg-light> ul > li.active {
+    border-left: 2px solid #19aa8d;
+    background: #fff;
+    }
+    
     .nav-primary > ul > li.active > a {
         border-left: 1px solid #13c4a5;
         padding-left: 9px;
@@ -2024,9 +2032,10 @@ input[type="text"], select, textarea {
         position: relative;
         left: 0;
         float: none;
-        display: block;
+        /*display: block;*/
         border: none;
-        background: transparent;
+        /*background:transparent;*/
+        background:#e1e5e9;
         padding-bottom: 0;
         -webkit-box-shadow: none;
         box-shadow: none;
@@ -2038,10 +2047,9 @@ input[type="text"], select, textarea {
     }
 
     .nav-primary .dropdown-menu a {
-        color: #8e9eae;
-        border-bottom: 1px solid #2a3b4c;
+        color: #233445;
     }
-
+   
     .nav-primary.bg-light .dropdown-menu a {
         color: #3e4e5e;
         border-bottom-color: #d1d4d7;
@@ -2172,6 +2180,7 @@ input[type="text"], select, textarea {
     vertical-align: -14%;
 }
 
-.bg-black .fa-comment {
+.bg-black .fa-comment, .bg-black .fa-bell, .bg-black .fa-book {
     color: #e0e4e8;
 }
+

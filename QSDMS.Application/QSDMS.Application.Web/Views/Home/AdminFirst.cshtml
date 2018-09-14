@@ -110,7 +110,7 @@
                 <i class="icon-reorder icon-xlarge text-default fa fa-bar-chart-o"></i>
             </button>*@
         <button type="button" class="btn btn-link pull-left nav-toggle hidden-lg" data-toggle="class:slide-nav slide-nav-left" data-target="body">
-            <i class="icon-reorder icon-xlarge text-default fa fa-bars"></i>
+            <i class="icon-xlarge fa fa-bars"></i>
         </button>
         <ul class="nav navbar-nav hidden-sm">
 
@@ -149,68 +149,90 @@
                     </li>
                 </ul>
             </li>
-            <li>
+            <li class="">
                 <div class="m-t m-b-small" id="panel-notifications">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-comment icon-xlarge"></i><b class="badge badge-notes bg-danger count-n">2</b></a>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-bell icon-xlarge">关怀提醒</i><b class="badge badge-notes bg-danger count-n">0</b></a>
                     <section class="dropdown-menu m-l-small m-t-mini">
-                        <section class="panel panel-large arrow arrow-top">
+                        @*<section class="panel panel-large arrow arrow-top">*@
+                        <section class="panel arrow arrow-top">
                             <div class="list-group list-group-flush m-t-n">
-                                <a href="#" class="media list-group-item">
-                                    <span class="pull-left thumb-small"><img src="images/avatar.jpg" alt="John said" class="img-circle"></span>
-                                    <span class="media-body block m-b-none">
-                                        Moved to Bootstrap 3.0<br>
-                                        <small class="text-muted">23 June 13</small>
-                                    </span>
+                                <a href="#" class=" list-group-item">
+                                    回访提醒<b class="badge badge-notes bg-danger count-n">2</b>
                                 </a>
-                                <a href="#" class="media list-group-item">
-                                    <span class="media-body block m-b-none">
-                                        first v.1 (Bootstrap 2.3 based) released<br>
-                                        <small class="text-muted">19 June 13</small>
-                                    </span>
+                                <a href="#" class=" list-group-item">
+                                    保养提醒
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    车辆保险提醒
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    驾照年审提醒
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    车辆年检提醒
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    卡到期提醒
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    客户生日提醒
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    客户流失提醒
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    到货提醒
                                 </a>
                             </div>
 
                         </section>
                     </section>
+
+
+                </div>
+            </li>
+            <li class="">
+                <div class="m-t m-b-small" id="panel-notifications">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-book icon-xlarge">业务提醒</i><b class="badge badge-notes bg-danger count-n">2</b></a>
+                    <section class="dropdown-menu m-l-small m-t-mini">
+                        @*<section class="panel panel-large arrow arrow-top">*@
+                        <section class="panel arrow arrow-top">
+                            <div class="list-group list-group-flush m-t-n">
+                                <a href="#" class=" list-group-item">
+                                    未完成工单<b class="badge badge-notes bg-danger count-n">2</b>
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    未结算工单
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    未完工理赔单
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    未结算理赔单
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    未发货调拨单
+                                </a>
+                                <a href="#" class=" list-group-item">
+                                    未收货调拨单
+                                </a>
+                            </div>
+
+                        </section>
+                    </section>
+
+
                 </div>
             </li>
         </ul>
         <div class="navbar-form pull-left shift" action="" data-toggle="shift:appendTo" data-target=".nav-primary">
             <i class="icon-search text-muted"></i>
-            <input type="text" class="input-small form-control" placeholder="站内搜索...按回车提交">
+            <input type="text" class="input-small form-control" placeholder="站内搜索...">
         </div>
     </header>
     <!-- / header -->
     <nav id="nav" class="nav-primary visible-lg nav-vertical" style="height:auto">
-        <ul class="nav" id="side-menu" style="">
-            @*<li><a href="index.html"><i class="fa fa-bars icon-xlarge"></i>Dashboard</a></li>
-                <li class="dropdown-submenu">
-                    <a href="#"><i class="fa fa-bars icon-xlarge"></i>Elements</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="buttons.html">Buttons</a></li>
-                        <li><a href="icons.html"><b class="badge pull-right">302</b>Icons</a></li>
-                        <li><a href="grid.html">Grid</a></li>3
-                        <li><a href="widgets.html"><b class="badge bg-primary pull-right">8</b>Widgets</a></li>
-                        <li><a href="components.html"><b class="badge pull-right">18</b>Components</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown-submenu active">
-                    <a href="#"><i class="icon-list icon-xlarge"></i>Lists</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="list.html">List groups</a></li>
-                        <li class="dropdown-submenu">
-                            <a>Table</a>
-                            <ul class="dropdown-menu" style="padding-left:10px;">
-                                <li><a href="list.html">table1</a></li>
-                                <li><a href="table.html">table12</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-                <li class="dropdown-submenu active"><a class="menuItem" data-id="cfc43ec6-937c-415e-b2f8-85a9664553c9" href="javascript:void(0)"><i class="fa fa-home"></i><span class="nav-label">首页</span></a></li>*@
-
-        </ul>
-
+        <ul class="nav" id="side-menu" style=""></ul>
     </nav>
     <section id="content">
         <div class="clearfix" style="background:#fbf6f6;border-bottom:2px solid #dddddd; padding-left:10px">
@@ -227,7 +249,7 @@
     <footer id="footer">
         <div class="text-center padder clearfix" style="">
             <p>
-                <small>&copy; first 2013, Mobile first web app framework base on Bootstrap  更多模板：<a href="http://www.mycodes.net/" target="_blank">源码之家</a></small><br><br>
+                <small>&copy; qssoft</small><br><br>
 
             </p>
         </div>

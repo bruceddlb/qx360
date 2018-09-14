@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>@QSDMS.Util.Config.GetValue("SystemName").ToString()-登录</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <link href="~/Content/styles/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/styles/animate.min.css" rel="stylesheet" />
+    <link href="~/Content/styles/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/adminFirst/login.min.css" rel="stylesheet" />
+    <link href="~/Content/styles/util.css" rel="stylesheet" />
+    <script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>
+    <script src="~/Content/scripts/bootstrap/bootstrap.min.js"></script>
+    <script src="~/Content/scripts/plugins/cookie/jquery.cookie.js"></script>
+    <script src="~/Content/scripts/plugins/jquery.md5.js"></script>
+    <script src="~/Content/scripts/plugins/toastr/toastr.min.js"></script>
+    <link href="~/Content/scripts/plugins/toastr/toastr.min.css" rel="stylesheet" />
+    <!--[if lt IE 8]>
+    <meta http-equiv="refresh" content="0;ie.html" />
+    <![endif]-->
+    <script>
+        if (window.top !== window.self) { window.top.location = window.location };
+        var contentPath = '/'.substr(0, '/'.length - 1);
+        //回车键
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                var btlogin = document.getElementById("btnlogin");
+                btnlogin.click();
+            }
+        }
+        $(function () {
+            initialControl();
+        });
+        function initialControl() {
+            //错误提示
+            if (top.$.cookie('dms_login_error') != null) {
+                switch (top.$.cookie('dms_login_error')) {
+                    case "Overdue":
+                        toastr.error('登录已超时,请重新登录');
+                        break;
+                    case "OnLine":
+                        toastr.error('您的帐号已在其它地方登录,请重新登录');
+                        break;
+                    case "noCache":
+                        toastr.error('缓存过期,请重新登录');
+                        break;
+                    case "-1":
+                        toastr.error('未知错误,请重新登录');
+                        break;
+                    default:
+                        break;
+                }
+                top.$.cookie('dms_login_error', '', { path: "/", expires: -1 });
+            }
+            //是否自动登录
+            if (top.$.cookie('dms_autologin') == 1) {
+                $("#autologin").attr("checked", 'true');
+                $("#uname").val(top.$.cookie('dms_username'));
+                $("#upwd").val(top.$.cookie('dms_password'));
+                CheckLogin(1);
+            } else {
+                $("#autologin").removeAttr("checked");
+            }
+            //设置下次自动登录
+            $("#autologin").click(function () {
+                if (!$(this).attr('checked')) {
+                    $(this).attr("checked", 'true');
+                    top.$.cookie('dms_autologin', 1, { path: "/", expires: 7 });
+                } else {
+                    $(this).removeAttr("checked");
+                    top.$.cookie('dms_autologin', '', { path: "/", expires: -1 });
+                    top.$.cookie('dms_username', '', { path: "/", expires: -1 });
+                    top.$.cookie('dms_password', '', { path: "/", expires: -1 });
+                }
+            });
+
+            //登录按钮事件
+            $("#btnlogin").click(function () {
+                var $username = $("#uname");
+                var $password = $("#upwd");
+                var $verifycode = $("#verifycode");
+                if ($username.val() == "") {
+                    $username.focus();
+                    toastr.warning("请输入登录账户名", "", {
+                        "closeButton": true,
+                        "positionClass": "toast-top-right"
+                    });
+                    return false;
+                } else if ($password.val() == "") {
+                    $password.focus();
+                    toastr.warning("请输入密码", "", {
+                        "closeButton": true,
+                        "positionClass": "toast-top-right"
+                    });
+
+                    return false;
+                } else if ($verifycode.val() == "") {
+                    $verifycode.focus();
+                    toastr.warning("请输入验证码", "", {
+                        "closeButton": true,
+                        "positionClass": "toast-top-right"
+                    });
+
+                    return false;
+                } else {
+                    CheckLogin(0);
+                }
+                //CheckLogin(0);
+            });
+            //点击切换验证码
+            $("#login_verifycode").click(function () {
+                $("#verifycode").val('');
+                $("#login_verifycode").attr("src", contentPath + "/Login/GetValidateCode?time=" + Math.random());
+            });
+        }
+
+        //登录验证
+        function CheckLogin(autologin) {
+            var username = $.trim($("#uname").val());
+            var password = $.trim($("#upwd").val());
+            var verifycode = $.trim($("#verifycode").val());
+            if (top.$.cookie('dms_password') == "" || top.$.cookie('dms_password') == null) {
+                //  password = $.md5(password);
+            }
+            $.ajax({
+                url: contentPath + "/Login/CheckLogin",
+                data: { username: $.trim(username), password: $.trim(password), verifycode: verifycode, autologin: autologin },
+                type: "post",
+                dataType: "json",
+                success: function (data) {
+                    if (data.IsSuccess) {
+                        if (top.$.cookie('dms_autologin') == 1) {
+                            top.$.cookie('dms_username', $.trim(username), { path: "/", expires: 7 });
+                            top.$.cookie('dms_password', $.trim(password), { path: "/", expires: 7 });
+                        }
+                        var url = "/Home/DefaultIndex";
+                        switch (data.ResultData["theme"].toLowerCase()) {
+                            case "default":
+                                url = "/Home/AdminFirst";
+                                break;
+                            case "adminpretty":
+                                url = "/Home/AdminPretty";
+                                break;
+                        }
+                        window.location.href = contentPath + url;
+
+                    } else {
+                        toastr.error(data.Message);
+                        $("#btnlogin").removeClass('active').removeAttr('disabled');
+                        // $("#login_verifycode").trigger("click");
+                    }
+                }
+            });
+        }
+
+    </script>
+</head>
+<body>
+    <div class="dowebok limiter">
+        <div class="container-login100" style="background-image: url('/Content/adminFirst/img/login-back-01.jpg');">
+            <div class="wrap-login100 p-t-190 p-b-30">
+                <form class="login100-form">
+
+                    <div class="login100-form-avatar">
+                        <img src="~/Content/adminFirst/img/login-icon2.png" />
+                    </div>
+
+
+                    <div class="wrap-input100 validate-input m-b-10" >
+                        <input class="input100 fs-20" type="text" name="username" placeholder="用户名" id="uname">
+                        <span class="focus-input100"></span>
+                        <span class="symbol-input100">
+                            <i class="fa fa-user"></i>
+                        </span>
+                    </div>
+
+                    <div class="wrap-input100 validate-input m-b-10" >
+                        <input class="input100 fs-20" type="password" name="pass" placeholder="密码" id="upwd">
+                        <span class="focus-input100"></span>
+                        <span class="symbol-input100">
+                            <i class="fa fa-lock"></i>
+                        </span>
+                    </div>
+                    <div class="wrap-input100 validate-input m-b-10" >
+                        <div style="float: left; width: 65%;color:#333">
+                            <input class="input100 fs-20" id="verifycode" maxlength="4" type="text" placeholder="图片验证码">
+                        </div>
+                        <div style="float: left; width: 35%">
+                            <img  id="login_verifycode" class="input100" src="/Login/GetValidateCode" width="100" height="40" alt="点击切换验证码"
+                                 title="点击切换验证码" style="cursor: pointer; border-radius:10px" />
+                        </div>
+                    </div>
+                    <div class="container-login100-form-btn p-t-10">
+                        <button class="login100-form-btn" id="btnlogin">登 录</button>
+                    </div>
+
+                    <div class="text-center w-full p-t-25 p-b-230">
+                        <a href="#" class="txt1" target="_blank">忘记密码？</a>
+                    </div>
+
+                    <div class="text-center w-full">
+                        <a class="txt1" href="#" target="_blank">
+                            版权所有
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

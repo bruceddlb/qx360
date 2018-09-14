@@ -168,7 +168,7 @@ $.dmsindex = {
                         _html += '<li class="dropdown-submenu">';
                         if (subchildNodes.length > 0) {
                             _html += '<a href="#"><i class="' + subrow.Icon + ' "></i>' + subrow.FullName + '';
-                            _html += '<span class="fa fa-arrow-right" style="float:right;margin-top:5px;"></span>';
+                            _html += '<span class="fa fa-caret-right" style="float:right;margin-top:5px;"></span>';
                             _html += '</a>';
                             _html += '<ul class="dropdown-menu">';
                             $.each(subchildNodes, function (i) {
